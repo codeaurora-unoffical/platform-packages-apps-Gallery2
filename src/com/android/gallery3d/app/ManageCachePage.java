@@ -124,6 +124,11 @@ public class ManageCachePage extends ActivityState implements
         }
 
         @Override
+        protected void renderBackground(GLCanvas view) {
+            view.clearBuffer();
+        }
+
+        @Override
         protected void render(GLCanvas canvas) {
             canvas.save(GLCanvas.SAVE_FLAG_MATRIX);
             GalleryUtils.setViewPointMatrix(mMatrix,
