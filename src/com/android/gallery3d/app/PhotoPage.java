@@ -896,6 +896,7 @@ public class PhotoPage extends ActivityState implements
             mAppBridge = null;
             mScreenNailSet = null;
             mScreenNailItem = null;
+            mPhotoView.destroy();
         }
         mOrientationManager.removeListener(this);
         mActivity.getGLRoot().setOrientationSource(null);
@@ -903,6 +904,7 @@ public class PhotoPage extends ActivityState implements
         // Remove all pending messages.
         mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
+        System.gc();
     }
 
     private class MyDetailsSource implements DetailsSource {
