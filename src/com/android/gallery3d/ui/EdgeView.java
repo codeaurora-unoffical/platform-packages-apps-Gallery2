@@ -105,6 +105,11 @@ public class EdgeView extends GLView {
         }
     }
 
+     public void destroy() {
+        for (int i = 0; i < 4; i++) {
+            mEffect[i].destroy();
+        }
+    }
     // Call when the object is released after being pulled.
     public void onRelease() {
         boolean more = false;
