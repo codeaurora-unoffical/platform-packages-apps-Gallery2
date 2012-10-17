@@ -78,8 +78,8 @@ public class EdgeEffect {
 
     private static final float EPSILON = 0.001f;
 
-    private final Drawable mEdge;
-    private final Drawable mGlow;
+    private Drawable mEdge;
+    private Drawable mGlow;
     private int mWidth;
     private int mHeight;
     private final int MIN_WIDTH = 300;
@@ -102,7 +102,7 @@ public class EdgeEffect {
     private long mStartTime;
     private float mDuration;
 
-    private final Interpolator mInterpolator;
+    private Interpolator mInterpolator;
 
     private static final int STATE_IDLE = 0;
     private static final int STATE_PULL = 1;
@@ -218,6 +218,11 @@ public class EdgeEffect {
         mEdgeScaleYFinish = mEdgeScaleY;
         mGlowAlphaFinish = mGlowAlpha;
         mGlowScaleYFinish = mGlowScaleY;
+    }
+    public void destroy(){
+        mEdge = null;
+        mGlow = null;
+        mInterpolator=null;
     }
 
     /**
