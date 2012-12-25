@@ -34,6 +34,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.graphics.Color;
 
 import com.android.gallery3d.R;
 
@@ -87,7 +88,7 @@ public class MovieControllerOverlay extends FrameLayout implements
         new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
     background = new View(context);
-    background.setBackgroundColor(context.getResources().getColor(R.color.darker_transparent));
+    background.setBackgroundColor(Color.TRANSPARENT);
     addView(background, matchParent);
 
     timeBar = new TimeBar(context, this);
