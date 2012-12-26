@@ -261,6 +261,7 @@ public class MoviePlayer implements
     }
 
     public void onResume() {
+        mRootView.setBackgroundColor(Color.TRANSPARENT);
         if (mHasPaused) {
             mVideoView.seekTo(mVideoPosition);
             mVideoView.resume();
