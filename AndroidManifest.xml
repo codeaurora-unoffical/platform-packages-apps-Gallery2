@@ -37,7 +37,7 @@
             android:name="com.android.gallery3d.app.GalleryAppImpl"
             android:theme="@style/Theme.Gallery"
             android:logo="@mipmap/ic_launcher_gallery"
-            android:hardwareAccelerated="true">
+            android:hardwareAccelerated="true" android:largeHeap="true">
         <uses-library android:name="com.google.android.media.effects" android:required="false" />
         <activity android:name="com.android.gallery3d.app.MovieActivity"
                 android:label="@string/movie_view_label"
