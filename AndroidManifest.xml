@@ -303,6 +303,18 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity-alias android:icon="@mipmap/ic_launcher_video_camera"
+                        android:label="@string/video_camera_label"
+                        android:name="com.android.camera.VideoCameraLauncher"
+                        android:targetActivity="com.android.camera.VideoCamera" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity android:name="com.android.camera.PanoramaActivity"
                 android:taskAffinity="com.android.camera"
                 android:label="@string/pano_dialog_title"
