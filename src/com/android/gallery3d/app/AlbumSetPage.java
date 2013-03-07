@@ -614,6 +614,7 @@ public class AlbumSetPage extends ActivityState implements
                 mActivity.getStateManager().startState(ManageCachePage.class, data);
                 return true;
             }
+/*
             case R.id.action_sync_picasa_albums: {
                 PicasaSource.requestSync(activity);
                 return true;
@@ -622,6 +623,7 @@ public class AlbumSetPage extends ActivityState implements
                 activity.startActivity(new Intent(activity, GallerySettings.class));
                 return true;
             }
+*/
             default:
                 return false;
         }
