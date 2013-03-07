@@ -4,6 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
+LOCAL_JAVA_LIBRARIES := telephony-common
+
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-v13
 LOCAL_STATIC_JAVA_LIBRARIES += com.android.gallery3d.common2
 LOCAL_STATIC_JAVA_LIBRARIES += xmp_toolkit
@@ -35,7 +37,7 @@ else
 endif
 
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
-
+#LOCAL_CERTIFICATE := platform
 include $(BUILD_PACKAGE)
 
 include $(call all-makefiles-under, jni)

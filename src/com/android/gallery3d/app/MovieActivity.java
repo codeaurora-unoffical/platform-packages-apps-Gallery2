@@ -19,15 +19,20 @@ package com.android.gallery3d.app;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.content.AsyncQueryHandler;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -43,6 +48,13 @@ import android.widget.ShareActionProvider;
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.ApiHelper;
 import com.android.gallery3d.common.Utils;
+import com.qcom.gallery3d.ext.IActivityHooker;
+import com.qcom.gallery3d.ext.IMovieItem;
+import com.qcom.gallery3d.ext.MovieItem;
+import com.qcom.gallery3d.ext.MovieUtils;
+import com.qcom.gallery3d.ext.QcomLog;
+import com.qcom.gallery3d.video.ExtensionHelper;
+import com.qcom.gallery3d.video.MovieTitleHelper;
 
 /**
  * This activity plays a video from a specified URI.
@@ -59,7 +71,7 @@ public class MovieActivity extends Activity {
 
     private MoviePlayer mPlayer;
     private boolean mFinishOnCompletion;
-    private Uri mUri;
+    //private Uri mUri;
     private boolean mTreatUpAsBack;
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -74,24 +86,29 @@ public class MovieActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        QcomLog.v(TAG, "onCreate()");
         requestWindowFeature(Window.FEATURE_ACTION_BAR);
         requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         setContentView(R.layout.movie_view);
         View rootView = findViewById(R.id.movie_view_root);
 
         setSystemUiVisibility(rootView);
 
         Intent intent = getIntent();
+        mMovieHooker = ExtensionHelper.getHooker(this);
+        initMovieInfo(intent);
         initializeActionBar(intent);
         mFinishOnCompletion = intent.getBooleanExtra(
                 MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
         mTreatUpAsBack = intent.getBooleanExtra(KEY_TREAT_UP_AS_BACK, false);
-        mPlayer = new MoviePlayer(rootView, this, intent.getData(), savedInstanceState,
+        mPlayer = new MoviePlayer(rootView, this, mMovieItem, savedInstanceState,
                 !mFinishOnCompletion) {
             @Override
             public void onCompletion() {
+                if (LOG) {
+                	QcomLog.v(TAG, "onCompletion() mFinishOnCompletion=" + mFinishOnCompletion);
+                }
                 if (mFinishOnCompletion) {
                     finish();
                 }
@@ -114,6 +131,11 @@ public class MovieActivity extends Activity {
         // We set the background in the theme to have the launching animation.
         // But for the performance (and battery), we remove the background here.
         win.setBackgroundDrawable(null);
+        mMovieHooker.init(this, intent);
+        mMovieHooker.setParameter(null, mPlayer.getMoviePlayerExt());
+        mMovieHooker.setParameter(null, mMovieItem);
+        mMovieHooker.setParameter(null, mPlayer.getVideoSurface());
+        mMovieHooker.onCreate(savedInstanceState);
     }
 
     private void setActionBarLogoFromIntent(Intent intent) {
@@ -125,18 +147,20 @@ public class MovieActivity extends Activity {
     }
 
     private void initializeActionBar(Intent intent) {
-        mUri = intent.getData();
+        //mUri = intent.getData();
         final ActionBar actionBar = getActionBar();
         setActionBarLogoFromIntent(intent);
-        actionBar.setDisplayOptions(
-                ActionBar.DISPLAY_HOME_AS_UP,
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_HOME_AS_UP);
+        /// M: show title for video playback
+        actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_TITLE);
 
-        String title = intent.getStringExtra(Intent.EXTRA_TITLE);
-        if (title != null) {
-            actionBar.setTitle(title);
-        } else {
-            // Displays the filename as title, reading the filename from the
+//        String title = intent.getStringExtra(Intent.EXTRA_TITLE);
+//        if (title != null) {
+//            actionBar.setTitle(title);
+//        } else {
+//            enhanceActionBar();
+            /*// Displays the filename as title, reading the filename from the
             // interface: {@link android.provider.OpenableColumns#DISPLAY_NAME}.
             AsyncQueryHandler queryHandler =
                     new AsyncQueryHandler(getContentResolver()) {
@@ -159,35 +183,57 @@ public class MovieActivity extends Activity {
             };
             queryHandler.startQuery(0, null, mUri,
                     new String[] {OpenableColumns.DISPLAY_NAME}, null, null,
-                    null);
+                    null);*/
+//        }
+        if (LOG) {
+        	QcomLog.v(TAG, "initializeActionBar() mMovieInfo=" + mMovieItem);
         }
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.movie, menu);
+        boolean local = MovieUtils.isLocalFile(mMovieItem.getOriginalUri(), mMovieItem.getMimeType());
+   
+            getMenuInflater().inflate(R.menu.movie, menu);
+            mShareMenu = menu.findItem(R.id.action_share);
+            ShareActionProvider provider = (ShareActionProvider) mShareMenu.getActionProvider();
+            mShareProvider = provider;
+            if (mShareProvider != null) {
+                /// M: share provider is singleton, we should refresh our history file.
+                mShareProvider.setShareHistoryFileName(SHARE_HISTORY_FILE);
+            }
+            refreshShareProvider(mMovieItem);
+        return mMovieHooker.onCreateOptionsMenu(menu);
+        /*getMenuInflater().inflate(R.menu.movie, menu);
+        ShareActionProvider provider = GalleryActionBar.initializeShareActionProvider(menu);
 
         // Document says EXTRA_STREAM should be a content: Uri
         // So, we only share the video if it's "content:".
-        MenuItem shareItem = menu.findItem(R.id.action_share);
-        if (ContentResolver.SCHEME_CONTENT.equals(mUri.getScheme())) {
-            shareItem.setVisible(true);
-            ((ShareActionProvider) shareItem.getActionProvider())
-                    .setShareIntent(createShareIntent());
-        } else {
-            shareItem.setVisible(false);
+        if (provider != null && ContentResolver.SCHEME_CONTENT
+                .equals(mUri.getScheme())) {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("video/*");
+            intent.putExtra(Intent.EXTRA_STREAM, mUri);
+            provider.setShareIntent(intent);
         }
-        return true;
-    }
 
+        return true;*/
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        return mMovieHooker.onPrepareOptionsMenu(menu);
+    }
+    
     private Intent createShareIntent() {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("video/*");
-        intent.putExtra(Intent.EXTRA_STREAM, mUri);
+        intent.putExtra(Intent.EXTRA_STREAM, mMovieItem.getUri());
         return intent;
     }
-
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -204,15 +250,17 @@ public class MovieActivity extends Activity {
                     getString(R.string.share)));
             return true;
         }
-        return false;
+        return mMovieHooker.onOptionsItemSelected(item);
     }
 
     @Override
     public void onStart() {
-        ((AudioManager) getSystemService(AUDIO_SERVICE))
-                .requestAudioFocus(null, AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         super.onStart();
+        mMovieHooker.onStart();
+        registerScreenOff();
+        if (LOG) {
+        	QcomLog.v(TAG, "onStart()");
+        }
     }
 
     @Override
@@ -220,18 +268,61 @@ public class MovieActivity extends Activity {
         ((AudioManager) getSystemService(AUDIO_SERVICE))
                 .abandonAudioFocus(null);
         super.onStop();
+        if (mControlResumed && mPlayer != null) {
+            mPlayer.onStop();
+            mControlResumed = false;
+        }
+        mMovieHooker.onStop();
+        unregisterScreenOff();
+        if (LOG) {
+        	QcomLog.v(TAG, "onStop() isKeyguardLocked=" + isKeyguardLocked()
+                + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
+        }
     }
 
     @Override
     public void onPause() {
-        mPlayer.onPause();
+        if (LOG) {
+        	QcomLog.v(TAG, "onPause() isKeyguardLocked=" + isKeyguardLocked()
+                + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
+        }
+        mResumed = false;
+        if (mControlResumed && mPlayer != null) {
+            mControlResumed = !mPlayer.onPause();
+        }
         super.onPause();
+        // TODO comments by sunlei
+//        collapseShareMenu();
+        mMovieHooker.onPause();
     }
 
     @Override
     public void onResume() {
-        mPlayer.onResume();
+        if (LOG) {
+        	QcomLog.v(TAG, "onResume() isKeyguardLocked=" + isKeyguardLocked()
+                + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
+        }
+        mResumed = true;
+        if (!isKeyguardLocked() && mResumed && !mControlResumed && mPlayer != null) {
+            mPlayer.onResume();
+            mControlResumed = true;
+        }
+        enhanceActionBar();
         super.onResume();
+        mMovieHooker.onResume();
+    }
+    
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (LOG) {
+        	QcomLog.v(TAG, "onWindowFocusChanged(" + hasFocus + ") isKeyguardLocked=" + isKeyguardLocked()
+                + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
+        }
+        if (hasFocus && !isKeyguardLocked() && mResumed && !mControlResumed && mPlayer != null) {
+            mPlayer.onResume();
+            mControlResumed = true;
+        }
     }
 
     @Override
@@ -244,6 +335,7 @@ public class MovieActivity extends Activity {
     public void onDestroy() {
         mPlayer.onDestroy();
         super.onDestroy();
+        mMovieHooker.onDestroy();
     }
 
     @Override
@@ -257,4 +349,184 @@ public class MovieActivity extends Activity {
         return mPlayer.onKeyUp(keyCode, event)
                 || super.onKeyUp(keyCode, event);
     }
+    
+    private static final boolean LOG = true;
+    /// M: resume bug fix @{
+    private boolean mResumed = false;
+    private boolean mControlResumed = false;
+    private KeyguardManager mKeyguardManager;
+    private boolean isKeyguardLocked() {
+        if (mKeyguardManager == null) {
+            mKeyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        }
+        // isKeyguardSecure excludes the slide lock case.
+        boolean locked = (mKeyguardManager != null) && mKeyguardManager.inKeyguardRestrictedInputMode();
+        if (LOG) {
+            QcomLog.v(TAG, "isKeyguardLocked() locked=" + locked + ", mKeyguardManager=" + mKeyguardManager);
+        }
+        return locked;
+    }
+    /// @}
+    
+    /// M: for sdp over http @{
+    private static final String VIDEO_SDP_MIME_TYPE = "application/sdp";
+    private static final String VIDEO_SDP_TITLE = "rtsp://";
+    private static final String VIDEO_FILE_SCHEMA = "file";
+    private static final String VIDEO_MIME_TYPE = "video/*";
+    private IMovieItem mMovieItem;
+    
+    private void initMovieInfo(Intent intent) {
+        Uri original = intent.getData();
+        String mimeType = intent.getType();
+        if (VIDEO_SDP_MIME_TYPE.equalsIgnoreCase(mimeType)
+                && VIDEO_FILE_SCHEMA.equalsIgnoreCase(original.getScheme())) {
+            mMovieItem = new MovieItem(VIDEO_SDP_TITLE + original, mimeType, null);
+        } else {
+            mMovieItem = new MovieItem(original, mimeType, null);
+        }
+        mMovieItem.setOriginalUri(original);
+        if (LOG) {
+        	QcomLog.v(TAG, "initMovieInfo(" + original + ") mMovieInfo=" + mMovieItem);
+        }
+    }
+    /// @}
+    
+    /// M:for live streaming. @{
+    //we do not stop live streaming when other dialog overlays it.
+    private BroadcastReceiver mScreenOffReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (LOG) {
+            	QcomLog.v(TAG, "onReceive(" + intent.getAction() + ") mControlResumed=" + mControlResumed);
+            }
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                //Only stop video.
+                if (mControlResumed) {
+                    mPlayer.onStop();
+                    mControlResumed = false;
+                }
+            }
+        }
+        
+    };
+    
+    private void registerScreenOff() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mScreenOffReceiver, filter);
+    }
+    
+    private void unregisterScreenOff() {
+        unregisterReceiver(mScreenOffReceiver);
+    }
+    /// @}
+    
+    /// M: enhance the title feature @{
+    private void enhanceActionBar() {
+        final IMovieItem movieItem = mMovieItem;//remember original item
+        final Uri uri = mMovieItem.getUri();
+        final String scheme = mMovieItem.getUri().getScheme();
+        final String authority = mMovieItem.getUri().getAuthority();
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                String title = null;
+                if (ContentResolver.SCHEME_FILE.equals(scheme)) { //from file manager
+                    title = MovieTitleHelper.getTitleFromMediaData(MovieActivity.this, uri);
+                } else if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+                    title = MovieTitleHelper.getTitleFromDisplayName(MovieActivity.this, uri);
+                    if (title == null) {
+                        title = MovieTitleHelper.getTitleFromData(MovieActivity.this, uri);
+                    }
+                }
+                if (title == null) {
+                    title = MovieTitleHelper.getTitleFromUri(uri);
+                }
+                if (LOG) {
+                	QcomLog.v(TAG, "enhanceActionBar() task return " + title);
+                }
+                return title;
+            }
+            @Override
+            protected void onPostExecute(String result) {
+                if (LOG) {
+                	QcomLog.v(TAG, "onPostExecute(" + result + ") movieItem=" + movieItem + ", mMovieItem=" + mMovieItem);
+                }
+                movieItem.setTitle(result);
+                if (movieItem == mMovieItem) {
+                    setActionBarTitle(result);
+                }
+            };
+        }.execute();
+        if (LOG) {
+        	QcomLog.v(TAG, "enhanceActionBar() " + mMovieItem);
+        }
+    }
+    
+    public void setActionBarTitle(String title) {
+        if (LOG) {
+        	QcomLog.v(TAG, "setActionBarTitle(" + title + ")");
+        }
+        ActionBar actionBar = getActionBar();
+        if (title != null) {
+            actionBar.setTitle(title);
+        }
+    }
+    /// @}
+
+    public void refreshMovieInfo(IMovieItem info) {
+        mMovieItem = info;
+        setActionBarTitle(info.getTitle());
+        refreshShareProvider(info);
+        mMovieHooker.setParameter(null, mMovieItem);
+        if (LOG) {
+        	QcomLog.v(TAG, "refreshMovieInfo(" + info + ")");
+        }
+    }
+
+    private ShareActionProvider mShareProvider;
+    private void refreshShareProvider(IMovieItem info) {
+        // Document says EXTRA_STREAM should be a content: Uri
+        // So, we only share the video if it's "content:".
+        /// M: the upper is JellyBean's comment, here we enhance the share action.
+        if (mShareProvider != null) {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            if (MovieUtils.isLocalFile(info.getUri(), info.getMimeType())) {
+                intent.setType("video/*");
+                intent.putExtra(Intent.EXTRA_STREAM, info.getUri());
+            } else {
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, String.valueOf(info.getUri()));
+            }
+            mShareProvider.setShareIntent(intent);
+        }
+        if (LOG) {
+        	QcomLog.v(TAG, "refreshShareProvider() mShareProvider=" + mShareProvider);
+        }
+    }
+    
+    /* M: ActivityChooseView's popup window will not dismiss
+     * when user press power key off and on quickly.
+     * Here dismiss the popup window if need.
+     * Note: dismissPopup() will check isShowingPopup().
+     * @{
+     */
+    private MenuItem mShareMenu;
+    // TODO comments by sunlei
+//    private void collapseShareMenu() {
+//        if (mShareMenu != null &&  mShareMenu.getActionView() instanceof ActivityChooserView) {
+//            ActivityChooserView chooserView = (ActivityChooserView)mShareMenu.getActionView();
+//            if (LOG) {
+//            	QcomLog.v(TAG, "collapseShareMenu() chooserView.isShowingPopup()=" + chooserView.isShowingPopup());
+//            }
+//            chooserView.dismissPopup();
+//        }
+//    }
+    /* @} */
+    
+    /// M: share history file name
+    private static final String SHARE_HISTORY_FILE = "video_share_history_file";
+    
+    private IActivityHooker mMovieHooker;
 }

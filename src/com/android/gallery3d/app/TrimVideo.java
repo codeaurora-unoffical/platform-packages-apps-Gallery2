@@ -435,4 +435,10 @@ public class TrimVideo extends Activity implements
     public boolean onError(MediaPlayer mp, int what, int extra) {
         return false;
     }
+
+	@Override
+	public boolean onIsRTSP() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
