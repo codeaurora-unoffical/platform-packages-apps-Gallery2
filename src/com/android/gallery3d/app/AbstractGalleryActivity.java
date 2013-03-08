@@ -146,32 +146,33 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
     @Override
     protected void onStart() {
         super.onStart();
-        if (getExternalCacheDir() == null) {
-            OnCancelListener onCancel = new OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    finish();
-                }
-            };
-            OnClickListener onClick = new OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            };
-            AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                    .setTitle(R.string.no_external_storage_title)
-                    .setMessage(R.string.no_external_storage)
-                    .setNegativeButton(android.R.string.cancel, onClick)
-                    .setOnCancelListener(onCancel);
-            if (ApiHelper.HAS_SET_ICON_ATTRIBUTE) {
-                setAlertDialogIconAttribute(builder);
-            } else {
-                builder.setIcon(android.R.drawable.ic_dialog_alert);
-            }
-            mAlertDialog = builder.show();
-            registerReceiver(mMountReceiver, mMountFilter);
-        }
+        //wss support for phone storage
+//        if (getExternalCacheDir() == null) {
+//            OnCancelListener onCancel = new OnCancelListener() {
+//                @Override
+//                public void onCancel(DialogInterface dialog) {
+//                    finish();
+//                }
+//            };
+//            OnClickListener onClick = new OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    dialog.cancel();
+//                }
+//            };
+//            AlertDialog.Builder builder = new AlertDialog.Builder(this)
+//                    .setTitle(R.string.no_external_storage_title)
+//                    .setMessage(R.string.no_external_storage)
+//                    .setNegativeButton(android.R.string.cancel, onClick)
+//                    .setOnCancelListener(onCancel);
+//            if (ApiHelper.HAS_SET_ICON_ATTRIBUTE) {
+//                setAlertDialogIconAttribute(builder);
+//            } else {
+//                builder.setIcon(android.R.drawable.ic_dialog_alert);
+//            }
+//            mAlertDialog = builder.show();
+//            registerReceiver(mMountReceiver, mMountFilter);
+//        }
         mPanoramaViewHelper.onStart();
     }
 
