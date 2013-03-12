@@ -859,6 +859,9 @@ public class MoviePlayer implements
 //            	QcomLog.w(TAG, "Metadata is null!");
 //            }
             int duration = mp.getDuration();
+ // TODO comments by sunlei: seems there is no need check again,mp.getDuration maybe 0
+/*
+           
             if (duration <= 0) {
                 mStreamingType = STREAMING_SDP;//correct it
             } else {
@@ -867,6 +870,7 @@ public class MoviePlayer implements
                     mStreamingType = STREAMING_RTSP;
                 }
             }
+            **/
             if (LOG) {
             	QcomLog.v(TAG, "getVideoInfo() duration=" + duration + ", mStreamingType=" + mStreamingType);
             }
