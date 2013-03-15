@@ -31,7 +31,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-//import android.media.Metadata;
+import android.media.Metadata;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -355,7 +355,7 @@ public class MoviePlayer implements
         long end2 = System.currentTimeMillis();
         mOverlayExt.clearBuffering();//to end buffer state
         // TODO comments by sunlei
-//        mServerTimeoutExt.recordDisconnectTime();
+        mServerTimeoutExt.recordDisconnectTime();
         if (LOG) {
         	QcomLog.v(TAG, "doOnPause() save video info consume:" + (end1 - start));
         	QcomLog.v(TAG, "doOnPause() suspend video consume:" + (end2 - end1));
@@ -375,10 +375,10 @@ public class MoviePlayer implements
             /// @}
             
             // TODO comments by sunlei
-//            if (mServerTimeoutExt.handleOnResume() || mIsShowResumingDialog) {
-//                mHasPaused = false;
-//                return;
-//            }
+            if (mServerTimeoutExt.handleOnResume() || mIsShowResumingDialog) {
+                mHasPaused = false;
+                return;
+            }
             switch(mTState) {
             case RETRY_ERROR:
                 mRetryExt.showRetry();
@@ -428,7 +428,7 @@ public class MoviePlayer implements
         mVideoView.stopPlayback();
         mAudioBecomingNoisyReceiver.unregister();
         // TODO comments by sunlei
-//        mServerTimeoutExt.clearTimeoutDialog();
+        mServerTimeoutExt.clearTimeoutDialog();
     }
 
     // This updates the time bar display (if necessary). It is called every
@@ -530,9 +530,9 @@ public class MoviePlayer implements
         mMovieItem.setError();
         
         // TODO comments by sunlei
-//        if (mServerTimeoutExt.onError(player, arg1, arg2)) {
-//            return true;
-//        }
+        if (mServerTimeoutExt.onError(player, arg1, arg2)) {
+            return true;
+        }
         if (mRetryExt.onError(player, arg1, arg2)) {
             return true;
         }
@@ -658,13 +658,23 @@ public class MoviePlayer implements
     }
     
     public void updateRewindAndForwardUI(){
+	  QcomLog.v(TAG, "updateRewindAndForwardUI");
+	   QcomLog.v(TAG, "updateRewindAndForwardUI== getCurrentPosition = " +  mVideoView.getCurrentPosition());
+	   QcomLog.v(TAG, "updateRewindAndForwardUI==getDuration =" +  mVideoView.getDuration());
         if(mControllerRewindAndForwardExt != null){
+	/*
             mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
                     .canStop(), mVideoView.canSeekBackward()
                     && mVideoView.getCurrentPosition() > 0 && mControllerRewindAndForwardExt.getTimeBarEanbled(), mVideoView
                     .canSeekForward()
                     && (mVideoView.getCurrentPosition() < mVideoView
                             .getDuration()) && mControllerRewindAndForwardExt.getTimeBarEanbled());
+                            */
+                  mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
+                    .canStop(), mVideoView.canSeekBackward()
+                     && mControllerRewindAndForwardExt.getTimeBarEanbled(), mVideoView
+                    .canSeekForward()
+                     && mControllerRewindAndForwardExt.getTimeBarEanbled());
         }
     }
 
@@ -802,7 +812,7 @@ public class MoviePlayer implements
         //for more details
     	
     	// TODO comments by sunlei
-//        mServerTimeoutExt.onSaveInstanceState(outState);
+        mServerTimeoutExt.onSaveInstanceState(outState);
         outState.putInt(KEY_VIDEO_LAST_DURATION, mVideoLastDuration);
         outState.putBoolean(KEY_VIDEO_CAN_PAUSE, mVideoView.canPause());
         outState.putBoolean(KEY_VIDEO_CAN_SEEK, mVideoView.canSeekForward());
@@ -825,7 +835,7 @@ public class MoviePlayer implements
         
         mScreenModeExt.onRestoreInstanceState(icicle);
      // TODO comments by sunlei
-//        mServerTimeoutExt.onRestoreInstanceState(icicle);
+        mServerTimeoutExt.onRestoreInstanceState(icicle);
         mRetryExt.onRestoreInstanceState(icicle);
         mPlayerExt.onRestoreInstanceState(icicle);
         if (LOG) {
@@ -840,24 +850,24 @@ public class MoviePlayer implements
         mIsOnlyAudio = false;
  
      // TODO comments by sunlei
-//        if (mServerTimeoutExt != null) {
-//            mServerTimeoutExt.clearServerInfo();
-//        }
+        if (mServerTimeoutExt != null) {
+            mServerTimeoutExt.clearServerInfo();
+        }
     }
 
     private void getVideoInfo(MediaPlayer mp) {
         if (!MovieUtils.isLocalFile(mMovieItem.getUri(), mMovieItem.getMimeType())) {
         	
         	// TODO comments by sunlei
-//            Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
-//                    MediaPlayer.BYPASS_METADATA_FILTER);
-//            if (data != null) {
-//            	// TODO comments by sunlei
-////                mServerTimeoutExt.setVideoInfo(data);
-//                mPlayerExt.setVideoInfo(data);
-//            } else {
-//            	QcomLog.w(TAG, "Metadata is null!");
-//            }
+            Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
+                    MediaPlayer.BYPASS_METADATA_FILTER);
+            if (data != null) {
+            	// TODO comments by sunlei
+                mServerTimeoutExt.setVideoInfo(data);
+               // mPlayerExt.setVideoInfo(data);
+            } else {
+            	QcomLog.w(TAG, "Metadata is null!");
+            }
             int duration = mp.getDuration();
  // TODO comments by sunlei: seems there is no need check again,mp.getDuration maybe 0
 /*
@@ -1036,7 +1046,7 @@ public class MoviePlayer implements
     private RetryExtension mRetryExt = new RetryExtension();
     private ScreenModeExt mScreenModeExt = new ScreenModeExt();
     // TODO comments by sunlei
-//    private ServerTimeoutExtension mServerTimeoutExt = new ServerTimeoutExtension();
+    private ServerTimeoutExtension mServerTimeoutExt = new ServerTimeoutExtension();
     private MoviePlayerExtension mPlayerExt = new MoviePlayerExtension();
     private IContrllerOverlayExt mOverlayExt;
     private IControllerRewindAndForward mControllerRewindAndForwardExt;
@@ -1506,151 +1516,151 @@ public class MoviePlayer implements
     
     
     // comments by sunlei
-//    private class ServerTimeoutExtension implements Restorable, MediaPlayer.OnErrorListener {
-//        //for cmcc server timeout case 
-//        //please remember to clear this value when changed video.
-//        private int mServerTimeout = -1;
-//        private long mLastDisconnectTime;
-//        private boolean mIsShowDialog = false;
-//        private AlertDialog mServerTimeoutDialog;
-//        
-//        //check whether disconnect from server timeout or not.
-//        //if timeout, return false. otherwise, return true.
-//        private boolean passDisconnectCheck() {
-//            if (ExtensionHelper.getMovieStrategy(mActivityContext).shouldEnableServerTimeout()
-//                    && !isFullBuffer()) {
-//                //record the time disconnect from server
-//                long now = System.currentTimeMillis();
-//                if (LOG) {
-//                	QcomLog.v(TAG, "passDisconnectCheck() now=" + now + ", mLastDisconnectTime=" + mLastDisconnectTime
-//                            + ", mServerTimeout=" + mServerTimeout);
-//                }
-//                if (mServerTimeout > 0 && (now - mLastDisconnectTime) > mServerTimeout) {
-//                    //disconnect time more than server timeout, notify user
-//                    notifyServerTimeout();
-//                    return false;
-//                }
-//            }
-//            return true;
-//        }
-//        
-//        private void recordDisconnectTime() {
-//            if (ExtensionHelper.getMovieStrategy(mActivityContext).shouldEnableServerTimeout()
-//                    && !isFullBuffer()) {
-//                //record the time disconnect from server
-//                mLastDisconnectTime = System.currentTimeMillis();
-//            }
-//            if (LOG) {
-//            	QcomLog.v(TAG, "recordDisconnectTime() mLastDisconnectTime=" + mLastDisconnectTime);
-//            }
-//        }
-//        
-//        private void clearServerInfo() {
-//            mServerTimeout = -1;
-//        }
-//        
-//        private void notifyServerTimeout() {
-//            if (mServerTimeoutDialog == null) {
-//                //for updating last position and duration.
-//                if (mVideoCanSeek || mVideoView.canSeekForward()) { 
-//                    mVideoView.seekTo(mVideoPosition);
-//                }
-//                mVideoView.setDuration(mVideoLastDuration);
-//                AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext);
-//                mServerTimeoutDialog = builder.setTitle(R.string.server_timeout_title)
-//                    .setMessage(R.string.server_timeout_message)
-//                    .setNegativeButton(android.R.string.cancel, new OnClickListener() {
-//    
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            if (LOG) {
-//                            	QcomLog.v(TAG, "NegativeButton.onClick() mIsShowDialog=" + mIsShowDialog);
-//                            }
-//                            mController.showEnded();
-//                            onCompletion();
-//                        }
-//                        
-//                    })
-//                    .setPositiveButton(R.string.resume_playing_resume, new OnClickListener() {
-//        
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            if (LOG) {
-//                            	QcomLog.v(TAG, "PositiveButton.onClick() mIsShowDialog=" + mIsShowDialog);
-//                            }
-//                            doStartVideo(true, mVideoPosition, mVideoLastDuration);
-//                        }
-//                        
-//                    })
-//                    .create();
-//                mServerTimeoutDialog.setOnDismissListener(new OnDismissListener() {
-//                        
-//                        public void onDismiss(DialogInterface dialog) {
-//                            if (LOG) {
-//                            	QcomLog.v(TAG, "mServerTimeoutDialog.onDismiss()");
-//                            }
-//                            mIsShowDialog = false;
-//                        }
-//                        
-//                    });
-//                mServerTimeoutDialog.setOnShowListener(new OnShowListener() {
-//    
-//                        public void onShow(DialogInterface dialog) {
-//                            if (LOG) {
-//                            	QcomLog.v(TAG, "mServerTimeoutDialog.onShow()");
-//                            }
-//                            mIsShowDialog = true;
-//                        }
-//                        
-//                    });
-//            }
-//            mServerTimeoutDialog.show();
-//        }
-//        
-//        private void clearTimeoutDialog() {
-//            if (mServerTimeoutDialog != null && mServerTimeoutDialog.isShowing()) {
-//                mServerTimeoutDialog.dismiss();
-//            }
-//            mServerTimeoutDialog = null;
-//        }
-//
-//        @Override
-//        public void onRestoreInstanceState(Bundle icicle) {
-//            mLastDisconnectTime = icicle.getLong(KEY_VIDEO_LAST_DISCONNECT_TIME);
-//        }
-//
-//        @Override
-//        public void onSaveInstanceState(Bundle outState) {
-//            outState.putLong(KEY_VIDEO_LAST_DISCONNECT_TIME, mLastDisconnectTime);
-//        }
-//
-//        public boolean handleOnResume() {
-//            if (mIsShowDialog && !isLiveStreaming()) {
-//                //wait for user's operation
-//                return true;
-//            }
-//            if (!passDisconnectCheck()) {
-//                return true;
-//            }
-//            return false;
-//        }
-//
-//        @Override
-//        public boolean onError(MediaPlayer mp, int what, int extra) {
-//            //if we are showing a dialog, cancel the error dialog
-//            if (mIsShowDialog) {
-//                return true;
-//            }
-//            return false;
-//        }
-//        
-//        public void setVideoInfo(Metadata data) {
-//            if (data.has(Metadata.SERVER_TIMEOUT)) {
-//                mServerTimeout = data.getInt(Metadata.SERVER_TIMEOUT);
-//                if (LOG) {
-//                	QcomLog.v(TAG, "get server timeout from metadata. mServerTimeout=" + mServerTimeout);
-//                }
-//            }
-//        }
-//    }
+    private class ServerTimeoutExtension implements Restorable, MediaPlayer.OnErrorListener {
+        //for cmcc server timeout case 
+        //please remember to clear this value when changed video.
+        private int mServerTimeout = -1;
+        private long mLastDisconnectTime;
+        private boolean mIsShowDialog = false;
+        private AlertDialog mServerTimeoutDialog;
+        
+        //check whether disconnect from server timeout or not.
+        //if timeout, return false. otherwise, return true.
+        private boolean passDisconnectCheck() {
+            if (ExtensionHelper.getMovieStrategy(mActivityContext).shouldEnableServerTimeout()
+                    && !isFullBuffer()) {
+                //record the time disconnect from server
+                long now = System.currentTimeMillis();
+                if (LOG) {
+                	QcomLog.v(TAG, "passDisconnectCheck() now=" + now + ", mLastDisconnectTime=" + mLastDisconnectTime
+                            + ", mServerTimeout=" + mServerTimeout);
+                }
+                if (mServerTimeout > 0 && (now - mLastDisconnectTime) > mServerTimeout) {
+                    //disconnect time more than server timeout, notify user
+                    notifyServerTimeout();
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        private void recordDisconnectTime() {
+            if (ExtensionHelper.getMovieStrategy(mActivityContext).shouldEnableServerTimeout()
+                    && !isFullBuffer()) {
+                //record the time disconnect from server
+                mLastDisconnectTime = System.currentTimeMillis();
+            }
+            if (LOG) {
+            	QcomLog.v(TAG, "recordDisconnectTime() mLastDisconnectTime=" + mLastDisconnectTime);
+            }
+        }
+        
+        private void clearServerInfo() {
+            mServerTimeout = -1;
+        }
+        
+        private void notifyServerTimeout() {
+            if (mServerTimeoutDialog == null) {
+                //for updating last position and duration.
+                if (mVideoCanSeek || mVideoView.canSeekForward()) { 
+                    mVideoView.seekTo(mVideoPosition);
+                }
+                mVideoView.setDuration(mVideoLastDuration);
+                AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext);
+                mServerTimeoutDialog = builder.setTitle(R.string.server_timeout_title)
+                    .setMessage(R.string.server_timeout_message)
+                    .setNegativeButton(android.R.string.cancel, new OnClickListener() {
+    
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (LOG) {
+                            	QcomLog.v(TAG, "NegativeButton.onClick() mIsShowDialog=" + mIsShowDialog);
+                            }
+                            mController.showEnded();
+                            onCompletion();
+                        }
+                        
+                    })
+                    .setPositiveButton(R.string.resume_playing_resume, new OnClickListener() {
+        
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (LOG) {
+                            	QcomLog.v(TAG, "PositiveButton.onClick() mIsShowDialog=" + mIsShowDialog);
+                            }
+                            doStartVideo(true, mVideoPosition, mVideoLastDuration);
+                        }
+                        
+                    })
+                    .create();
+                mServerTimeoutDialog.setOnDismissListener(new OnDismissListener() {
+                        
+                        public void onDismiss(DialogInterface dialog) {
+                            if (LOG) {
+                            	QcomLog.v(TAG, "mServerTimeoutDialog.onDismiss()");
+                            }
+                            mIsShowDialog = false;
+                        }
+                        
+                    });
+                mServerTimeoutDialog.setOnShowListener(new OnShowListener() {
+    
+                        public void onShow(DialogInterface dialog) {
+                            if (LOG) {
+                            	QcomLog.v(TAG, "mServerTimeoutDialog.onShow()");
+                            }
+                            mIsShowDialog = true;
+                        }
+                        
+                    });
+            }
+            mServerTimeoutDialog.show();
+        }
+        
+        private void clearTimeoutDialog() {
+            if (mServerTimeoutDialog != null && mServerTimeoutDialog.isShowing()) {
+                mServerTimeoutDialog.dismiss();
+            }
+            mServerTimeoutDialog = null;
+        }
+
+        @Override
+        public void onRestoreInstanceState(Bundle icicle) {
+            mLastDisconnectTime = icicle.getLong(KEY_VIDEO_LAST_DISCONNECT_TIME);
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            outState.putLong(KEY_VIDEO_LAST_DISCONNECT_TIME, mLastDisconnectTime);
+        }
+
+        public boolean handleOnResume() {
+            if (mIsShowDialog && !isLiveStreaming()) {
+                //wait for user's operation
+                return true;
+            }
+            if (!passDisconnectCheck()) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onError(MediaPlayer mp, int what, int extra) {
+            //if we are showing a dialog, cancel the error dialog
+            if (mIsShowDialog) {
+                return true;
+            }
+            return false;
+        }
+        
+        public void setVideoInfo(Metadata data) {
+            if (data.has(Metadata.SERVER_TIMEOUT)) {
+                mServerTimeout = data.getInt(Metadata.SERVER_TIMEOUT);
+                if (LOG) {
+                	QcomLog.v(TAG, "get server timeout from metadata. mServerTimeout=" + mServerTimeout);
+                }
+            }
+        }
+    }
     
     /// M: fix hardware accelerated issue @{
     private static final int DELAY_REMOVE_MS = 10000;

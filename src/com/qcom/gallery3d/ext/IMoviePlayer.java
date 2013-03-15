@@ -1,14 +1,6 @@
 package com.qcom.gallery3d.ext;
-
-//import android.app.NotificationManagerPlus;
-/**
- * MoviePlayer extension functions interface
- */
-// TODO comments by sunlei
-//public interface IMoviePlayer extends NotificationManagerPlus.OnFirstShowListener, 
-//        NotificationManagerPlus.OnLastDismissListener {
 	
-	public interface IMoviePlayer {
+public interface IMoviePlayer {
     /**
      * add new bookmark Uri.
      */

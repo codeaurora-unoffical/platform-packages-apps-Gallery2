@@ -291,8 +291,6 @@ public class MovieActivity extends Activity {
             mControlResumed = !mPlayer.onPause();
         }
         super.onPause();
-        // TODO comments by sunlei
-//        collapseShareMenu();
         mMovieHooker.onPause();
     }
 
@@ -513,17 +511,6 @@ public class MovieActivity extends Activity {
      * @{
      */
     private MenuItem mShareMenu;
-    // TODO comments by sunlei
-//    private void collapseShareMenu() {
-//        if (mShareMenu != null &&  mShareMenu.getActionView() instanceof ActivityChooserView) {
-//            ActivityChooserView chooserView = (ActivityChooserView)mShareMenu.getActionView();
-//            if (LOG) {
-//            	QcomLog.v(TAG, "collapseShareMenu() chooserView.isShowingPopup()=" + chooserView.isShowingPopup());
-//            }
-//            chooserView.dismissPopup();
-//        }
-//    }
-    /* @} */
     
     /// M: share history file name
     private static final String SHARE_HISTORY_FILE = "video_share_history_file";

@@ -29,8 +29,6 @@ public class MovieItem implements IMovieItem {
     }
     
     public MovieItem(Uri uri, String mimeType, String title) {
-    	// TODO comments by sunlei
-//        this(uri, mimeType, title, MediaStore.Video.Media.STEREO_TYPE_2D);
     	   this(uri, mimeType, title, STREO_TYPE_2D);
     }
     

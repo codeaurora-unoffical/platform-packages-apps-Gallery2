@@ -10,7 +10,7 @@ public class MovieStrategy implements IMovieStrategy {
 
     @Override
     public boolean shouldEnableServerTimeout() {
-        return false;
+        return true;
     }
     
     @Override

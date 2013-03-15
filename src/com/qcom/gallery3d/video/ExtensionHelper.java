@@ -22,30 +22,7 @@ public class ExtensionHelper {
     private static void ensureMovieExtension(final Context context) {
         if (sMovieExtensions == null) {
             sMovieExtensions = new ArrayList<IMovieExtension>();
-//            boolean find = false;
-            
-            // TODO comments by sunlei
-//            final PluginManager<IMovieExtension> pm = PluginManager.<IMovieExtension>create(
-//                    context, IMovieExtension.class.getName());
-//            for (int i = 0, count = pm.getPluginCount(); i < count; i++) {
-//                final Plugin<IMovieExtension> plugin = pm.getPlugin(i);
-//                try {
-//                    final IMovieExtension ext = plugin.createObject();
-//                    if (ext != null) {
-//                        if (LOG) {
-//                            QcomLog.v(TAG, "ensureMovieExtension() plugin[" + i + "]=" + ext);
-//                        }
-//                        sMovieExtensions.add(ext);
-//                        find = true;
-//                    }
-//                } catch (final Plugin.ObjectCreationException e1) {
-//                    //ingore any plugin creation exception.
-//                    QcomLog.w(TAG, "Cannot create plugin object.", e1);
-//                }
-//            }
-//            if (!find) { //add default implemetation
-                sMovieExtensions.add(new MovieExtension(MovieExtension.CMCC_EXTENSION_FUNCTIONS));
-//            }
+            sMovieExtensions.add(new MovieExtension(MovieExtension.CMCC_EXTENSION_FUNCTIONS));
         }
     }
 
@@ -105,15 +82,7 @@ public class ExtensionHelper {
     }
     
     public static IMovieStrategy getMovieStrategy(final Context context) {
-    	// TODO comments by sunlei
-//        ensureMovieExtension(context);
-//        for (final IMovieExtension ext : sMovieExtensions) {
-//            final IMovieStrategy strategy = ext.getMovieStrategy();
-//            if (strategy != null) {
-//                return strategy;
-//            }
-//        }
-        return new MovieStrategy();
+       return  new MovieStrategy();
     }
     
 }
