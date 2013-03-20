@@ -119,4 +119,7 @@
 	<string name="set_buffer_size">设置缓冲大小</string>
 	<string name="set_apn">选择接入优先点</string>
 
+  <string name="media_controller_live">直播</string>
+  <string name="media_controller_playing">正在播放</string>
+   <string name="media_controller_connecting">正在连接...</string>
 </resources>

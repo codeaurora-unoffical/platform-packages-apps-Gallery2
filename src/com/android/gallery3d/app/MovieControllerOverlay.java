@@ -488,10 +488,6 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
             }
             if (percent >= 0 && percent < 100) { // valid value
                 mState = State.BUFFERING;
-             // TODO comments by sunlei
-//                int msgId = com.mediatek.R.string.media_controller_buffering;
-//                String text = String.format(getResources().getString(msgId),
-//                        percent);
                 String text = "media controller buffering";
                 mTimeBar.setInfo(text);
                 showMainView(mLoadingView);
@@ -544,13 +540,12 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
         public void setPlayingInfo(boolean liveStreaming) {
             int msgId;
             // TODO comments by sunlei
-//            if (liveStreaming) {
-//                msgId = com.mediatek.R.string.media_controller_live;
-//            } else {
-//                msgId = com.mediatek.R.string.media_controller_playing;
-//            }
-//           mPlayingInfo = getResources().getString(msgId);
-            mPlayingInfo = "media controller playing or live";
+            if (liveStreaming) {
+                msgId = R.string.media_controller_live;
+            } else {
+                msgId =R.string.media_controller_playing;
+            }
+           mPlayingInfo = getResources().getString(msgId);
             if (LOG) {
             	QcomLog.v(TAG, "setPlayingInfo(" + liveStreaming
                         + ") playingInfo=" + mPlayingInfo);
@@ -630,9 +625,8 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
 
         public void onShowLoading() {
         	// TODO comments by sunlei
-//            int msgId = com.mediatek.R.string.media_controller_connecting;
-//            String text = getResources().getString(msgId);
-            String text = "media controller connecting";
+            int msgId = R.string.media_controller_connecting;
+            String text = getResources().getString(msgId);
             mTimeBar.setInfo(text);
         }
 

@@ -140,4 +140,9 @@
     <string name="set_buffer_size">Set buffer size</string>
     <string name="set_apn">Select prefered apn</string>
     <string name="setting">Settings</string>
+    
+    
+    <string name="media_controller_live">Live</string>
+    <string name="media_controller_playing">Playing</string>
+    <string name="media_controller_connecting">Connecting...</string>
 </resources>
