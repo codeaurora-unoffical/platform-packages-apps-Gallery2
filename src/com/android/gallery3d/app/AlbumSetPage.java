@@ -547,8 +547,12 @@ public class AlbumSetPage extends ActivityState implements
             inflater.inflate(R.menu.albumset, menu);
             boolean wasShowingClusterMenu = mShowClusterMenu;
             mShowClusterMenu = !inAlbum;
+            // When have no AlbumPage and the selected action is CLUSTER_BY_ALBUM,
+            // we will make select menu show "select album", else show "select group".
+            // GalleryActionBar will not update current cluster action until after onResume.
+            // mSelectedAction is updated in onCreate, can identify current action correctly.
             boolean selectAlbums = !inAlbum &&
-                    mActionBar.getClusterTypeAction() == FilterUtils.CLUSTER_BY_ALBUM;
+                    mSelectedAction == FilterUtils.CLUSTER_BY_ALBUM;
             MenuItem selectItem = menu.findItem(R.id.action_select);
             selectItem.setTitle(activity.getString(
                     selectAlbums ? R.string.select_album : R.string.select_group));
