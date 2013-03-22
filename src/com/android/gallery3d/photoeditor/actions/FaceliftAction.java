@@ -18,6 +18,7 @@ package com.android.gallery3d.photoeditor.actions;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 
 import com.android.gallery3d.photoeditor.filters.FaceliftFilter;
 
@@ -27,14 +28,15 @@ import com.android.gallery3d.photoeditor.filters.FaceliftFilter;
 public class FaceliftAction extends EffectAction {
 
     private static final float DEFAULT_SCALE = 0.5f;
+    final FaceliftFilter filter = new FaceliftFilter();
 
     public FaceliftAction(Context context, AttributeSet attrs) {
         super(context, attrs);
+        if (!filter.isEffectExist()) setVisibility(View.GONE);
     }
 
     @Override
     public void prepare() {
-        final FaceliftFilter filter = new FaceliftFilter();
 
         ScaleSeekBar scalePicker = toolKit.addScalePicker(EffectToolKit.ScaleType.GENERIC);
         scalePicker.setOnScaleChangeListener(new ScaleSeekBar.OnScaleChangeListener() {

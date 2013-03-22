@@ -20,16 +20,28 @@ import android.media.effect.Effect;
 
 import com.android.gallery3d.photoeditor.Photo;
 
+import android.media.effect.EffectContext;
+
 /**
  * Facelift filter applied to the image.
  */
 public class FaceliftFilter extends AbstractScaleFilter {
 
     public static final Creator<FaceliftFilter> CREATOR = creatorOf(FaceliftFilter.class);
+    public static boolean isEffectExist = true;
+    public static Effect effect = null;
+    public String effectKey = "com.google.android.media.effect.effects.FaceliftEffect";
+
+    public boolean isEffectExist() {
+        if (effect == null && isEffectExist) {
+            isEffectExist = checkEffectExist(effectKey);
+        }
+        return isEffectExist;
+    }
 
     @Override
     public void process(Photo src, Photo dst) {
-        Effect effect = getEffect("com.google.android.media.effect.effects.FaceliftEffect");
+        effect = getEffect(effectKey);
         effect.setParameter("blend", scale);
         effect.apply(src.texture(), src.width(), src.height(), dst.texture());
     }
