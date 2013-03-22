@@ -20,16 +20,28 @@ import android.media.effect.Effect;
 
 import com.android.gallery3d.photoeditor.Photo;
 
+import android.media.effect.EffectContext;
+
 /**
  * Face tanning filter applied to the image.
  */
 public class FaceTanFilter extends AbstractScaleFilter {
 
     public static final Creator<FaceTanFilter> CREATOR = creatorOf(FaceTanFilter.class);
+    public static boolean isEffectExist = true;
+    public Effect effect = null;
+    public String effectKey = "com.google.android.media.effect.effects.FaceTanningEffect";
+
+    public boolean isEffectExist() {
+        if (effect == null && isEffectExist) {
+            isEffectExist = checkEffectExist(effectKey);
+        }
+        return isEffectExist;
+    }
 
     @Override
     public void process(Photo src, Photo dst) {
-        Effect effect = getEffect("com.google.android.media.effect.effects.FaceTanningEffect");
+        effect = getEffect(effectKey);
         effect.setParameter("blend", scale);
         effect.apply(src.texture(), src.width(), src.height(), dst.texture());
     }

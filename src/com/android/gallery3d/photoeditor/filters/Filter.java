@@ -107,4 +107,15 @@ public abstract class Filter implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         writeToParcel(dest);
     }
+
+    public boolean checkEffectExist(String effect) {
+        try {
+            EffectContext.createWithCurrentGlContext().getFactory().createEffect(effect);
+        } catch (java.lang.IllegalArgumentException ex) {
+            return false;
+        } catch (Exception ex) {
+            // ignore other
+        }
+        return true;
+    }
 }

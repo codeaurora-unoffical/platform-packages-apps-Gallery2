@@ -38,7 +38,9 @@
             android:text="@string/redeye"
             style="@style/EffectLabel"/>
     </com.android.gallery3d.photoeditor.actions.RedEyeAction>
-    <com.android.gallery3d.photoeditor.actions.FaceliftAction style="@style/Effect">
+    <com.android.gallery3d.photoeditor.actions.FaceliftAction
+        android:id="@+id/effect_facelift"
+        style="@style/Effect">
         <ImageView
             style="@style/EffectIcon"
             android:src="@drawable/photoeditor_effect_facelift"/>
@@ -47,7 +49,9 @@
             android:text="@string/facelift"
             style="@style/EffectLabel"/>
     </com.android.gallery3d.photoeditor.actions.FaceliftAction>
-    <com.android.gallery3d.photoeditor.actions.FaceTanAction style="@style/Effect">
+    <com.android.gallery3d.photoeditor.actions.FaceTanAction
+        android:id="@+id/effect_facetan"
+        style="@style/Effect">
         <ImageView
             style="@style/EffectIcon"
             android:src="@drawable/photoeditor_effect_facetan"/>
