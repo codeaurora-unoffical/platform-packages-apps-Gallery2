@@ -32,6 +32,8 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -147,6 +149,9 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
     private LoadBitmapTask mLoadBitmapTask;
     private ImageSmallFilter mNullFxFilter;
     private ImageSmallFilter mNullBorderFilter;
+    //p9203-252 wss: toast in ui thread.
+    public static final int MSG_LOAD_FAILED = 0;
+    private Handler mHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -401,6 +406,15 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
         } else if (action.equalsIgnoreCase(TINY_PLANET_ACTION)) {
             mPanelController.showComponent(findViewById(R.id.tinyplanetButton));
         }
+        //p9203-252 wss: toast in ui thread.
+        mHandler = new Handler(){
+        	@Override
+        	public void handleMessage(Message msg){
+        		if(msg.what == MSG_LOAD_FAILED){
+        			loadFailed();
+        		}
+        	}
+        };        
     }
 
     private void startLoadBitmap(Uri uri) {
@@ -927,12 +941,16 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
             saveImage();
         }
     }
-
-    public void cannotLoadImage() {
-        CharSequence text = getString(R.string.cannot_load_image);
+    //p9203-252 wss: toast in ui thread.
+    private void loadFailed(){
+    	CharSequence text = getString(R.string.cannot_load_image);
         Toast toast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
         toast.show();
         finish();
+    }
+
+    public void cannotLoadImage() {
+        mHandler.sendEmptyMessage(MSG_LOAD_FAILED); 
     }
 
     // //////////////////////////////////////////////////////////////////////////////

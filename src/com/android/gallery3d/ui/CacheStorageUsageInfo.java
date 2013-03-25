@@ -54,10 +54,8 @@ public class CacheStorageUsageInfo {
     }
 
     public void loadStorageInfo(JobContext jc) {
-        File cacheDir = mContext.getExternalCacheDir();
-        if (cacheDir == null) {
-            cacheDir = mContext.getCacheDir();
-        }
+    	//wss support for phone storage
+        File cacheDir = mContext.getCacheDir();
 
         String path = cacheDir.getAbsolutePath();
         StatFs stat = new StatFs(path);
