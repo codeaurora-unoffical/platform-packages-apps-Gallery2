@@ -47,7 +47,6 @@ public class PortDialog extends AlertDialog implements TextWatcher,
     private static final int ERROR_MAX_INVALID = 2;
     private static final int ERROR_MIN_INVALID = 3;
 
-    // TODO comments by sunlei
 //    private static final String SETTING_KEY_MAX_PORT = MediaStore.Streaming.Setting.MAX_UDP_PORT;
 //    private static final String SETTING_KEY_MIN_PORT = MediaStore.Streaming.Setting.MIN_UDP_PORT;
     private static final String SETTING_KEY_MAX_PORT = "SETTING_KEY_MAX_PORT";

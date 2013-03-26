@@ -276,7 +276,6 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
                 } else if (mState == State.PAUSED || mState == State.PLAYING) {
                     mListener.onPlayPause();
                     //set view disabled (play/pause asynchronous processing)
-                     // TODO modify by sunlei
                     setViewEnabled(true);
                 }
             }
@@ -526,9 +525,7 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
         public void showReconnectingError() {
             clearBuffering();
             mState = State.RETRY_CONNECTING_ERROR;
-         // TODO comments by sunlei
-//            int msgId = com.mediatek.R.string.VideoView_error_text_cannot_connect_to_server;
-//            String text = getResources().getString(msgId);
+
             String text = "can not connect to server";
             mTimeBar.setInfo(text);
             showMainView(mPlayPauseReplayView);
@@ -539,7 +536,7 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
 
         public void setPlayingInfo(boolean liveStreaming) {
             int msgId;
-            // TODO comments by sunlei
+            // TODO 
             if (liveStreaming) {
                 msgId = R.string.media_controller_live;
             } else {
@@ -624,7 +621,7 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
         }
 
         public void onShowLoading() {
-        	// TODO comments by sunlei
+        	// TODO 
             int msgId = R.string.media_controller_connecting;
             String text = getResources().getString(msgId);
             mTimeBar.setInfo(text);

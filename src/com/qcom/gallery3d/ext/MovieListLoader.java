@@ -63,9 +63,6 @@ public class MovieListLoader implements IMovieListLoader {
         private static final String TAG = "MovieListFetcherTask";
         private static final boolean LOG = true;
         
-        // TODO comments by sunlei
-//        public static final String COLUMN_STEREO_TYPE = MediaStore.Video.Media.STEREO_TYPE;
-//        public static final String COLUMN_STEREO_TYPE = "STEREO_TYPE";
         
         private final ContentResolver mCr;
         private final LoaderListener mFetecherListener;

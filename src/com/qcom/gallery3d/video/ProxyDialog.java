@@ -75,13 +75,11 @@ public class ProxyDialog extends AlertDialog implements TextWatcher,
         mCr = mContext.getContentResolver();
         mType = type;
         if (mType == TYPE_RTSP) {
-        	// TODO comments by sunlei
 //            mSettingKeyProxyHost = MediaStore.Streaming.Setting.RTSP_PROXY_HOST;
 //            mSettingKeyProxyPort = MediaStore.Streaming.Setting.RTSP_PROXY_PORT;
             mSettingKeyProxyHost = "mSettingKeyProxyHost";
             mSettingKeyProxyPort = "mSettingKeyProxyPort";
         } else if (mType == TYPE_HTTP) {
-        	// TODO comments by sunlei
 //            mSettingKeyProxyHost = MediaStore.Streaming.Setting.HTTP_PROXY_HOST;
 //            mSettingKeyProxyPort = MediaStore.Streaming.Setting.HTTP_PROXY_PORT;
         	 mSettingKeyProxyHost = "mSettingKeyProxyHost";

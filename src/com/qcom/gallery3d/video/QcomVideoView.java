@@ -62,7 +62,6 @@ public class QcomVideoView extends VideoView implements ScreenModeListener {
             if (mOnInfoListener != null && mOnInfoListener.onInfo(mp, what, extra)) {
                 return true;
             } else {
-            	// TODO comments by sunlei
 //                if (what == MediaPlayer.MEDIA_INFO_METADATA_CHECK_COMPLETE) {
 //                    mHasGotMetaData = true;
 //                    doPreparedIfReady(mMediaPlayer);
@@ -169,7 +168,7 @@ public class QcomVideoView extends VideoView implements ScreenModeListener {
                     final Resources r = mContext.getResources();
                     int messageId;
                     
-                    // TODO comments by sunlei
+                    // TODO 
 //                    if (frameworkErr == MediaPlayer.MEDIA_ERROR_BAD_FILE) {
 //                        messageId = com.mediatek.R.string.VideoView_error_text_bad_file;
 //                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_CANNOT_CONNECT_TO_SERVER) {

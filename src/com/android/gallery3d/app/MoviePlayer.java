@@ -354,7 +354,6 @@ public class MoviePlayer implements
         
         long end2 = System.currentTimeMillis();
         mOverlayExt.clearBuffering();//to end buffer state
-        // TODO comments by sunlei
         mServerTimeoutExt.recordDisconnectTime();
         if (LOG) {
         	QcomLog.v(TAG, "doOnPause() save video info consume:" + (end1 - start));
@@ -374,7 +373,7 @@ public class MoviePlayer implements
             mVideoView.postDelayed(mDelayVideoRunnable, BLACK_TIMEOUT);
             /// @}
             
-            // TODO comments by sunlei
+
             if (mServerTimeoutExt.handleOnResume() || mIsShowResumingDialog) {
                 mHasPaused = false;
                 return;
@@ -427,7 +426,7 @@ public class MoviePlayer implements
     public void onDestroy() {
         mVideoView.stopPlayback();
         mAudioBecomingNoisyReceiver.unregister();
-        // TODO comments by sunlei
+        // TODO 
         mServerTimeoutExt.clearTimeoutDialog();
     }
 
@@ -529,7 +528,7 @@ public class MoviePlayer implements
         }
         mMovieItem.setError();
         
-        // TODO comments by sunlei
+        // TODO 
         if (mServerTimeoutExt.onError(player, arg1, arg2)) {
             return true;
         }
@@ -573,12 +572,10 @@ public class MoviePlayer implements
     // Below are notifications from ControllerOverlay
     @Override
     public void onPlayPause() {
-    QcomLog.v(TAG, "onPlayPause == sunlei");
         if (mVideoView.isPlaying()) {
             if (mVideoView.canPause()) {
                 pauseVideo();
                 //set view disabled(play/pause asynchronous processing)
-                // TODO modify by sunlei
                 mController.setViewEnabled(true);
                 if (mControllerRewindAndForwardExt != null) {
                     mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
@@ -588,7 +585,6 @@ public class MoviePlayer implements
         } else {
             playVideo();
             //set view disabled(play/pause asynchronous processing)
-             // TODO modify by sunlei
             mController.setViewEnabled(true);
             if (mControllerRewindAndForwardExt != null) {
                 mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
@@ -645,7 +641,7 @@ public class MoviePlayer implements
         showSystemUi(false);
         removeBackground();
     }
-    // TODO comments by sunlei
+    // TODO
 //    @Override
     public boolean onIsRTSP() {
         if (MovieUtils.isRtspStreaming(mMovieItem.getUri(), mMovieItem
@@ -811,7 +807,7 @@ public class MoviePlayer implements
     private void onSaveInstanceStateMore(Bundle outState) {
         //for more details
     	
-    	// TODO comments by sunlei
+    	// TODO 
         mServerTimeoutExt.onSaveInstanceState(outState);
         outState.putInt(KEY_VIDEO_LAST_DURATION, mVideoLastDuration);
         outState.putBoolean(KEY_VIDEO_CAN_PAUSE, mVideoView.canPause());
@@ -834,7 +830,7 @@ public class MoviePlayer implements
         mTState = TState.valueOf(icicle.getString(KEY_VIDEO_STATE));
         
         mScreenModeExt.onRestoreInstanceState(icicle);
-     // TODO comments by sunlei
+     // TODO 
         mServerTimeoutExt.onRestoreInstanceState(icicle);
         mRetryExt.onRestoreInstanceState(icicle);
         mPlayerExt.onRestoreInstanceState(icicle);
@@ -849,7 +845,7 @@ public class MoviePlayer implements
         mVideoLastDuration = 0;
         mIsOnlyAudio = false;
  
-     // TODO comments by sunlei
+     // TODO 
         if (mServerTimeoutExt != null) {
             mServerTimeoutExt.clearServerInfo();
         }
@@ -858,18 +854,18 @@ public class MoviePlayer implements
     private void getVideoInfo(MediaPlayer mp) {
         if (!MovieUtils.isLocalFile(mMovieItem.getUri(), mMovieItem.getMimeType())) {
         	
-        	// TODO comments by sunlei
+        	// TODO 
             Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
                     MediaPlayer.BYPASS_METADATA_FILTER);
             if (data != null) {
-            	// TODO comments by sunlei
+            	// TODO 
                 mServerTimeoutExt.setVideoInfo(data);
                // mPlayerExt.setVideoInfo(data);
             } else {
             	QcomLog.w(TAG, "Metadata is null!");
             }
             int duration = mp.getDuration();
- // TODO comments by sunlei: seems there is no need check again,mp.getDuration maybe 0
+ // TODO  seems there is no need check again,mp.getDuration maybe 0
 /*
            
             if (duration <= 0) {
@@ -919,7 +915,7 @@ public class MoviePlayer implements
         if (mRetryExt.onInfo(mp, what, extra)) {
             return true;
         }
-        // TODO comments by sunlei
+        // TODO
 //        if (mFirstBePlayed && what == MediaPlayer.MEDIA_INFO_VIDEO_NOT_SUPPORTED) {
 //            Toast.makeText(mActivityContext, R.string.VideoView_info_text_video_not_supported, Toast.LENGTH_SHORT).show();
 //            mFirstBePlayed = false;
@@ -1045,7 +1041,6 @@ public class MoviePlayer implements
     private IMovieItem mMovieItem;
     private RetryExtension mRetryExt = new RetryExtension();
     private ScreenModeExt mScreenModeExt = new ScreenModeExt();
-    // TODO comments by sunlei
     private ServerTimeoutExtension mServerTimeoutExt = new ServerTimeoutExtension();
     private MoviePlayerExtension mPlayerExt = new MoviePlayerExtension();
     private IContrllerOverlayExt mOverlayExt;
@@ -1117,7 +1112,6 @@ public class MoviePlayer implements
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) {
         	
-        	// TODO comments by sunlei
 //            if (what == MediaPlayer.MEDIA_ERROR_CANNOT_CONNECT_TO_SERVER) {
 //                //get the last position for retry
 //                mRetryPosition = mVideoView.getCurrentPosition();
@@ -1138,7 +1132,6 @@ public class MoviePlayer implements
         @Override
         public boolean onInfo(MediaPlayer mp, int what, int extra) {
         	
-        	// TODO comments by sunlei
 //            if (what == MediaPlayer.MEDIA_INFO_GET_BUFFER_DATA) {
 //                //this means streaming player has got the display data
 //                //so we can retry connect server if it has connection error.
@@ -1451,7 +1444,6 @@ public class MoviePlayer implements
         public void onSaveInstanceState(Bundle outState) {
             outState.putBoolean(KEY_VIDEO_IS_LOOP, mIsLoop);
         }
-        // TODO comments by sunlei
 //
 //        @Override
 //        public void onFirstShow(DialogInterface dialog) {
@@ -1500,7 +1492,7 @@ public class MoviePlayer implements
             return mPauseBuffering;
         }
         
-        // TODO comments by sunlei
+
 //        public void setVideoInfo(Metadata data) {
 //            if (data.has(Metadata.TITLE)) {
 //                mTitle = data.getString(Metadata.TITLE);
@@ -1515,7 +1507,6 @@ public class MoviePlayer implements
     };
     
     
-    // comments by sunlei
     private class ServerTimeoutExtension implements Restorable, MediaPlayer.OnErrorListener {
         //for cmcc server timeout case 
         //please remember to clear this value when changed video.
