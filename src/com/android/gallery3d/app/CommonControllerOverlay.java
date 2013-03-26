@@ -41,15 +41,18 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
         OnClickListener,
         TimeBar.Listener {
 
-    protected enum State {
+    public enum State {
         PLAYING,
         PAUSED,
         ENDED,
         ERROR,
-        LOADING
+        LOADING,//mean connecting
+        BUFFERING,
+        RETRY_CONNECTING,
+        RETRY_CONNECTING_ERROR
     }
 
-    private static final float ERROR_MESSAGE_RELATIVE_PADDING = 1.0f / 6;
+    protected static final float ERROR_MESSAGE_RELATIVE_PADDING = 1.0f / 6;
 
     protected Listener mListener;
 
@@ -90,13 +93,13 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
         ProgressBar spinner = new ProgressBar(context);
         spinner.setIndeterminate(true);
         mLoadingView.addView(spinner, wrapContent);
-        TextView loadingText = createOverlayTextView(context);
-        loadingText.setText(R.string.loading_video);
-        mLoadingView.addView(loadingText, wrapContent);
+     // / M: mark it for qcom info feature.
+//        TextView loadingText = createOverlayTextView(context);
+//        loadingText.setText(R.string.loading_video);
+//        mLoadingView.addView(loadingText, wrapContent);
         addView(mLoadingView, wrapContent);
 
         mPlayPauseReplayView = new ImageView(context);
-        mPlayPauseReplayView.setImageResource(R.drawable.ic_vidcontrol_play);
         mPlayPauseReplayView.setBackgroundResource(R.drawable.bg_vidcontrol);
         mPlayPauseReplayView.setScaleType(ScaleType.CENTER);
         mPlayPauseReplayView.setFocusable(true);
@@ -111,7 +114,8 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
                 new RelativeLayout.LayoutParams(
                         LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         setLayoutParams(params);
-        hide();
+        
+        //hide();
     }
 
     abstract protected void createTimeBar(Context context);
@@ -244,7 +248,7 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
     // | Navigation Bar | insets.bottom
     // +-----------------+/
     // Please see View.fitSystemWindows() for more details.
-    private final Rect mWindowInsets = new Rect();
+    protected final Rect mWindowInsets = new Rect();
 
     @Override
     protected boolean fitSystemWindows(Rect insets) {
@@ -286,7 +290,7 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
         }
     }
 
-    private void layoutCenteredView(View view, int l, int t, int r, int b) {
+    protected void layoutCenteredView(View view, int l, int t, int r, int b) {
         int cw = view.getMeasuredWidth();
         int ch = view.getMeasuredHeight();
         int cl = (r - l - cw) / 2;
