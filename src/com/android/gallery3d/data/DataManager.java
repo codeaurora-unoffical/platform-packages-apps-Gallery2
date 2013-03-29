@@ -17,8 +17,10 @@
 package com.android.gallery3d.data;
 
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
+import android.provider.MediaStore.Images;
 
 import com.android.gallery3d.app.GalleryApp;
 import com.android.gallery3d.app.StitchingChangeListener;
@@ -274,6 +276,39 @@ public class DataManager implements StitchingChangeListener {
             if (path != null) return path;
         }
         return null;
+    }
+    /**
+     * wss add support for "file://" 
+     * filePath as file:///mnt/sdcard/Pictures/00087_popped_1920x1200.jpg
+     * @param filePath
+     * @return
+     */
+    public Path findPathByFile(String filePath, String type){
+    	if(filePath==null){
+    		return null;
+    	}
+    	Cursor resultCursor =null;
+    	try{
+    			resultCursor=mApplication.getContentResolver().query(
+    			Images.Media.EXTERNAL_CONTENT_URI, new String[]{"_id"}, " _data=?", new String[]{filePath}, null);
+    			if(resultCursor.getCount()>0){
+    				resultCursor.moveToNext();
+    				int  mediaID = resultCursor.getInt(0);
+    				Uri targetUri =Uri.withAppendedPath(Images.Media.EXTERNAL_CONTENT_URI, mediaID+"");
+    				return findPathByUri(targetUri,type);
+    			}else{
+    				return null;
+    			}
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}finally{
+    		if(resultCursor!=null){
+    			resultCursor.close();
+    			resultCursor=null;
+    		}
+    	}
+    	
+    	return null;
     }
 
     public Path getDefaultSetOf(Path item) {
