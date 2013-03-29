@@ -202,7 +202,13 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
                     startDefaultPage();
                 }
             } else {
-                Path itemPath = dm.findPathByUri(uri, contentType);
+            	//wss add support for "file://" 
+            	Path itemPath = null;
+				if (uri.getScheme().equals("file")) {
+					itemPath = dm.findPathByFile(uri.getPath(),contentType);
+				} else {
+					itemPath = dm.findPathByUri(uri, contentType);
+				}
                 Path albumPath = dm.getDefaultSetOf(itemPath);
 
                 data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, itemPath.toString());
