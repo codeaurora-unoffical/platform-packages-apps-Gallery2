@@ -46,7 +46,7 @@ public class OrientationManager implements OrientationSource {
     // The degrees of the device rotated clockwise from its natural orientation.
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     // If the framework orientation is locked.
-    private boolean mOrientationLocked = false;
+    private boolean mOrientationLocked = true;
     // The orientation compensation: if the framwork orientation is locked, the
     // device orientation and the framework orientation may be different, so we
     // need to rotate the UI. For example, if this value is 90, the UI
