@@ -595,7 +595,9 @@ public class QcomVideoView extends VideoView implements ScreenModeListener {
             //we should remember this position for retry
             position = mSeekWhenPrepared;
         ///M: if player not started, getCurrentPosition() will lead to NE.
-        } else if (isInPlaybackState() && mCurrentState != STATE_PREPARED) {
+        } else if (isInPlaybackState()) {
+        
+        
             position = mMediaPlayer.getCurrentPosition();
         }
         if (LOG) {
@@ -665,7 +667,14 @@ public class QcomVideoView extends VideoView implements ScreenModeListener {
             if (mDuration > 0) {
                 return mDuration;
             }
-            mDuration = mMediaPlayer.getDuration();
+	    // in case the duration is zero or smaller than zero for streaming video
+	    int tempDuration =  mMediaPlayer.getDuration();
+	    if(tempDuration <= 0){
+		 return mDuration;
+	    } else {
+	        mDuration = tempDuration;
+	    }
+			
             return mDuration;
         }
         //mDuration = -1;

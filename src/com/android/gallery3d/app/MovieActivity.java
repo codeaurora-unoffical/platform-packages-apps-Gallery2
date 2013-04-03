@@ -331,6 +331,7 @@ public class MovieActivity extends Activity {
 
     @Override
     public void onDestroy() {
+    QcomLog.v(TAG, "onDestroy() ");
         mPlayer.onDestroy();
         super.onDestroy();
         mMovieHooker.onDestroy();
