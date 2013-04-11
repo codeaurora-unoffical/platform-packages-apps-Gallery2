@@ -57,6 +57,7 @@ import com.android.gallery3d.ui.SlotView;
 import com.android.gallery3d.ui.SynchronizedHandler;
 import com.android.gallery3d.util.Future;
 import com.android.gallery3d.util.GalleryUtils;
+import com.android.gallery3d.util.GalleryUtils.XCloudManager;
 import com.android.gallery3d.util.HelpUtils;
 
 import java.lang.ref.WeakReference;
@@ -568,6 +569,9 @@ public class AlbumSetPage extends ActivityState implements
             helpItem.setVisible(helpIntent != null);
             if (helpIntent != null) helpItem.setIntent(helpIntent);
 
+            // Add for Baidu xCloud Feature
+            XCloudManager.getInstance().updateMenuState(menu, activity);
+
             mActionBar.setTitle(mTitle);
             mActionBar.setSubtitle(mSubtitle);
             if (mShowClusterMenu != wasShowingClusterMenu) {
@@ -582,8 +586,20 @@ public class AlbumSetPage extends ActivityState implements
     }
 
     @Override
+    protected boolean onPrepareOptionsMenu(Menu menu) {
+        // Add for Baidu xCloud Feature
+        XCloudManager.getInstance().updateMenuState(menu, (Activity)mActivity);
+        return true;
+    }
+
+    @Override
     protected boolean onItemSelected(MenuItem item) {
         Activity activity = mActivity;
+
+        // Add for Baidu xCloud Feature
+        if (XCloudManager.getInstance().handleXCouldRelatedMenuItem(item, activity))
+            return true;
+
         switch (item.getItemId()) {
             case R.id.action_cancel:
                 activity.setResult(Activity.RESULT_CANCELED);

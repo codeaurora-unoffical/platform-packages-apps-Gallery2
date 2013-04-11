@@ -262,6 +262,10 @@ abstract public class ActivityState {
         return true;
     }
 
+    protected boolean onPrepareOptionsMenu(Menu menu) {
+        return true;
+    }
+
     protected boolean onItemSelected(MenuItem item) {
         return false;
     }
