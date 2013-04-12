@@ -401,12 +401,37 @@ public class GLRootView extends GLSurfaceView
         }
     }
 
+    private Boolean isReverse = false;
+    private Boolean isLandscape = false;
+
+    public void setReverse(Boolean reverse) {
+        isReverse = reverse;
+    }
+
+    public void setLandscape(Boolean landscape) {
+        isLandscape = landscape;
+    }
+
     private void rotateCanvas(int degrees) {
+        if (isReverse) degrees += 180;
+        degrees = degrees % 360;
+
         if (degrees == 0) return;
         int w = getWidth();
         int h = getHeight();
         int cx = w / 2;
         int cy = h / 2;
+
+        if (isReverse) {
+            if (isLandscape) {
+                cx = w * 2 / 5;
+                cy = h / 2;
+            } else {
+                cx = w / 2;
+                cy =h * 2 / 5;
+            }
+        }
+
         mCanvas.translate(cx, cy);
         mCanvas.rotate(degrees, 0, 0, 1);
         if (degrees % 180 != 0) {
