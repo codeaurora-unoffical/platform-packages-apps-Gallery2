@@ -26,6 +26,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -209,15 +210,25 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
 				} else {
 					itemPath = dm.findPathByUri(uri, contentType);
 				}
-                Path albumPath = dm.getDefaultSetOf(itemPath);
-
-                data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, itemPath.toString());
-
-                // TODO: Make the parameter "SingleItemOnly" public so other
-                //       activities can reference it.
-                boolean singleItemOnly = (albumPath == null)
-                        || intent.getBooleanExtra("SingleItemOnly", false);
-                if (!singleItemOnly) {
+				//wss item may be single & "file://",can't find path by findPathByFile()
+				if(itemPath == null){
+					itemPath = dm.findPathByUri(uri, contentType);
+				}
+				if(itemPath == null){
+					Toast.makeText(this,
+                            R.string.no_such_item, Toast.LENGTH_LONG).show();
+					finish();
+				}
+				//wss item may be single,exception may be cast 
+                Path albumPath = null;
+				try {
+					albumPath = dm.getDefaultSetOf(itemPath);
+				} catch (Exception e) {
+					e.printStackTrace();
+                }
+                // TODO: Make this parameter public so other activities can reference it.
+                boolean singleItemOnly = intent.getBooleanExtra("SingleItemOnly", false);
+                if (!singleItemOnly && (albumPath != null)) {
                     data.putString(PhotoPage.KEY_MEDIA_SET_PATH, albumPath.toString());
                     // when FLAG_ACTIVITY_NEW_TASK is set, (e.g. when intent is fired
                     // from notification), back button should behave the same as up button
@@ -227,6 +238,9 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
                         data.putBoolean(PhotoPage.KEY_TREAT_BACK_AS_UP, true);
                     }
                 }
+                //wss add data for single item
+				data.putBoolean("SingleItemOnly", singleItemOnly);
+                data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, itemPath.toString());
 
                 getStateManager().startState(PhotoPage.class, data);
             }
