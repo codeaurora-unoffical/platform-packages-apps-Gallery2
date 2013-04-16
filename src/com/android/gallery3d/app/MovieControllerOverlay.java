@@ -452,6 +452,11 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
         }
     }
 
+    public void setDefaultScreenMode()
+    {
+        mScreenModeManager.setScreenMode(ScreenModeManager.SCREENMODE_BIGSCREEN);
+    }
+
     public IContrllerOverlayExt getOverlayExt() {
         return mOverlayExt;
     }
