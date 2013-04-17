@@ -44,6 +44,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ShareActionProvider;
+import android.content.res.Configuration;
+
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.ApiHelper;
@@ -155,36 +157,6 @@ public class MovieActivity extends Activity {
         /// M: show title for video playback
         actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_TITLE);
 
-//        String title = intent.getStringExtra(Intent.EXTRA_TITLE);
-//        if (title != null) {
-//            actionBar.setTitle(title);
-//        } else {
-//            enhanceActionBar();
-            /*// Displays the filename as title, reading the filename from the
-            // interface: {@link android.provider.OpenableColumns#DISPLAY_NAME}.
-            AsyncQueryHandler queryHandler =
-                    new AsyncQueryHandler(getContentResolver()) {
-                @Override
-                protected void onQueryComplete(int token, Object cookie,
-                        Cursor cursor) {
-                    try {
-                        if ((cursor != null) && cursor.moveToFirst()) {
-                            String displayName = cursor.getString(0);
-
-                            // Just show empty title if other apps don't set
-                            // DISPLAY_NAME
-                            actionBar.setTitle((displayName == null) ? "" :
-                                    displayName);
-                        }
-                    } finally {
-                        Utils.closeSilently(cursor);
-                    }
-                }
-            };
-            queryHandler.startQuery(0, null, mUri,
-                    new String[] {OpenableColumns.DISPLAY_NAME}, null, null,
-                    null);*/
-//        }
         if (LOG) {
         	QcomLog.v(TAG, "initializeActionBar() mMovieInfo=" + mMovieItem);
         }
@@ -323,6 +295,18 @@ public class MovieActivity extends Activity {
         }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+		
+        if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+	    mPlayer.setDefaultScreenMode();
+			
+        } else if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            mPlayer.setDefaultScreenMode();
+        }
+
+    }
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
