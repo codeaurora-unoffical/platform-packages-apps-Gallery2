@@ -30,7 +30,11 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS"/>
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
 
     <supports-screens android:smallScreens="false"
             android:normalScreens="true" android:largeScreens="true"
@@ -46,6 +50,11 @@
         <activity android:name="com.android.gallery3d.app.MovieActivity"
                 android:label="@string/movie_view_label"
                 android:configChanges="orientation|keyboardHidden|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -86,6 +95,10 @@
                 <data android:mimeType="application/vnd.apple.mpegurl" />
                 <data android:mimeType="application/x-mpegurl" />
              </intent-filter>
+        </activity>
+        <activity android:name="com.qcom.gallery3d.video.VideoSettingsActivity"
+                android:label="@string/movie_view_label"
+                android:configChanges="orientation|keyboardHidden|screenSize|mnc|mcc">
         </activity>
 
         <activity android:name="com.android.gallery3d.app.Gallery" android:label="@string/app_name"
@@ -410,5 +423,32 @@
         <activity android:name="com.android.camera.ProxyLauncher"
                 android:theme="@style/Theme.ProxyLauncher">
         </activity>
+	<activity android:name="com.qcom.gallery3d.video.BookmarkActivity"
+            android:label="@string/bookmark_list"
+            android:icon="@drawable/ic_menu_display_bookmark"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@android:style/Theme.Holo"
+            >
+            <intent-filter>
+               <action android:name="com.qcom.bookmark.VIEW" />
+               <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+<activity android:name="com.qcom.gallery3d.video.SettingsActivity"
+	        android:label="@string/streaming_settings"
+	        android:configChanges="keyboardHidden|orientation|screenSize"
+	        >
+	        <intent-filter>
+	           <action android:name="com.qcom.settings.streaming" />
+	           <action android:name="android.intent.action.MAIN" />
+	           <category android:name="android.intent.category.DEFAULT" />
+	        </intent-filter>
+	    </activity>
+	      <receiver android:name="com.qcom.gallery3d.video.DmReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="streaming.action.WRITE_SETTINGS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
