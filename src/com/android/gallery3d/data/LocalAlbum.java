@@ -49,7 +49,7 @@ public class LocalAlbum extends MediaSet {
     private final GalleryApp mApplication;
     private final ContentResolver mResolver;
     private final int mBucketId;
-    private final String mName;
+    private String mName;
     private final boolean mIsImage;
     private final ChangeNotifier mNotifier;
     private final Path mItemPath;
@@ -245,6 +245,7 @@ public class LocalAlbum extends MediaSet {
 
     @Override
     public String getName() {
+        mName = getLocalizedName(mApplication.getResources(), mBucketId, mName);
         return mName;
     }
 

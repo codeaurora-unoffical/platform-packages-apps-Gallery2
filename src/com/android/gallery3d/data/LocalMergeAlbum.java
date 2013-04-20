@@ -111,6 +111,7 @@ public class LocalMergeAlbum extends MediaSet implements ContentListener {
 
     @Override
     public String getName() {
+        mName = mSources.length == 0 ? "" : mSources[0].getName();
         return mName;
     }
 
