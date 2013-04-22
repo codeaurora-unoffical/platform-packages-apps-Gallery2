@@ -340,6 +340,9 @@ public class PhotoView extends GLView {
                             numberOfPictures--;
                         }
                     }
+                    if (numberOfPictures <= 0) {
+                        switchWithCaptureAnimation(-1);
+                    }
                     showUndoBar(numberOfPictures <= 1);
                     break;
                 }
