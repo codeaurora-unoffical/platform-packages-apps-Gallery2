@@ -47,6 +47,7 @@ public class OrientationManager implements OrientationSource {
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     // If the framework orientation is locked.
     private boolean mOrientationLocked = true;
+    private boolean isOrientationLockeEnable = false;
     // The orientation compensation: if the framwork orientation is locked, the
     // device orientation and the framework orientation may be different, so we
     // need to rotate the UI. For example, if this value is 90, the UI
@@ -97,6 +98,7 @@ public class OrientationManager implements OrientationSource {
 
     // Lock the framework orientation to the current device orientation
     public void lockOrientation() {
+        if (!isOrientationLockeEnable) return;
         if (mOrientationLocked) return;
         mOrientationLocked = true;
         if (mActivity.getResources().getConfiguration().orientation
