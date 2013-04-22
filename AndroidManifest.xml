@@ -319,6 +319,7 @@
                 android:taskAffinity="com.android.camera"
                 android:label="@string/pano_dialog_title"
                 android:theme="@style/ThemeCamera"
+                android:screenOrientation="landscape"
                 android:configChanges="orientation|screenSize|keyboardHidden"
                 android:clearTaskOnLaunch="true"
                 android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
