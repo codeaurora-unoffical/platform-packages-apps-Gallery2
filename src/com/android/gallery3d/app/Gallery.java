@@ -51,7 +51,7 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
     public static final String KEY_TYPE_BITS = "type-bits";
     public static final String KEY_MEDIA_TYPES = "mediaTypes";
     public static final String KEY_DISMISS_KEYGUARD = "dismiss-keyguard";
-
+    public static final String INTENT_ACTION_VIDEO_GALLERY = "video_gallery";
     private static final String TAG = "Gallery";
     private Dialog mVersionCheckDialog;
 
@@ -95,7 +95,9 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
         } else if (Intent.ACTION_VIEW.equalsIgnoreCase(action)
                 || ACTION_REVIEW.equalsIgnoreCase(action)){
             startViewAction(intent);
-        } else {
+        } else if (INTENT_ACTION_VIDEO_GALLERY.equals(action)) {
+            startVideoGallery(intent);// add video interface
+        }else {
             startDefaultPage();
         }
     }
@@ -122,6 +124,22 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
         data.putString(AlbumSetPage.KEY_MEDIA_PATH,
                 getDataManager().getTopSetPath(typeBits));
         getStateManager().startState(AlbumSetPage.class, data);
+    }
+
+   // add video interface
+   private void startVideoGallery(Intent intent) {
+		Bundle data = intent.getExtras() != null ? new Bundle(
+				intent.getExtras()) : new Bundle();
+		int typeBits = GalleryUtils.determineTypeBits(this, intent);
+		data.putInt(KEY_TYPE_BITS, typeBits);
+		data.putString(AlbumSetPage.KEY_MEDIA_PATH, getDataManager()
+				.getTopSetPath(typeBits));
+		data.putBoolean(INTENT_ACTION_VIDEO_GALLERY, true);
+		getStateManager().startState(AlbumSetPage.class, data);
+        mVersionCheckDialog = PicasaSource.getVersionCheckDialog(this);
+        if (mVersionCheckDialog != null) {
+            mVersionCheckDialog.setOnCancelListener(this);
+        }
     }
 
     private String getContentType(Intent intent) {

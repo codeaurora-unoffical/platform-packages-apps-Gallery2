@@ -55,6 +55,15 @@ public class GalleryActionBar implements OnNavigationListener {
     private int mCurrentIndex;
     private ClusterAdapter mAdapter = new ClusterAdapter();
 
+    // add content to mark the entry
+    private boolean isVideoMode = false;
+    public void setMode(boolean isVideoMode){
+    	this.isVideoMode = isVideoMode;
+    }
+    public boolean getMode(){
+    	return isVideoMode;
+    }
+
     private AlbumModeAdapter mAlbumModeAdapter;
     private OnAlbumModeSelectedListener mAlbumModeListener;
     private int mLastAlbumModeSelected;
@@ -191,6 +200,10 @@ public class GalleryActionBar implements OnNavigationListener {
         mActivity = activity;
         mInflater = ((Activity) mActivity).getLayoutInflater();
         mCurrentIndex = 0;
+    }
+
+    public void setIcon(int id){
+    	mActionBar.setLogo(id);
     }
 
     private void createDialogData() {
