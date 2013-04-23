@@ -165,6 +165,9 @@ public class MoviePlayer implements
             mVideoView.start();
             mVideoView.suspend();
             mHasPaused = true;
+        } else if (videoUri.toString().startsWith("rtsp://") && videoUri.toString().contains(".sdp")) {
+            //rtsp live TV should start from the beginning every time, no choice of continue can be select
+            startVideo();
         } else {
             final Integer bookmark = mBookmarker.getBookmark(mUri);
             if (bookmark != null) {
