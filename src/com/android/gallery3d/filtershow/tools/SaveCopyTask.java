@@ -300,7 +300,7 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
         values.put(Images.Media.TITLE, saveFileName);
         values.put(Images.Media.DISPLAY_NAME, file.getName());
         values.put(Images.Media.MIME_TYPE, "image/jpeg");
-        values.put(Images.Media.DATE_TAKEN, now);
+        values.put(Images.Media.DATE_TAKEN, now * 1000); // in milliseconds
         values.put(Images.Media.DATE_MODIFIED, now);
         values.put(Images.Media.DATE_ADDED, now);
         values.put(Images.Media.ORIENTATION, 0);
