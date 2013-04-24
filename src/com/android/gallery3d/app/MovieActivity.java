@@ -129,8 +129,8 @@ public class MovieActivity extends Activity {
         final ActionBar actionBar = getActionBar();
         setActionBarLogoFromIntent(intent);
         actionBar.setDisplayOptions(
-                ActionBar.DISPLAY_HOME_AS_UP,
-                ActionBar.DISPLAY_HOME_AS_UP);
+                ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE,
+                ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
 
         String title = intent.getStringExtra(Intent.EXTRA_TITLE);
         if (title != null) {
