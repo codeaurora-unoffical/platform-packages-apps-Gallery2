@@ -292,6 +292,11 @@ public class PhotoView extends GLView {
         mTileView.setModel(mModel);
     }
 
+    public void destroy() {
+          mEdgeView.destroy();
+          mEdgeView = null;
+    }
+
     class MyHandler extends SynchronizedHandler {
         public MyHandler(GLRoot root) {
             super(root);
