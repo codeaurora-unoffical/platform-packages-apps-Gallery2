@@ -389,6 +389,10 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_SCANNER_FINISHED"/>
+                <data android:scheme="file"/>
+            </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                     android:resource="@xml/widget_info" />
         </receiver>
