@@ -565,6 +565,11 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
 
         }
         actionBar.setSubtitle(null);
+	 // remove slideshow if all are videos
+        boolean isVideoMode = actionBar.getMode();
+        if(isVideoMode){
+            menu.findItem(R.id.action_slideshow).setVisible(false);
+        }
         return true;
     }
 

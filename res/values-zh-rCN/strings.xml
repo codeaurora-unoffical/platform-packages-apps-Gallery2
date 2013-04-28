@@ -200,4 +200,5 @@
     <string name="pano_progress_text" msgid="1586851614586678464">"正在渲染全景图"</string>
     <string name="save" msgid="613976532235060516">"保存"</string>
     <string name="gif_image_too_large">Gif图片文件过大，无法动态播放</string>
+    <string name="title_video">视频</string>
 </resources>
