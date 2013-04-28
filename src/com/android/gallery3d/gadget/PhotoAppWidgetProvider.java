@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -48,11 +49,49 @@ public class PhotoAppWidgetProvider extends AppWidgetProvider {
         }
         throw new RuntimeException("invalid type - " + entry.type);
     }
+    //TS823VGT-223 wss:force to update widget after scan finished. 
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        if (action.equals(Intent.ACTION_MEDIA_SCANNER_FINISHED)) {
+            Log.d(TAG,"action:" + action);
+            pushUpdate(context);
+        }
+        super.onReceive(context, intent);
+    }
+    //qrd-3040 wss force to update.
+    private void pushUpdate(Context context) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        ComponentName componentName = new ComponentName(context, this.getClass());
+        int[] ids = appWidgetManager.getAppWidgetIds(componentName);
+        WidgetDatabaseHelper helper = new WidgetDatabaseHelper(context);
+        try {
+            for (int id : ids) {
+                Entry entry = helper.getEntry(id);
+                if (entry != null) {
+                    // qrd-3040, notify the widget that the data may have changed to make sure the newest widget.
+                    if (entry.type == WidgetDatabaseHelper.TYPE_ALBUM ||
+                            entry.type == WidgetDatabaseHelper.TYPE_SHUFFLE) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.appwidget_stack_view);
+                    } else if (entry.type == WidgetDatabaseHelper.TYPE_SINGLE_PHOTO) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.photo);
+                    } else {
+                        throw new RuntimeException("invalid type - " + entry.type);
+                    }
+                } else {
+                    Log.e(TAG, "cannot load widget: " + id);
+                }
+            }
+        } finally {
+            helper.close();
+        }
+        //onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(componentName));
+    }
 
     @Override
     public void onUpdate(Context context,
             AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-
+    	Log.d(TAG,"widget on update");
         if (ApiHelper.HAS_REMOTE_VIEWS_SERVICE) {
             // migrate gallery widgets from pre-JB releases to JB due to bucket ID change
             GalleryWidgetMigrator.migrateGalleryWidgets(context);
@@ -65,6 +104,15 @@ public class PhotoAppWidgetProvider extends AppWidgetProvider {
                 if (entry != null) {
                     RemoteViews views = buildWidget(context, id, entry);
                     appWidgetManager.updateAppWidget(id, views);
+                    // qrd-3040, notify the widget that the data may have changed to make sure the newest widget.
+                    if (entry.type == WidgetDatabaseHelper.TYPE_ALBUM ||
+                            entry.type == WidgetDatabaseHelper.TYPE_SHUFFLE) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.appwidget_stack_view);
+                    } else if (entry.type == WidgetDatabaseHelper.TYPE_SINGLE_PHOTO) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.photo);
+                    } else {
+                        throw new RuntimeException("invalid type - " + entry.type);
+                    }
                 } else {
                     Log.e(TAG, "cannot load widget: " + id);
                 }
