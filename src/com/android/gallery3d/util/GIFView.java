@@ -92,39 +92,6 @@ public class GIFView extends ImageView implements GifAction{
         }
         
 		setGifDecoderImage(input);
-        
-        
-		
-        android.content.ContentResolver resolver = mContext.getContentResolver();
-        Cursor c = resolver.query(uri, new String[]{"_data"}, null, null, null);
-		
-//        if ( c != null && 1 == c.getCount()){
-//            c.moveToFirst();
-//            
-//            AssetManager am = mContext.getAssets();
-//            try{
-//            	System.out.println(">>>>>>>>>1 "+c.getString(0));
-//                setGifDecoderImage(am.open(c.getString(0), AssetManager.ACCESS_RANDOM));
-//            }catch(FileNotFoundException e){
-//                Log.v(TAG, "e:" + e);
-//            }catch(IOException e){
-//                Log.v(TAG, "e:" + e);
-//            }finally{
-//                c.close();
-//            }
-//            
-//            return true;
-//        }
-//        else{
-//        	AssetManager am1 = mContext.getAssets();                           
-//            try {
-//            	System.out.println(">>>>>>>>2 "+mUri.getPath());
-//    			setGifDecoderImage(am1.open(mUri.getPath(), AssetManager.ACCESS_UNKNOWN));
-//    		} catch (IOException e1) {
-//    			e1.printStackTrace();
-//    		}
-//    		return true;
-//        }
         return true;
     }
     

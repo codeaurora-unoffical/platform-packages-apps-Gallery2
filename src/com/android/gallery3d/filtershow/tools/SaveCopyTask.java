@@ -147,6 +147,11 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
         Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
         int orientation = ImageLoader.getOrientation(context, sourceUri);
         bitmap = ImageLoader.rotateToPortrait(bitmap, orientation);
+        //wss close stream
+        try{
+        	is.close();
+        }
+        catch (IOException e){}
         return bitmap;
     }
 
@@ -241,6 +246,13 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
 
             Uri uri = insertContent(context, sourceUri, this.destinationFile, saveFileName);
             bitmap.recycle();
+            //wss close stream
+            if(is != null){
+            	try{
+                	is.close();
+                }
+                catch (IOException e){}
+            }
             return uri;
 
         } catch (FileNotFoundException ex) {
