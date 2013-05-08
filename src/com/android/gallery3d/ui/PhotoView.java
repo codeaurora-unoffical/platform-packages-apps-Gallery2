@@ -602,11 +602,9 @@ public class PhotoView extends GLView {
             mIsStaticCamera = mModel.isStaticCamera(0);
           //wss change for gif icon
             boolean isGif = false;
-            try {
-				isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(mModel.getMediaItem(0).getMimeType());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+            if(mModel.getMediaItem(0) != null){
+            	isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(mModel.getMediaItem(0).getMimeType());
+            }
             mIsVideoOrGif = mModel.isVideo(0) || isGif;
             mIsDeletable = mModel.isDeletable(0);
             mLoadingState = mModel.getLoadingState(0);
@@ -791,11 +789,9 @@ public class PhotoView extends GLView {
             mIsStaticCamera = mModel.isStaticCamera(mIndex);
           //wss change for gif icon
             boolean isGif = false;
-			try {
-				isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(mModel.getMediaItem(mIndex).getMimeType());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+            if(mModel.getMediaItem(0) != null){
+            	isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(mModel.getMediaItem(0).getMimeType());
+            }
             mIsVideoOrGif = mModel.isVideo(mIndex) || isGif;
             mIsDeletable = mModel.isDeletable(mIndex);
             mLoadingState = mModel.getLoadingState(mIndex);
