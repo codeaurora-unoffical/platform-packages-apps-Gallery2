@@ -27,9 +27,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.data.DataManager;
@@ -37,6 +39,8 @@ import com.android.gallery3d.data.MediaItem;
 import com.android.gallery3d.ui.GLRoot;
 import com.android.gallery3d.ui.GLRootView;
 import com.android.gallery3d.util.ThreadPool;
+
+import java.lang.Runnable;
 
 public class AbstractGalleryActivity extends Activity implements GalleryActivity {
     @SuppressWarnings("unused")
@@ -48,14 +52,35 @@ public class AbstractGalleryActivity extends Activity implements GalleryActivity
     private TransitionStore mTransitionStore = new TransitionStore();
     private boolean mDisableToggleStatusBar;
 
+    private void ShowAlertDialog() {
+        AlertDialog.Builder MyAlertDialog = new AlertDialog.Builder(this);
+        MyAlertDialog.setTitle("Warning: External Storage Ejected");
+        MyAlertDialog.setMessage("Application will close later.");
+        MyAlertDialog.show();
+    }
+
     private AlertDialog mAlertDialog = null;
     private BroadcastReceiver mMountReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (getExternalCacheDir() != null) onStorageReady();
+            String action = intent.getAction();
+            if (action.equals(Intent.ACTION_MEDIA_EJECT)) {
+                ShowAlertDialog();
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() { public void run() { finish(); }}, 3000);
+            }
+            if (action.equals(Intent.ACTION_MEDIA_MOUNTED)) {
+                if (getExternalCacheDir() != null)
+                    onStorageReady();
+            }
         }
     };
-    private IntentFilter mMountFilter = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
+    private void installIntentFilter() {
+        IntentFilter mMountFilter = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
+        mMountFilter.addAction(Intent.ACTION_MEDIA_EJECT);
+        mMountFilter.addDataScheme("file");
+        registerReceiver(mMountReceiver, mMountFilter);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,13 +146,13 @@ public class AbstractGalleryActivity extends Activity implements GalleryActivity
         if (mAlertDialog != null) {
             mAlertDialog.dismiss();
             mAlertDialog = null;
-            unregisterReceiver(mMountReceiver);
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        installIntentFilter();
         if (getExternalCacheDir() == null) {
             OnCancelListener onCancel = new OnCancelListener() {
                 @Override
@@ -148,7 +173,6 @@ public class AbstractGalleryActivity extends Activity implements GalleryActivity
                     .setNegativeButton(android.R.string.cancel, onClick)
                     .setOnCancelListener(onCancel)
                     .show();
-            registerReceiver(mMountReceiver, mMountFilter);
         }
     }
 
@@ -174,6 +198,7 @@ public class AbstractGalleryActivity extends Activity implements GalleryActivity
         }
         mGLRootView.onResume();
         mOrientationManager.resume();
+        installIntentFilter();
     }
 
     @Override
