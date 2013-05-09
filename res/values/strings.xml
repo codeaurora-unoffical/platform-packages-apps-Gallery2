@@ -509,4 +509,7 @@
 
     <!-- The label on the button that will save an edited image -->
     <string name="save" msgid="8140440041190264400">Save</string>
+
+    <!-- The title of the menu item where user can auto upload to Baidu Yun. -->
+    <string name="menu_auto_upload_to_xcloud_switch">Auto upload to Baidu Yun</string>
 </resources>

@@ -31,7 +31,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-
+    <!-- add uses-permission to access Baidu xCloud provider, agreed with Baidu -->
+    <uses-permission android:name="com.baidu.permission.QCCLOUD_PROVIDER" />
     <supports-screens android:smallScreens="false"
             android:normalScreens="true" android:largeScreens="true"
             android:anyDensity="true" />
