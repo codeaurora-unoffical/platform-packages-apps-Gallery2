@@ -441,7 +441,8 @@ public class ImageLoader {
         try {
             InputStream is = mContext.getContentResolver().openInputStream(getUri());
             XMPMeta meta = XmpUtilHelper.extractXMPMeta(is);
-            if (meta == null) {
+            if (meta == null) {            	
+				is.close();//wss close stream
                 return false;
             }
             String name = meta.getPacketHeader();
@@ -451,9 +452,11 @@ public class ImageLoader {
                 String fullWidthName = "GPano:FullPanoWidthPixels";
 
                 if (!meta.doesPropertyExist(namespace, cropWidthName)) {
+                	is.close();//wss close stream
                     return false;
                 }
                 if (!meta.doesPropertyExist(namespace, fullWidthName)) {
+                	is.close();//wss close stream
                     return false;
                 }
 
@@ -463,15 +466,19 @@ public class ImageLoader {
                 // Definition of a 360:
                 // GFullPanoWidthPixels == CroppedAreaImageWidthPixels
                 if (cropValue != null && fullValue != null) {
+                	is.close();//wss close stream
                     return cropValue.equals(fullValue);
                 }
-
+                is.close();//wss close stream
                 return false;
             } catch (XMPException e) {
+            	is.close();//wss close stream
                 return false;
             }
         } catch (FileNotFoundException e) {
             return false;
+        } catch (IOException e){
+        	return false;
         }
     }
 

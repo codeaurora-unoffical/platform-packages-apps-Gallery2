@@ -509,4 +509,7 @@
 
     <!-- The label on the button that will save an edited image -->
     <string name="save" msgid="8140440041190264400">Save</string>
+    
+    <string name="gif_image_too_large">Gif image is too large, can not play.</string>
+    <string name="title_video">Video</string>
 </resources>

@@ -141,11 +141,12 @@ public class MovieActivity extends Activity {
     }
 
     private void setActionBarLogoFromIntent(Intent intent) {
-        Bitmap logo = intent.getParcelableExtra(KEY_LOGO_BITMAP);
-        if (logo != null) {
-            getActionBar().setLogo(
-                    new BitmapDrawable(getResources(), logo));
-        }
+       // Bitmap logo = intent.getParcelableExtra(KEY_LOGO_BITMAP);
+      //  if (logo != null) {
+      //      getActionBar().setLogo(
+       //             new BitmapDrawable(getResources(), logo));
+      //  }
+      getActionBar().setLogo(R.mipmap.ic_launcher_video);
     }
 
     private void initializeActionBar(Intent intent) {

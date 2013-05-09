@@ -255,6 +255,7 @@ public class BitmapUtils {
     public static boolean isRotationSupported(String mimeType) {
         if (mimeType == null) return false;
         mimeType = mimeType.toLowerCase();
-        return mimeType.equals("image/jpeg");
+		//EGS8236-235,zhangxuejie
+        return (mimeType.equals("image/jpeg") ||mimeType.equals("image/gif") ||mimeType.endsWith("bmp") ||mimeType.equals("image/png"));
     }
 }

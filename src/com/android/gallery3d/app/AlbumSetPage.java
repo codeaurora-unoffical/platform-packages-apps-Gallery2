@@ -99,6 +99,7 @@ public class AlbumSetPage extends ActivityState implements
 
     private boolean mGetContent;
     private boolean mGetAlbum;
+    public boolean mVideoGallery = false;//if in video mode or not
     private ActionModeHandler mActionModeHandler;
     private DetailsHelper mDetailsHelper;
     private MyDetailsSource mDetailsSource;
@@ -328,6 +329,7 @@ public class AlbumSetPage extends ActivityState implements
         Context context = mActivity.getAndroidContext();
         mGetContent = data.getBoolean(Gallery.KEY_GET_CONTENT, false);
         mGetAlbum = data.getBoolean(Gallery.KEY_GET_ALBUM, false);
+	mVideoGallery = data.getBoolean(Gallery.INTENT_ACTION_VIDEO_GALLERY, false);
         mTitle = data.getString(AlbumSetPage.KEY_SET_TITLE);
         mSubtitle = data.getString(AlbumSetPage.KEY_SET_SUBTITLE);
         mEyePosition = new EyePosition(context, this);
@@ -532,6 +534,14 @@ public class AlbumSetPage extends ActivityState implements
     @Override
     protected boolean onCreateActionBar(Menu menu) {
         Activity activity = mActivity;
+	 //if for video,modify the action bar,leave title only,change icon
+        if(mVideoGallery){
+        	mActionBar.setTitle(R.string.title_video);
+        	mActionBar.setIcon(R.mipmap.ic_launcher_video);
+	        // means that is in video only mode
+		mActionBar.setMode(true);
+        	return true;
+        }
         final boolean inAlbum = mActivity.getStateManager().hasStateClass(AlbumPage.class);
         MenuInflater inflater = getSupportMenuInflater();
 

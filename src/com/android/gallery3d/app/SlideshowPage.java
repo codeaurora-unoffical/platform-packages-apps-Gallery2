@@ -112,8 +112,9 @@ public class SlideshowPage extends ActivityState {
     @Override
     public void onCreate(Bundle data, Bundle restoreState) {
         super.onCreate(data, restoreState);
-        mFlags |= (FLAG_HIDE_ACTION_BAR | FLAG_HIDE_STATUS_BAR
-                | FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED);
+        mFlags |= (FLAG_HIDE_ACTION_BAR | FLAG_HIDE_STATUS_BAR);
+ //wss MSM8130-440 unlock before slide show.       
+ //               | FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED);
         if (data.getBoolean(KEY_DREAM)) {
             // Dream screensaver only keeps screen on for plugged devices.
             mFlags |= FLAG_SCREEN_ON_WHEN_PLUGGED;

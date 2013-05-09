@@ -70,6 +70,7 @@ import com.android.gallery3d.ui.PhotoView;
 import com.android.gallery3d.ui.SelectionManager;
 import com.android.gallery3d.ui.SynchronizedHandler;
 import com.android.gallery3d.util.GalleryUtils;
+import com.android.gallery3d.util.ViewGifImage;
 
 public class PhotoPage extends ActivityState implements
         PhotoView.Listener, AppBridge.Server,
@@ -1139,6 +1140,11 @@ public class PhotoPage extends ActivityState implements
             // item is not ready or it is camera preview, ignore
             return;
         }
+        // wss add for gif
+        if(item.getMimeType().equals(MediaItem.MIME_TYPE_GIF)){
+        	viewAnimateGif((Activity) mActivity,item.getContentUri());
+        	return;
+        }
 
         int supported = item.getSupportedOperations();
         boolean playVideo = ((supported & MediaItem.SUPPORT_PLAY) != 0);
@@ -1503,4 +1509,12 @@ public class PhotoPage extends ActivityState implements
     public void onUndoBarVisibilityChanged(boolean visible) {
         refreshBottomControlsWhenReady();
     }
+    //wss add for gif
+    public static void viewAnimateGif(Activity activity,Uri gif_uri) {
+
+		Intent intent = new Intent("hisense.view_gif_image", gif_uri);
+		intent.setClass(activity, ViewGifImage.class);
+		activity.startActivity(intent);
+		//activity.finish();
+	}
 }
