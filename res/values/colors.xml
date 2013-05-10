@@ -40,4 +40,9 @@
     <color name="slideshow_background">#1A1A1A</color>
 
     <color name="button_dark_transparent_background">#6000</color>
+
+    <color name="highlight">#00a8ff</color>
+    <color name="lowlight">#00527c</color>
+    <color name="grey">#999999</color>
+    <color name="disabled">#505050</color>
 </resources>
