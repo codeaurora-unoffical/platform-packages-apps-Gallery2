@@ -345,9 +345,6 @@ public class PhotoView extends GLView {
                             numberOfPictures--;
                         }
                     }
-                    if (numberOfPictures <= 0) {
-                        switchWithCaptureAnimation(-1);
-                    }
                     showUndoBar(numberOfPictures <= 1);
                     break;
                 }
@@ -378,6 +375,10 @@ public class PhotoView extends GLView {
     public void notifyDataChange(int[] fromIndex, int prevBound, int nextBound) {
         mPrevBound = prevBound;
         mNextBound = nextBound;
+
+        if (mNextBound < 0) {
+            mModel.moveTo(mNextBound - mPrevBound);
+        }
 
         // Update mTouchBoxIndex
         if (mTouchBoxIndex != Integer.MAX_VALUE) {
