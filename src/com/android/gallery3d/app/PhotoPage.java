@@ -95,6 +95,7 @@ public class PhotoPage extends ActivityState implements
     public static final String KEY_TREAT_BACK_AS_UP = "treat-back-as-up";
 
     public static final String KEY_RETURN_INDEX_HINT = "return-index-hint";
+    public static final String KEY_IS_IMAGE_VIEW_INTENT = "is-image-view-intent";
 
     private GalleryApp mApplication;
     private SelectionManager mSelectionManager;
@@ -180,8 +181,11 @@ public class PhotoPage extends ActivityState implements
         mRootPane.addComponent(mPhotoView);
         mApplication = (GalleryApp)((Activity) mActivity).getApplication();
         mOrientationManager = mActivity.getOrientationManager();
-        mOrientationManager.addListener(this);
         mActivity.getGLRoot().setOrientationSource(mOrientationManager);
+
+        if (!data.getBoolean(KEY_IS_IMAGE_VIEW_INTENT, false)) {
+            mOrientationManager.addListener(this);
+        }
 
         mSetPathString = data.getString(KEY_MEDIA_SET_PATH);
         mOriginalSetPathString = mSetPathString;
