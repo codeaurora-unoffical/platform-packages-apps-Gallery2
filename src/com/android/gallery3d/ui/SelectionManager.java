@@ -109,12 +109,12 @@ public class SelectionManager {
 
     private int getTotalCount() {
         if (mSourceMediaSet == null) return -1;
-
-        if (mTotal < 0) {
+//wss, msm8130-924, refresh mTotal before get count
+//        if (mTotal < 0) {
             mTotal = mIsAlbumSet
                     ? mSourceMediaSet.getSubMediaSetCount()
                     : mSourceMediaSet.getMediaItemCount();
-        }
+//        }
         return mTotal;
     }
 
