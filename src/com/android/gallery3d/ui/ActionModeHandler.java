@@ -408,6 +408,15 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                 // Pass1: Deal with unexpanded media object list for menu operation.
                 ArrayList<MediaObject> selected = getSelectedMediaObjects(jc);
                 if (selected == null) {
+                	 //wss msm8130-864,  if nothing selected, don't support any operation.
+                	 mMainHandler.post(new Runnable() {
+                         public void run() {
+                             mMenuTask = null;
+                             if (!jc.isCancelled()) {
+                                 MenuExecutor.updateMenuOperation(mMenu, 0); 
+                             }
+                         }
+                      });
                     return null;
                 }
                 final int operation = computeMenuOptions(selected);
