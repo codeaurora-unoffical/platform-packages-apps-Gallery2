@@ -162,6 +162,8 @@ public class AlbumSlotRenderer extends AbstractSlotRenderer {
         @Override
         public void onSizeChanged(int size) {
             mSlotView.setSlotCount(size);
+            //wss force refresh
+            mSlotView.invalidate();
         }
     }
 
