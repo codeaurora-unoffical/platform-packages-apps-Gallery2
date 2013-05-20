@@ -247,6 +247,7 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
             Uri uri = insertContent(context, sourceUri, this.destinationFile, saveFileName);
             bitmap.recycle();
             //wss close stream
+			bitmap = null;
             if(is != null){
             	try{
                 	is.close();
