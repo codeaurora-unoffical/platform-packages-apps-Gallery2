@@ -308,6 +308,7 @@ public class AlbumDataLoader {
                 int index = i % DATA_CACHE_SIZE;
                 mSetVersion[index] = info.version;
                 MediaItem updateItem = items.get(i - info.reloadStart);
+                if(updateItem == null) continue;
                 long itemVersion = updateItem.getDataVersion();
                 if (mItemVersion[index] != itemVersion) {
                     mItemVersion[index] = itemVersion;
