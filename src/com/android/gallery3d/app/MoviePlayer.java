@@ -684,6 +684,7 @@ public class MoviePlayer implements
         if (LOG) {
         	QcomLog.v(TAG, "onReplay()");
         }
+	mTState = TState.PLAYING;
         mFirstBePlayed = true;
         if (mRetryExt.handleOnReplay()) {
             return;
