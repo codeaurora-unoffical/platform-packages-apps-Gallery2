@@ -700,6 +700,10 @@ public class PhotoPage extends ActivityState implements
     private void launchCamera() {
         Intent intent = new Intent(mActivity, CameraActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        //wss MSM8130-1048 send path to camera.
+        if(mSetPathString != null){
+        	intent.putExtra(KEY_MEDIA_SET_PATH, mSetPathString);
+        }
         mRecenterCameraOnResume = false;
         mActivity.startActivity(intent);
     }

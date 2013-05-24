@@ -51,10 +51,16 @@ public class MediaSetUtils {
             Path.fromString("/local/all/" + CAMERA_BUCKET_ID),
             Path.fromString("/local/image/" + CAMERA_BUCKET_ID),
             Path.fromString("/local/video/" + CAMERA_BUCKET_ID)};
+    //wss MSM8130-1048 make internal camera the same with external camera 
+    private static final Path[] CAMERA_PHONE_PATHS = {
+        Path.fromString("/local/all/" + CAMERA_PHONE_BUCKET_ID),
+        Path.fromString("/local/image/" + CAMERA_PHONE_BUCKET_ID),
+        Path.fromString("/local/video/" + CAMERA_PHONE_BUCKET_ID)};
 
     public static boolean isCameraSource(Path path) {
         return CAMERA_PATHS[0] == path || CAMERA_PATHS[1] == path
-                || CAMERA_PATHS[2] == path;
+                || CAMERA_PATHS[2] == path || CAMERA_PHONE_PATHS[0] == path
+                || CAMERA_PHONE_PATHS[1] == path || CAMERA_PHONE_PATHS[2] == path;
     }
 
     // Sort MediaSets by name

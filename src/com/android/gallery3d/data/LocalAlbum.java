@@ -92,7 +92,8 @@ public class LocalAlbum extends MediaSet {
 
     @Override
     public boolean isCameraRoll() {
-        return mBucketId == MediaSetUtils.CAMERA_BUCKET_ID;
+    	//wss MSM8130-1048 make internal camera the same with external camera
+        return mBucketId == MediaSetUtils.CAMERA_BUCKET_ID ||  mBucketId == MediaSetUtils.CAMERA_PHONE_BUCKET_ID;
     }
 
     @Override
@@ -276,7 +277,8 @@ public class LocalAlbum extends MediaSet {
 
     public static String getLocalizedName(Resources res, int bucketId,
             String name) {
-        if (bucketId == MediaSetUtils.CAMERA_BUCKET_ID) {
+    	//wss MSM8130-1048 make internal camera the same with external camera
+        if (bucketId == MediaSetUtils.CAMERA_BUCKET_ID || bucketId == MediaSetUtils.CAMERA_PHONE_BUCKET_ID) {
             return res.getString(R.string.folder_camera);
         } else if (bucketId == MediaSetUtils.DOWNLOAD_BUCKET_ID) {
             return res.getString(R.string.folder_download);
