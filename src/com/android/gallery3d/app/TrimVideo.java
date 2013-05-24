@@ -77,6 +77,25 @@ public class TrimVideo extends Activity implements
     private File mSaveDirectory = null;
     // For showing the result.
     private String saveFolderName = null;
+    /// M: add for show dialog @{
+    private final Runnable mShowDialogRunnable = new Runnable() {
+        @Override
+        public void run() {
+            showProgressDialog();
+        }
+    };
+    /// @}
+    /// M: add for show toast @{
+    private final Runnable mShowToastRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Toast.makeText(getApplicationContext(),
+                    getString(R.string.can_not_trim),
+                    Toast.LENGTH_SHORT)
+                    .show();
+        }
+    };
+    /// @}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -288,13 +307,20 @@ public class TrimVideo extends Activity implements
         mDstFile = new File(mSaveDirectory, mSaveFileName + ".mp4");
         mSrcFile = new File(mSrcVideoPath);
 
-        showProgressDialog();
+        // after check this video could trim, then show dialog
+       // showProgressDialog();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    TrimVideoUtils.startTrim(mSrcFile, mDstFile, mTrimStartTime, mTrimEndTime);
+                    boolean isTrimSuccessful = TrimVideoUtils.startTrim(mSrcFile, mDstFile, mTrimStartTime, mTrimEndTime, TrimVideo.this);
+					if(!isTrimSuccessful) {
+				    mHandler.removeCallbacks(mShowToastRunnable);
+                    mHandler.post(mShowToastRunnable);
+					return;
+					}
+					
                     // Update the database for adding a new video file.
                     insertContent(mDstFile);
                 } catch (IOException e) {
@@ -336,6 +362,10 @@ public class TrimVideo extends Activity implements
         mProgress.setCancelable(false);
         mProgress.setCanceledOnTouchOutside(false);
         mProgress.show();
+    }
+    public void showDialogCommand(){
+        mHandler.removeCallbacks(mShowDialogRunnable);
+        mHandler.post(mShowDialogRunnable);
     }
 
     /**
