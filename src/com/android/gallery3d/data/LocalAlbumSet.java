@@ -117,6 +117,11 @@ public class LocalAlbumSet extends MediaSet
             if (index != -1) {
                 circularShiftRight(entries, offset++, index);
             }
+            //wss MSM8130-1048 move internal camera after external camera.
+            index = findBucket(entries, MediaSetUtils.CAMERA_PHONE_BUCKET_ID);
+            if (index != -1) {
+                circularShiftRight(entries, offset++, index);
+            }
             index = findBucket(entries, MediaSetUtils.DOWNLOAD_BUCKET_ID);
             if (index != -1) {
                 circularShiftRight(entries, offset++, index);
