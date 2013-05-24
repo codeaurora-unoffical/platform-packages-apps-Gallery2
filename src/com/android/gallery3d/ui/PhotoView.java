@@ -1399,7 +1399,9 @@ public class PhotoView extends GLView {
         boolean touched = (mUndoBarState & UNDO_BAR_TOUCHED) != 0;
         boolean fullCamera = (mUndoBarState & UNDO_BAR_FULL_CAMERA) != 0;
         boolean deleteLast = (mUndoBarState & UNDO_BAR_DELETE_LAST) != 0;
-        if ((timeout && deleteLast) || fullCamera || touched) {
+        //wss qrd msm8130-1044 don't hide for timeout && deleteLast.
+        //if ((timeout && deleteLast) || fullCamera || touched) {
+        if (fullCamera || touched) {
             hideUndoBar();
         }
     }
