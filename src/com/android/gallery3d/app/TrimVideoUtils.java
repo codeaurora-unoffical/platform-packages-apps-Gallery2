@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class TrimVideoUtils {
 
-    public static void startTrim(File src, File dst, int startMs, int endMs) throws IOException {
+    public static boolean startTrim(File src, File dst, int startMs, int endMs, TrimVideo trimVideo) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(src, "r");
         Movie movie = MovieCreator.build(randomAccessFile.getChannel());
 
@@ -64,7 +64,8 @@ public class TrimVideoUtils {
                     // with sync samples at exactly the same positions. E.g. a single movie containing
                     // multiple qualities of the same video (Microsoft Smooth Streaming file)
 
-                    throw new RuntimeException("The startTime has already been corrected by another track with SyncSample. Not Supported.");
+                   // throw new RuntimeException("The startTime has already been corrected by another track with SyncSample. Not Supported.");
+                   return false;
                 }
                 startTime = correctTimeToSyncSample(track, startTime, false);
                 endTime = correctTimeToSyncSample(track, endTime, true);
@@ -72,6 +73,7 @@ public class TrimVideoUtils {
             }
         }
 
+        trimVideo.showDialogCommand();
         for (Track track : tracks) {
             long currentSample = 0;
             double currentTime = 0;
@@ -113,6 +115,7 @@ public class TrimVideoUtils {
         fc.close();
         fos.close();
         randomAccessFile.close();
+        return true;
     }
 
     protected static long getDuration(Track track) {
