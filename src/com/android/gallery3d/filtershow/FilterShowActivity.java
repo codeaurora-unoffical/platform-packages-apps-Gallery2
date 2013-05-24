@@ -85,6 +85,7 @@ import com.android.gallery3d.filtershow.imageshow.ImageZoom;
 import com.android.gallery3d.filtershow.presets.ImagePreset;
 import com.android.gallery3d.filtershow.provider.SharedImageProvider;
 import com.android.gallery3d.filtershow.tools.SaveCopyTask;
+import com.android.gallery3d.filtershow.tools.YesCancelDialogBuilder;
 import com.android.gallery3d.filtershow.ui.FramedTextButton;
 import com.android.gallery3d.filtershow.ui.ImageButtonTitle;
 import com.android.gallery3d.filtershow.ui.ImageCurves;
@@ -937,9 +938,23 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
 
     @Override
     public void onBackPressed() {
-        if (mPanelController.onBackPressed()) {
-            saveImage();
-        }
+    	//wss msm8130-1047 don't save auto.
+//        if (mPanelController.onBackPressed()) {
+//            saveImage();
+//        }
+    	if (mImageShow.hasModifications()){
+    		new YesCancelDialogBuilder(FilterShowActivity.this, new Runnable() {
+
+                @Override
+                public void run() {
+                    // Discard unsaved photo for the result.
+                    finish();
+                }
+            }, R.string.discard_unsaved_photo).show();
+    	}else{
+    		finish();
+    	}
+    	
     }
     //p9203-252 wss: toast in ui thread.
     private void loadFailed(){
