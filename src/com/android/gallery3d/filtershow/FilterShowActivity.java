@@ -150,13 +150,23 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
     private LoadBitmapTask mLoadBitmapTask;
     private ImageSmallFilter mNullFxFilter;
     private ImageSmallFilter mNullBorderFilter;
-    //p9203-252 wss: toast in ui thread.
+    //wss: toast in ui thread.
     public static final int MSG_LOAD_FAILED = 0;
     private Handler mHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        //wss: toast in ui thread.
+        mHandler = new Handler(){
+        	@Override
+        	public void handleMessage(Message msg){
+        		if(msg.what == MSG_LOAD_FAILED){
+        			loadFailed();
+        		}
+        	}
+        };
 
         ImageFilterRS.setRenderScriptContext(this);
 
@@ -406,16 +416,7 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
             mPanelController.showComponent(findViewById(R.id.cropButton));
         } else if (action.equalsIgnoreCase(TINY_PLANET_ACTION)) {
             mPanelController.showComponent(findViewById(R.id.tinyplanetButton));
-        }
-        //p9203-252 wss: toast in ui thread.
-        mHandler = new Handler(){
-        	@Override
-        	public void handleMessage(Message msg){
-        		if(msg.what == MSG_LOAD_FAILED){
-        			loadFailed();
-        		}
-        	}
-        };        
+        }                
     }
 
     private void startLoadBitmap(Uri uri) {
@@ -956,7 +957,7 @@ public class FilterShowActivity extends Activity implements OnItemClickListener,
     	}
     	
     }
-    //p9203-252 wss: toast in ui thread.
+    //wss: toast in ui thread.
     private void loadFailed(){
     	CharSequence text = getString(R.string.cannot_load_image);
         Toast toast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
