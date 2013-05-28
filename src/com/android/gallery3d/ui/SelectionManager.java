@@ -138,12 +138,17 @@ public class SelectionManager {
         int count = getSelectedCount();
         if (count == getTotalCount()) {
             selectAll();
+        }        
+        //wss msm8130-970 leave selection all mode auto if select nothing
+        if (count == 0) {
+        	if(mAutoLeave){
+        		leaveSelectionMode();
+        	}else{
+        		mInverseSelection = false;
+        		mClickedSet.clear();
+        	}            
         }
-
         if (mListener != null) mListener.onSelectionChange(path, isItemSelected(path));
-        if (count == 0 && mAutoLeave) {
-            leaveSelectionMode();
-        }
     }
 
     private static void expandMediaSet(ArrayList<Path> items, MediaSet set) {
