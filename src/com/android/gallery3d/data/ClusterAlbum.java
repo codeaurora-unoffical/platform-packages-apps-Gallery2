@@ -112,6 +112,12 @@ public class ClusterAlbum extends MediaSet implements ContentListener {
         }
         return mDataVersion;
     }
+    //wss msm8130-1045 add for update version without reload.
+    public void updateVersion(long version){
+    	if(version > mDataVersion){
+    		mDataVersion = nextVersionNumber();
+    	}
+    }
 
     @Override
     public void onContentDirty() {

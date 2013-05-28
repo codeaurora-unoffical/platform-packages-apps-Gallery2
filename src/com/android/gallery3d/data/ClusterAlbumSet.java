@@ -60,13 +60,18 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
     @Override
     public long reload() {
         if (mBaseSet.reload() > mDataVersion) {
-            if (mFirstReloadDone) {
-                updateClustersContents();
-            } else {
-                updateClusters();
-                mFirstReloadDone = true;
-            }
+    		//wss msm8130-1045 always update Clusters 
+    		//if (mFirstReloadDone) {
+//                updateClustersContents();//delete inexistent items
+//            } else {
+                  updateClusters();
+//                mFirstReloadDone = true;
+//            }
             mDataVersion = nextVersionNumber();
+			//wss msm8130-1045 update ClusterAlbum's version.
+            for(ClusterAlbum album : mAlbums){
+            	album.updateVersion(mDataVersion);
+            }
         }
         return mDataVersion;
     }
