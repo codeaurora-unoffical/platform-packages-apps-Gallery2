@@ -419,6 +419,13 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                       });
                     return null;
                 }
+				//wss msm8130-969 disable the menu during menu computing
+				mMainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                    	MenuExecutor.disableSomeMenuOperation(mMenu); 
+                    }
+                });
                 final int operation = computeMenuOptions(selected);
                 if (jc.isCancelled()) {
                     return null;

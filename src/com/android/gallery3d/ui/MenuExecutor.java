@@ -183,6 +183,20 @@ public class MenuExecutor {
         setMenuItemVisible(menu, R.id.action_details, supportInfo);
         setMenuItemVisible(menu, R.id.action_import, supportImport);
     }
+    //wss msm8130-969 disable some menus(besides delete)during menu computing
+    public static void disableSomeMenuOperation(Menu menu) {
+    	setMenuItemVisible(menu, R.id.action_delete, true);
+        setMenuItemVisible(menu, R.id.action_rotate_ccw, false);
+        setMenuItemVisible(menu, R.id.action_rotate_cw, false);
+        setMenuItemVisible(menu, R.id.action_crop, false);
+        setMenuItemVisible(menu, R.id.action_trim, false);
+        setMenuItemVisible(menu, R.id.action_share_panorama, false);
+        setMenuItemVisible(menu, R.id.action_setas, false);
+        setMenuItemVisible(menu, R.id.action_show_on_map, false);
+        setMenuItemVisible(menu, R.id.action_edit, false);
+        setMenuItemVisible(menu, R.id.action_details, false);
+        setMenuItemVisible(menu, R.id.action_import, false);
+    }
 
     public static void updateMenuForPanorama(Menu menu, boolean shareAsPanorama360,
             boolean disablePanorama360Options) {
