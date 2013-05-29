@@ -59,6 +59,8 @@ public class PreparePageFadeoutTexture implements OnGLIdleListener {
 
     public static void prepareFadeOutTexture(AbstractGalleryActivity activity,
             GLView rootPane) {
+    	//wss return if rootPane is null.
+    	if(rootPane == null) return;
         PreparePageFadeoutTexture task = new PreparePageFadeoutTexture(rootPane);
         if (task.isCancelled()) return;
         GLRoot root = activity.getGLRoot();
