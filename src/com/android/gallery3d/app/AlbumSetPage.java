@@ -627,6 +627,11 @@ public class AlbumSetPage extends ActivityState implements
                 GalleryUtils.startCameraActivity(activity);
                 return true;
             }
+
+            // Because there is no offline picture exist,we disable the
+            // "make available offline" button,but this function may be used
+            // after picasa function is enable.
+/*
             case R.id.action_manage_offline: {
                 Bundle data = new Bundle();
                 String mediaPath = mActivity.getDataManager().getTopSetPath(
@@ -635,7 +640,6 @@ public class AlbumSetPage extends ActivityState implements
                 mActivity.getStateManager().startState(ManageCachePage.class, data);
                 return true;
             }
-/*
             case R.id.action_sync_picasa_albums: {
                 PicasaSource.requestSync(activity);
                 return true;
