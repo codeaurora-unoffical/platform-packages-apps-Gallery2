@@ -59,6 +59,7 @@ public class MenuExecutor {
     public static final int EXECUTION_RESULT_CANCEL = 3;
 
     private ProgressDialog mDialog;
+    private AlertDialog mConfirmDialog;
     private Future<?> mTask;
     // wait the operation to finish when we want to stop it.
     private boolean mWaitOnStop;
@@ -139,8 +140,17 @@ public class MenuExecutor {
         }
     }
 
+    private void dismissConfirmDialog() {
+        if (mConfirmDialog != null && mConfirmDialog.isShowing()) {
+            mConfirmDialog.dismiss();
+            mConfirmDialog = null;
+        }
+    }
+
+
     public void pause() {
         stopTaskAndDismissDialog();
+        dismissConfirmDialog();
     }
 
     private void onProgressUpdate(int index, ProgressListener listener) {
@@ -306,12 +316,15 @@ public class MenuExecutor {
         if (confirmMsg != null) {
             if (listener != null) listener.onConfirmDialogShown();
             ConfirmDialogListener cdl = new ConfirmDialogListener(action, listener);
-            new AlertDialog.Builder(mActivity.getAndroidContext())
+            //new AlertDialog.Builder(mActivity.getAndroidContext())
+            dismissConfirmDialog();
+            mConfirmDialog = new AlertDialog.Builder(mActivity.getAndroidContext())
                     .setMessage(confirmMsg)
                     .setOnCancelListener(cdl)
                     .setPositiveButton(R.string.ok, cdl)
                     .setNegativeButton(R.string.cancel, cdl)
-                    .create().show();
+                    .create();
+            mConfirmDialog.show();
         } else {
             onMenuClicked(action, listener);
         }
