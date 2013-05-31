@@ -19,6 +19,7 @@ package com.android.gallery3d.app;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -752,6 +753,16 @@ public class AlbumSetPage extends ActivityState implements
                 }
             }
         });
+    }
+
+    @Override
+    protected void onConfigurationChanged(Configuration config) {
+        // When AlbumSetPage's state is active and configuration changed,
+        // we refresh this cluster menu to make sure it is shown correctly.
+        if (mIsActive && mShowClusterMenu) {
+            mActionBar.disableClusterMenu(true);
+            mActionBar.enableClusterMenu(mSelectedAction, this);
+        }
     }
 
     private class MyLoadingListener implements LoadingListener {
