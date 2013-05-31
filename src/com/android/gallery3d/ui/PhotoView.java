@@ -376,7 +376,7 @@ public class PhotoView extends GLView {
         mPrevBound = prevBound;
         mNextBound = nextBound;
 
-        if (mNextBound < 0) {
+        if (mNextBound < 0 && (mNextBound - mPrevBound) >= 0) {
             mModel.moveTo(mNextBound - mPrevBound);
         }
 
