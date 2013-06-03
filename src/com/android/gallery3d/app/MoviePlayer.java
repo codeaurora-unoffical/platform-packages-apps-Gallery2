@@ -18,6 +18,7 @@ package com.android.gallery3d.app;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -85,6 +86,9 @@ public class MoviePlayer implements
     private long mResumeableTime = Long.MAX_VALUE;
     private int mVideoPosition = 0;
     private boolean mHasPaused = false;
+    private boolean mVideoHasPaused = false;
+    private boolean mCanResumed = false;
+    private boolean mKeyguardLocked = false;
     private int mLastSystemUiVis = 0;
 
     // If the time bar is being dragged.
@@ -109,6 +113,21 @@ public class MoviePlayer implements
         public void run() {
             int pos = setProgress();
             mHandler.postDelayed(mProgressChecker, 1000 - (pos % 1000));
+        }
+    };
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                mKeyguardLocked = true;
+            } else if (Intent.ACTION_USER_PRESENT.equals(intent.getAction())) {
+                if ((mCanResumed) && (!mVideoHasPaused)) {
+                    playVideo();
+                }
+                mKeyguardLocked = false;
+                mCanResumed = false;
+            }
         }
     };
 
@@ -154,6 +173,12 @@ public class MoviePlayer implements
 
         mAudioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver();
         mAudioBecomingNoisyReceiver.register();
+
+        // Listen for broadcasts related to user-presence
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        mContext.registerReceiver(mReceiver, filter);
 
         Intent i = new Intent(SERVICECMD);
         i.putExtra(CMDNAME, CMDPAUSE);
@@ -268,6 +293,10 @@ public class MoviePlayer implements
             // If we have slept for too long, pause the play
             if (System.currentTimeMillis() > mResumeableTime) {
                 pauseVideo();
+            } else if (mKeyguardLocked){
+                // If Keyguard Locked , pause the play
+                mCanResumed = true;
+                mVideoView.pause();
             }
         }
 
@@ -283,6 +312,7 @@ public class MoviePlayer implements
     public void onDestroy() {
         mVideoView.stopPlayback();
         mAudioBecomingNoisyReceiver.unregister();
+        mContext.unregisterReceiver(mReceiver);
     }
 
     // This updates the time bar display (if necessary). It is called every
@@ -319,12 +349,14 @@ public class MoviePlayer implements
         mVideoView.start();
         mController.showPlaying();
         setProgress();
+        mVideoHasPaused = false;
     }
 
     private void pauseVideo() {
         mVideoView.pause();
         setProgress();
         mController.showPaused();
+        mVideoHasPaused = true;
     }
 
     // Below are notifications from VideoView
