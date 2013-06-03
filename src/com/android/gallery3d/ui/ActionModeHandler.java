@@ -356,13 +356,22 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
         DataManager manager = mActivity.getDataManager();
         int type = 0;
         final Intent intent = new Intent();
+        int currentNum = 0;
+        // We only support 1024 items put into intent one time,
+        // since too long arguments will cause TransactionTooLargeException in binder.
+        int maxNum = 1024;
         for (Path path : expandedPaths) {
             if (jc.isCancelled()) return null;
+            if (currentNum == maxNum) {
+                Log.e(TAG,"only 1024 items allowed");
+                break;
+            }
             int support = manager.getSupportedOperations(path);
             type |= manager.getMediaType(path);
 
             if ((support & MediaObject.SUPPORT_SHARE) != 0) {
                 uris.add(manager.getContentUri(path));
+                currentNum++;
             }
         }
 
