@@ -770,11 +770,12 @@ public class AlbumSetPage extends ActivityState implements
         }
 
         @Override
-        public MediaDetails getDetails() {
+		//wss add for system data format
+        public MediaDetails getDetails(Context context) {
             MediaObject item = mAlbumSetDataAdapter.getMediaSet(mIndex);
             if (item != null) {
                 mAlbumSetView.setHighlightItemPath(item.getPath());
-                return item.getDetails();
+                return item.getDetails(context);
             } else {
                 return null;
             }

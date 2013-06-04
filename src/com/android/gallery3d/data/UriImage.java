@@ -17,6 +17,7 @@
 package com.android.gallery3d.data;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory.Options;
@@ -248,8 +249,9 @@ public class UriImage extends MediaItem {
     }
 
     @Override
-    public MediaDetails getDetails() {
-        MediaDetails details = super.getDetails();
+	//wss add for system data format
+    public MediaDetails getDetails(Context context) {
+        MediaDetails details = super.getDetails(context);
         if (mWidth != 0 && mHeight != 0) {
             details.addDetail(MediaDetails.INDEX_WIDTH, mWidth);
             details.addDetail(MediaDetails.INDEX_HEIGHT, mHeight);

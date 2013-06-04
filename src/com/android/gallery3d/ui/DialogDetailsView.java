@@ -73,7 +73,8 @@ public class DialogDetailsView implements DetailsViewContainer {
     public void reloadDetails() {
         int index = mSource.setIndex();
         if (index == -1) return;
-        MediaDetails details = mSource.getDetails();
+        //wss add for system data format
+        MediaDetails details = mSource.getDetails(mActivity.getAndroidContext());
         if (details != null) {
             if (mIndex == index && mDetails == details) return;
             mIndex = index;

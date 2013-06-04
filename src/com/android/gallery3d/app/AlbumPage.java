@@ -775,12 +775,13 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
         }
 
         @Override
-        public MediaDetails getDetails() {
+		//wss add for system data format
+        public MediaDetails getDetails(Context context) {
             // this relies on setIndex() being called beforehand
             MediaObject item = mAlbumDataAdapter.get(mIndex);
             if (item != null) {
                 mAlbumView.setHighlightItemPath(item.getPath());
-                return item.getDetails();
+                return item.getDetails(context);
             } else {
                 return null;
             }
