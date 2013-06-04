@@ -1449,8 +1449,9 @@ public class PhotoPage extends ActivityState implements
     private class MyDetailsSource implements DetailsSource {
 
         @Override
-        public MediaDetails getDetails() {
-            return mModel.getMediaItem(0).getDetails();
+		//wss add for system data format
+        public MediaDetails getDetails(Context context) {
+            return mModel.getMediaItem(0).getDetails(context);
         }
 
         @Override

@@ -16,6 +16,7 @@
 
 package com.android.gallery3d.data;
 
+import android.content.Context;
 import android.net.Uri;
 
 public abstract class MediaObject {
@@ -122,8 +123,8 @@ public abstract class MediaObject {
     public boolean Import() {
         throw new UnsupportedOperationException();
     }
-
-    public MediaDetails getDetails() {
+    //wss add for system data format
+    public MediaDetails getDetails(Context context) {
         MediaDetails details = new MediaDetails();
         return details;
     }

@@ -148,8 +148,9 @@ public class MtpImage extends MediaItem {
     }
 
     @Override
-    public MediaDetails getDetails() {
-        MediaDetails details = super.getDetails();
+	//wss add for system data format
+    public MediaDetails getDetails(Context context) {
+        MediaDetails details = super.getDetails(context);
         DateFormat formater = DateFormat.getDateTimeInstance();
         details.addDetail(MediaDetails.INDEX_TITLE, mFileName);
         details.addDetail(MediaDetails.INDEX_DATETIME, formater.format(new Date(mDateTaken)));

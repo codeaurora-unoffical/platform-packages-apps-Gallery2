@@ -30,7 +30,8 @@ public class DetailsHelper {
     public interface DetailsSource {
         public int size();
         public int setIndex();
-        public MediaDetails getDetails();
+		//wss add for system data format
+        public MediaDetails getDetails(Context context);
     }
 
     public interface CloseListener {

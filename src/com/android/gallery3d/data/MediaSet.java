@@ -16,6 +16,8 @@
 
 package com.android.gallery3d.data;
 
+import android.content.Context;
+
 import com.android.gallery3d.common.Utils;
 import com.android.gallery3d.util.Future;
 
@@ -181,8 +183,9 @@ public abstract class MediaSet extends MediaObject {
     public abstract long reload();
 
     @Override
-    public MediaDetails getDetails() {
-        MediaDetails details = super.getDetails();
+	//wss add for system data format
+    public MediaDetails getDetails(Context context) {
+        MediaDetails details = super.getDetails(context);
         details.addDetail(MediaDetails.INDEX_TITLE, getName());
         return details;
     }

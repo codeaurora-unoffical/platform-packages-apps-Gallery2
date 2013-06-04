@@ -17,6 +17,7 @@
 package com.android.gallery3d.data;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
@@ -213,8 +214,9 @@ public class LocalVideo extends LocalMediaItem {
     }
 
     @Override
-    public MediaDetails getDetails() {
-        MediaDetails details = super.getDetails();
+	//wss add for system data format
+    public MediaDetails getDetails(Context context) {
+        MediaDetails details = super.getDetails(context);
         int s = durationInSec;
         if (s > 0) {
             details.addDetail(MediaDetails.INDEX_DURATION, GalleryUtils.formatDuration(

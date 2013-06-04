@@ -16,11 +16,13 @@
 
 package com.android.gallery3d.data;
 
+import android.content.Context;
 import android.database.Cursor;
+import android.text.format.DateFormat;
 
 import com.android.gallery3d.util.GalleryUtils;
 
-import java.text.DateFormat;
+//import java.text.DateFormat;
 import java.util.Date;
 
 //
@@ -80,13 +82,18 @@ public abstract class LocalMediaItem extends MediaItem {
     }
 
     @Override
-    public MediaDetails getDetails() {
-        MediaDetails details = super.getDetails();
+	//wss add for system data format
+    public MediaDetails getDetails(Context context) {
+        MediaDetails details = super.getDetails(context);
         details.addDetail(MediaDetails.INDEX_PATH, filePath);
         details.addDetail(MediaDetails.INDEX_TITLE, caption);
-        DateFormat formater = DateFormat.getDateTimeInstance();
+        //DateFormat formater = DateFormat.getDateTimeInstance();
+        java.text.DateFormat dateTimeFormat_date = DateFormat.getDateFormat(context);
+        java.text.DateFormat dateTimeFormat_time = DateFormat.getTimeFormat(context);
+        
         details.addDetail(MediaDetails.INDEX_DATETIME,
-                formater.format(new Date(dateModifiedInSec * 1000)));
+        		dateTimeFormat_date.format(new Date(dateModifiedInSec * 1000))+" "+
+        		dateTimeFormat_time.format(new Date(dateModifiedInSec * 1000)));
         details.addDetail(MediaDetails.INDEX_WIDTH, width);
         details.addDetail(MediaDetails.INDEX_HEIGHT, height);
 
