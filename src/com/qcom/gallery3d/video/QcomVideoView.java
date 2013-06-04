@@ -168,39 +168,27 @@ public class QcomVideoView extends VideoView implements ScreenModeListener {
                     final Resources r = mContext.getResources();
                     int messageId;
                     
-                    // TODO 
-//                    if (frameworkErr == MediaPlayer.MEDIA_ERROR_BAD_FILE) {
-//                        messageId = com.mediatek.R.string.VideoView_error_text_bad_file;
-//                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_CANNOT_CONNECT_TO_SERVER) {
-//                        messageId = com.mediatek.R.string.VideoView_error_text_cannot_connect_to_server;
-//                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_TYPE_NOT_SUPPORTED) {
-//                        messageId = com.mediatek.R.string.VideoView_error_text_type_not_supported;
-//                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_DRM_NOT_SUPPORTED) {
-//                        messageId = com.mediatek.R.string.VideoView_error_text_drm_not_supported;
-//                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_INVALID_CONNECTION) {
-//                        messageId = com.mediatek.internal.R.string.VideoView_error_text_invalid_connection;
-//                    } else if (frameworkErr == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
-//                        messageId = com.android.internal.R.string.VideoView_error_text_invalid_progressive_playback;
-//                    } else {
-//                        messageId = com.android.internal.R.string.VideoView_error_text_unknown;
-//                    }
-                    
                     if (frameworkErr == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
                         messageId = com.android.internal.R.string.VideoView_error_text_invalid_progressive_playback;
                     } else {
                         messageId = com.android.internal.R.string.VideoView_error_text_unknown;
                     }
+                     new AlertDialog.Builder(mContext)
+                        .setMessage(messageId)
+                        .setPositiveButton(com.android.internal.R.string.VideoView_error_button,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                        /* If we get here, there is no onError listener, so
+                                         * at least inform them that the video is over.
+                                         */
+                                        if (mOnCompletionListener != null) {
+                                            mOnCompletionListener.onCompletion(mMediaPlayer);
+                                        }
+                                    }
+                                })
+                        .setCancelable(false)
+                        .show();
                     
-                    final String errorDialogTag = "ERROR_DIALOG_TAG";
-                    FragmentManager fragmentManager = ((Activity)mContext).getFragmentManager();
-                    DialogFragment oldFragment = (DialogFragment) fragmentManager
-                            .findFragmentByTag(errorDialogTag);
-                    if (null != oldFragment) {
-                        oldFragment.dismissAllowingStateLoss();
-                    }
-                    DialogFragment newFragment = ErrorDialogFragment.newInstance(messageId);
-                    newFragment.show(fragmentManager, errorDialogTag);
-                    fragmentManager.executePendingTransactions();
                 }
                 return true;
             }

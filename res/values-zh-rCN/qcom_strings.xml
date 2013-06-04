@@ -121,5 +121,6 @@
 
   <string name="media_controller_live">直播</string>
   <string name="media_controller_playing">正在播放</string>
-   <string name="media_controller_connecting">正在连接...</string>
+  <string name="media_controller_connecting">正在连接...</string>
+  <string name="movie_could_not_show_menu_function">很抱歉，正在尝试连接在线流媒体视频，无法设置此项。请在视频播放时再进行设置。</string>
 </resources>

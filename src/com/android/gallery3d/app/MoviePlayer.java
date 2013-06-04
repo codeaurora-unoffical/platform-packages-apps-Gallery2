@@ -133,6 +133,10 @@ public class MoviePlayer implements
         }
     };
 
+     public boolean isStateLoadingVideo() {
+         return mController.ismStateEqualsLoading();
+     }
+
 //    private final Runnable mRemoveBackground = new Runnable() {
 //        @Override
 //        public void run() {
