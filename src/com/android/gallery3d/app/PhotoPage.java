@@ -344,7 +344,11 @@ public class PhotoPage extends ActivityState implements
                             if (mAppBridge != null) mPhotoView.setFilmMode(false);
                             stayedOnCamera = true;
                         }
-
+                        //wss don't launch camera if deleted picture by up.
+                        if(mPhotoView.isDeletingByUp()){
+                        	stayedOnCamera = false;
+                        	mPhotoView.setWantPictureCenterCallbacks(false);
+                        }
                         if (stayedOnCamera) {
                             if (mAppBridge == null) {
                                 launchCamera();
@@ -593,7 +597,8 @@ public class PhotoPage extends ActivityState implements
 
     @Override
     public void onPictureCenter(boolean isCamera) {
-        isCamera = isCamera || (mHasCameraScreennailOrPlaceholder && mAppBridge == null);
+    	//wss enter camera only when focus on it.
+        isCamera = isCamera || (mHasCameraScreennailOrPlaceholder && mAppBridge == null && mCurrentIndex == 0);
         mPhotoView.setWantPictureCenterCallbacks(false);
         mHandler.removeMessages(MSG_ON_CAMERA_CENTER);
         mHandler.removeMessages(MSG_ON_PICTURE_CENTER);
