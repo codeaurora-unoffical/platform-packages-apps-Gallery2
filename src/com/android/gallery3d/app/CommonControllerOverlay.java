@@ -66,6 +66,9 @@ public abstract class CommonControllerOverlay extends FrameLayout implements
 
     protected State mState;
 
+    public boolean ismStateEqualsLoading() {
+        return mState == State.LOADING ;
+    	}
     protected boolean mCanReplay = true;
 
     public CommonControllerOverlay(Context context) {

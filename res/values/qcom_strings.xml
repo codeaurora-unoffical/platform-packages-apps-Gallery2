@@ -145,4 +145,5 @@
     <string name="media_controller_live">Live</string>
     <string name="media_controller_playing">Playing</string>
     <string name="media_controller_connecting">Connecting...</string>
+    <string name="movie_could_not_show_menu_function">Sorry, trying to connect online video and could not set this function. Please try it when video is playing.</string>
 </resources>
