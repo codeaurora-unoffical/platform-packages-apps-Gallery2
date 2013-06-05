@@ -194,6 +194,8 @@ public class PhotoView extends GLView {
     private EdgeView mEdgeView;
     private UndoBarView mUndoBar;
     private Texture mVideoPlayIcon;
+    
+    private boolean mDeletingByUp;//wss mark the reason of on camera center.
 
     private SynchronizedHandler mHandler;
 
@@ -378,7 +380,8 @@ public class PhotoView extends GLView {
                     break;
                 }
                 case MSG_UNDO_BAR_FULL_CAMERA: {
-                    checkHideUndoBar(UNDO_BAR_FULL_CAMERA);
+                	//wss don't hide for camera.
+                    //checkHideUndoBar(UNDO_BAR_FULL_CAMERA);
                     break;
                 }
                 default: throw new AssertionError(message.what);
@@ -1131,6 +1134,7 @@ public class PhotoView extends GLView {
         }
 
         private void deleteAfterAnimation(int duration) {
+            mDeletingByUp = true ;//wss mark the reason of on camera center.
             MediaItem item = mModel.getMediaItem(mTouchBoxIndex);
             if (item == null) return;
             mListener.onCommitDeleteImage();
@@ -1381,7 +1385,12 @@ public class PhotoView extends GLView {
         mUndoBar.animateVisibility(GLView.INVISIBLE);
         mUndoBarState = 0;
         mUndoIndexHint = Integer.MAX_VALUE;
+        mDeletingByUp = false ;//wss mark the reason of on camera center.
         mListener.onUndoBarVisibilityChanged(false);
+    }
+    
+    public boolean isDeletingByUp(){
+    	return mDeletingByUp;
     }
 
     // Check if the one of the conditions for hiding the undo bar has been
@@ -1395,13 +1404,14 @@ public class PhotoView extends GLView {
     private void checkHideUndoBar(int addition) {
         mUndoBarState |= addition;
         if ((mUndoBarState & UNDO_BAR_SHOW) == 0) return;
-        boolean timeout = (mUndoBarState & UNDO_BAR_TIMEOUT) != 0;
+        //wss msm8130-1044 don't hide for timeout && deleteLast and camera.
+        //boolean timeout = (mUndoBarState & UNDO_BAR_TIMEOUT) != 0;
         boolean touched = (mUndoBarState & UNDO_BAR_TOUCHED) != 0;
-        boolean fullCamera = (mUndoBarState & UNDO_BAR_FULL_CAMERA) != 0;
-        boolean deleteLast = (mUndoBarState & UNDO_BAR_DELETE_LAST) != 0;
-        //wss qrd msm8130-1044 don't hide for timeout && deleteLast.
+        //boolean fullCamera = (mUndoBarState & UNDO_BAR_FULL_CAMERA) != 0;
+        //boolean deleteLast = (mUndoBarState & UNDO_BAR_DELETE_LAST) != 0;
+        
         //if ((timeout && deleteLast) || fullCamera || touched) {
-        if (fullCamera || touched) {
+        if (touched) {
             hideUndoBar();
         }
     }
@@ -1417,14 +1427,16 @@ public class PhotoView extends GLView {
     @Override
     protected void render(GLCanvas canvas) {
         // Check if the camera preview occupies the full screen.
+    	//wss don't start camera if is deleting by up.
         boolean full = !mFilmMode && mPictures.get(0).isCamera()
                 && mPositionController.isCenter()
-                && mPositionController.isAtMinimalScale();
+                && mPositionController.isAtMinimalScale() && !isDeletingByUp();
         if (mFirst || full != mFullScreenCamera) {
             mFullScreenCamera = full;
             mFirst = false;
             mListener.onFullScreenChanged(full);
-            if (full) mHandler.sendEmptyMessage(MSG_UNDO_BAR_FULL_CAMERA);
+            //wss don't hide for camera.
+            //if (full) mHandler.sendEmptyMessage(MSG_UNDO_BAR_FULL_CAMERA);
         }
 
         // Determine how many photos we need to draw in addition to the center
