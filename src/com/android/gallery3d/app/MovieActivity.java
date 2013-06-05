@@ -45,6 +45,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ShareActionProvider;
 import android.content.res.Configuration;
+import android.widget.Toast;
+
 
 
 import com.android.gallery3d.R;
@@ -223,7 +225,16 @@ public class MovieActivity extends Activity {
                     getString(R.string.share)));
             return true;
         }
-        return mMovieHooker.onOptionsItemSelected(item);
+	if(mPlayer.isStateLoadingVideo()) {
+	     Toast.makeText(getApplicationContext(),
+                    getString(R.string.movie_could_not_show_menu_function),
+                    Toast.LENGTH_LONG)
+                    .show();
+	    return false;
+	}else {
+	    return mMovieHooker.onOptionsItemSelected(item);
+	}
+       
     }
 
     @Override
