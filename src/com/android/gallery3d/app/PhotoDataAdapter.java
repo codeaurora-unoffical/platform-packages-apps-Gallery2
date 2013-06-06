@@ -30,6 +30,7 @@ import com.android.gallery3d.data.MediaItem;
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.MediaSet;
 import com.android.gallery3d.data.Path;
+import com.android.gallery3d.ui.BitmapScreenNail;
 import com.android.gallery3d.ui.PhotoView;
 import com.android.gallery3d.ui.ScreenNail;
 import com.android.gallery3d.ui.SynchronizedHandler;
@@ -305,10 +306,11 @@ public class PhotoDataAdapter implements PhotoPage.Model {
         entry.screenNailTask = null;
 
         // Combine the ScreenNails if we already have a BitmapScreenNail
-        if (entry.screenNail instanceof TiledScreenNail) {
-            TiledScreenNail original = (TiledScreenNail) entry.screenNail;
-            screenNail = original.combine(screenNail);
-        }
+		// wss msm8130-1049 change to BitmapTexture from TiledTexture
+		if (entry.screenNail instanceof BitmapScreenNail) {
+			BitmapScreenNail original = (BitmapScreenNail) entry.screenNail;
+			screenNail = original.combine(screenNail);
+		}
 
         if (screenNail == null) {
             entry.failToLoad = true;
@@ -716,7 +718,8 @@ public class PhotoDataAdapter implements PhotoPage.Model {
                 bitmap = BitmapUtils.rotateBitmap(bitmap,
                     mItem.getRotation() - mItem.getFullImageRotation(), true);
             }
-            return bitmap == null ? null : new TiledScreenNail(bitmap);
+			// wss msm8130-1049 change to BitmapTexture from TiledTexture
+			return bitmap == null ? null : new BitmapScreenNail(bitmap);
         }
     }
 
@@ -765,7 +768,8 @@ public class PhotoDataAdapter implements PhotoPage.Model {
     private ScreenNail newPlaceholderScreenNail(MediaItem item) {
         int width = item.getWidth();
         int height = item.getHeight();
-        return new TiledScreenNail(width, height);
+		// wss msm8130-1049 change to BitmapTexture from TiledTexture
+		return new BitmapScreenNail(width, height);
     }
 
     // Returns the task if we started the task or the task is already started.
@@ -827,11 +831,12 @@ public class PhotoDataAdapter implements PhotoPage.Model {
                 if (entry.requestedScreenNail != item.getDataVersion()) {
                     // This ScreenNail is outdated, we want to update it if it's
                     // still a placeholder.
-                    if (entry.screenNail instanceof TiledScreenNail) {
-                        TiledScreenNail s = (TiledScreenNail) entry.screenNail;
-                        s.updatePlaceholderSize(
-                                item.getWidth(), item.getHeight());
-                    }
+					// wss msm8130-1049 change to BitmapTexture from TiledTexture
+					if (entry.screenNail instanceof BitmapScreenNail) {
+						BitmapScreenNail s = (BitmapScreenNail) entry.screenNail;
+						s.updatePlaceholderSize(item.getWidth(),
+								item.getHeight());
+					}
                 }
             } else {
                 entry = new ImageEntry();
