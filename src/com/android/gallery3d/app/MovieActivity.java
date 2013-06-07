@@ -203,21 +203,21 @@ public class MovieActivity extends Activity {
                 int sessionId = mp.getAudioSessionId();
                 if (mBassBoostSupported) {
                     mBassBoostEffect = new BassBoost(0, sessionId);
-                    mBassBoostEffect.setEnabled(true);
                 }
                 if (mVirtualizerSupported) {
                     mVirtualizerEffect = new Virtualizer(0, sessionId);
-                    mVirtualizerEffect.setEnabled(true);
                 }
                 if (mIsHeadsetOn) {
                     if (mPrefs.getBoolean(Key.global_enabled.toString(), false)) {
                         if (mBassBoostSupported) {
                             mBassBoostEffect.setStrength((short)
                                     mPrefs.getInt(Key.bb_strength.toString(), 0));
+                            mBassBoostEffect.setEnabled(true);
                         }
                         if (mVirtualizerSupported) {
                             mVirtualizerEffect.setStrength((short)
                                 mPrefs.getInt(Key.virt_strength.toString(), 0));
+                            mVirtualizerEffect.setEnabled(true);
                         }
                     }
                 }
@@ -386,6 +386,13 @@ public class MovieActivity extends Activity {
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        boolean enabled = mPrefs.getBoolean(Key.global_enabled.toString(), false);
+                        mBassBoostEffect.setStrength((short)
+                                mPrefs.getInt(Key.bb_strength.toString(), 0));
+                        mBassBoostEffect.setEnabled(enabled);
+                        mVirtualizerEffect.setStrength((short)
+                            mPrefs.getInt(Key.virt_strength.toString(), 0));
+                        mVirtualizerEffect.setEnabled(enabled);
                     }
                 })
                 .create();
@@ -470,6 +477,14 @@ public class MovieActivity extends Activity {
     @Override
     public void onDestroy() {
         mPlayer.onDestroy();
+        if (mBassBoostEffect != null) {
+            mBassBoostEffect.setEnabled(false);
+            mBassBoostEffect.release();
+        }
+        if (mVirtualizerEffect != null) {
+            mVirtualizerEffect.setEnabled(false);
+            mVirtualizerEffect.release();
+        }
         super.onDestroy();
     }
 
