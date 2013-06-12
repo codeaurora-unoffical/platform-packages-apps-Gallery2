@@ -29,6 +29,7 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.ShutterCallback;
+import android.hardware.Camera.CameraDataCallback;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -72,8 +73,12 @@ public class CameraManager {
     private static final int SET_PREVIEW_CALLBACK = 22;
     private static final int ENABLE_SHUTTER_SOUND = 23;
     private static final int REFRESH_PARAMETERS = 24;
+    private static final int SET_HISTOGRAM_MODE = 25;
+    private static final int SEND_HISTOGRAM_DATA = 26;
+
 
     private Handler mCameraHandler;
+    private CameraProxy mCameraProxy;
     private android.hardware.Camera mCamera;
 
     // Used to retain a copy of Parameters for setting parameters.
@@ -252,6 +257,13 @@ public class CameraManager {
                         mParametersIsDirty = true;
                         return;
 
+                    case SET_HISTOGRAM_MODE:
+                        mCamera.setHistogramMode((CameraDataCallback) msg.obj);
+                        break;
+
+                    case SEND_HISTOGRAM_DATA:
+                        mCamera.sendHistogramData();
+                        break;
                     default:
                         throw new RuntimeException("Invalid CameraProxy message=" + msg.what);
                 }
@@ -452,6 +464,13 @@ public class CameraManager {
         public void enableShutterSound(boolean enable) {
             mCameraHandler.obtainMessage(
                     ENABLE_SHUTTER_SOUND, (enable ? 1 : 0), 0).sendToTarget();
+        }
+
+        public void setHistogramMode(CameraDataCallback cb) {
+            mCameraHandler.obtainMessage(SET_HISTOGRAM_MODE, cb).sendToTarget();
+        }
+          public void sendHistogramData() {
+            mCameraHandler.sendEmptyMessage(SEND_HISTOGRAM_DATA);
         }
 
         // return false if cancelled.
