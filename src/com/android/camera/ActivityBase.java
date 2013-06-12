@@ -94,6 +94,7 @@ public abstract class ActivityBase extends AbstractGalleryActivity
     // indicator bar, focus indicator and etc.
     protected View mCameraAppView;
     protected boolean mShowCameraAppView = true;
+    protected static boolean mUsingCameraView = true;
     private Animation mCameraAppViewFadeIn;
     private Animation mCameraAppViewFadeOut;
     // Secure album id. This should be incremented every time the camera is
@@ -462,6 +463,10 @@ public abstract class ActivityBase extends AbstractGalleryActivity
         } else {
             mCameraAppView.startAnimation(mCameraAppViewFadeOut);
         }
+    }
+
+     public static boolean getCameraAppViewStatus() {
+        return mUsingCameraView;
     }
 
     protected void onFullScreenChanged(boolean full) {
