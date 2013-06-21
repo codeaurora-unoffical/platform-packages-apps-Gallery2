@@ -26,16 +26,18 @@ public abstract class FadeTexture implements Texture {
     // The duration of the fading animation in milliseconds
     public static final int DURATION = 180;
 
+    protected final BasicTexture mTexture;
     private final long mStartTime;
     private final int mWidth;
     private final int mHeight;
     private final boolean mIsOpaque;
     private boolean mIsAnimating;
 
-    public FadeTexture(int width, int height, boolean opaque) {
-        mWidth = width;
-        mHeight = height;
-        mIsOpaque = opaque;
+    public FadeTexture(BasicTexture texture) {
+        mTexture = texture;
+        mWidth = mTexture.getWidth();
+        mHeight = mTexture.getHeight();
+        mIsOpaque = mTexture.isOpaque();
         mStartTime = now();
         mIsAnimating = true;
     }

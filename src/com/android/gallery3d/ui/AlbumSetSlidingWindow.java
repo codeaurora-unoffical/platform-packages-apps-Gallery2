@@ -59,7 +59,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
     private final AlbumLabelMaker mLabelMaker;
     private final String mLoadingText;
 
-    private final TiledTexture.Uploader mContentUploader;
+    private final TextureUploader mTextureUploader;
     private final TextureUploader mLabelUploader;
 
     private int mActiveRequestCount = 0;
@@ -73,7 +73,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
         public MediaItem coverItem;
         public Texture content;
         public BitmapTexture labelTexture;
-        public TiledTexture bitmapTexture;
+        public BitmapTexture bitmapTexture;
         public Path setPath;
         public String title;
         public int totalCount;
@@ -98,7 +98,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
 
         mLabelMaker = new AlbumLabelMaker(activity.getAndroidContext(), labelSpec);
         mLoadingText = activity.getAndroidContext().getString(R.string.loading);
-        mContentUploader = new TiledTexture.Uploader(activity.getGLRoot());
+        mTextureUploader = new TextureUploader(activity.getGLRoot());
         mLabelUploader = new TextureUploader(activity.getGLRoot());
 
         mHandler = new SynchronizedHandler(activity.getGLRoot()) {
@@ -300,7 +300,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
         if (index < mContentStart || index >= mContentEnd) return;
         AlbumSetEntry entry = mData[index % mData.length];
         if (entry.bitmapTexture != null) {
-            mContentUploader.addTexture(entry.bitmapTexture);
+            mTextureUploader.addBgTexture(entry.bitmapTexture);
         }
         if (entry.labelTexture != null) {
             mLabelUploader.addBgTexture(entry.labelTexture);
@@ -309,14 +309,14 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
 
     private void updateTextureUploadQueue() {
         if (!mIsActive) return;
-        mContentUploader.clear();
+        mTextureUploader.clear();
         mLabelUploader.clear();
 
         // Upload foreground texture
         for (int i = mActiveStart, n = mActiveEnd; i < n; ++i) {
             AlbumSetEntry entry = mData[i % mData.length];
             if (entry.bitmapTexture != null) {
-                mContentUploader.addTexture(entry.bitmapTexture);
+                mTextureUploader.addFgTexture(entry.bitmapTexture);
             }
             if (entry.labelTexture != null) {
                 mLabelUploader.addFgTexture(entry.labelTexture);
@@ -394,8 +394,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
     public void pause() {
         mIsActive = false;
         mLabelUploader.clear();
-        mContentUploader.clear();
-        TiledTexture.freeResources();
+        mTextureUploader.clear();
         for (int i = mContentStart, n = mContentEnd; i < n; ++i) {
             freeSlotContent(i);
         }
@@ -404,7 +403,6 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
 
     public void resume() {
         mIsActive = true;
-        TiledTexture.prepareResources();
         for (int i = mContentStart, n = mContentEnd; i < n; ++i) {
             prepareSlotContent(i);
         }
@@ -447,17 +445,17 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
             if (bitmap == null) return; // error or recycled
 
             AlbumSetEntry entry = mData[mSlotIndex % mData.length];
-            TiledTexture texture = new TiledTexture(bitmap);
+            BitmapTexture texture = new BitmapTexture(bitmap);
             entry.bitmapTexture = texture;
             entry.content = texture;
 
             if (isActiveSlot(mSlotIndex)) {
-                mContentUploader.addTexture(texture);
+                mTextureUploader.addFgTexture(texture);
                 --mActiveRequestCount;
                 if (mActiveRequestCount == 0) requestNonactiveImages();
                 if (mListener != null) mListener.onContentChanged();
             } else {
-                mContentUploader.addTexture(texture);
+                mTextureUploader.addBgTexture(texture);
             }
         }
     }
