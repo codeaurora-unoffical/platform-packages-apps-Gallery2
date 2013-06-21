@@ -938,7 +938,8 @@ public class CropImage extends AbstractGalleryActivity {
     protected void onResume() {
         super.onResume();
         if (mState == STATE_INIT) initializeData();
-        if (mState == STATE_SAVING) onSaveClicked();
+        //wss don't start task for more times.
+        //if (mState == STATE_SAVING) onSaveClicked();
 
         // TODO: consider to do it in GLView system
         GLRoot root = getGLRoot();
