@@ -967,6 +967,7 @@ public class MoviePlayer implements
         mWaitMetaData = true;
         if (MovieUtils.isSdpStreaming(uri, mimeType)) {
             mStreamingType = STREAMING_SDP;
+	    mWaitMetaData = false;
         } else if (MovieUtils.isRtspStreaming(uri, mimeType)) {
             mStreamingType = STREAMING_RTSP;
 	    mWaitMetaData = false;
