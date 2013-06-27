@@ -149,16 +149,18 @@ public class SinglePhotoDataAdapter extends TileImageViewAdapter
 
     @Override
     public void resume() {
-        if (mTask == null) {
-            if (mHasFullImage) {
-                mTask = mThreadPool.submit(
-                        mItem.requestLargeImage(), mLargeListener);
-            } else {
-                mTask = mThreadPool.submit(
-                        mItem.requestImage(MediaItem.TYPE_THUMBNAIL),
-                        mThumbListener);
-            }
+        //msm8130-1327 mBitmapScreenNail was recycled on pause,if task is not null,
+		//it won't be created again by task.So stop task on pause and start task on resume.
+        //if (mTask == null) {
+        if (mHasFullImage) {
+            mTask = mThreadPool.submit(
+                    mItem.requestLargeImage(), mLargeListener);
+        } else {
+            mTask = mThreadPool.submit(
+                    mItem.requestImage(MediaItem.TYPE_THUMBNAIL),
+                    mThumbListener);
         }
+        //}
     }
 
     @Override
@@ -166,9 +168,9 @@ public class SinglePhotoDataAdapter extends TileImageViewAdapter
         Future<?> task = mTask;
         task.cancel();
         task.waitDone();
-        if (task.get() == null) {
-            mTask = null;
-        }
+        //if (task.get() == null) {
+        mTask = null;
+        //}
         if (mBitmapScreenNail != null) {
             mBitmapScreenNail.recycle();
             mBitmapScreenNail = null;
