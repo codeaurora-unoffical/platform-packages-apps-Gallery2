@@ -1949,7 +1949,7 @@ public class VideoModule implements CameraModule,
                 for(Size size :  mParameters.getSupportedHfrSizes()){
                     if(size != null) {
                         Log.v(TAG, "supported hfr size : "+ size.width+ " "+size.height);
-                        if(videoWidth == size.width && videoHeight == size.height) {
+                        if(videoWidth <= size.width && videoHeight <= size.height) {
                             mUnsupportedHFRVideoSize = false;
                             Log.v(TAG,"Current hfr resolution is supported");
                             break;
