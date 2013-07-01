@@ -95,8 +95,12 @@ public class CameraSettings {
     public static final String KEY_SKIN_TONE_ENHANCEMENT = "pref_camera_skinToneEnhancement_key";
     public static final String KEY_SKIN_TONE_ENHANCEMENT_FACTOR = "pref_camera_skinToneEnhancement_factor_key";
 
+    public static final String KEY_FACE_RECOGNITION = "pref_camera_facerc_key";
+
     private static final String KEY_QC_SUPPORTED_AE_BRACKETING_MODES = "ae-bracket-hdr-values";
+    private static final String KEY_QC_SUPPORTED_FACE_RECOGNITION_MODES = "face-recognition-values";
     public static final String KEY_QC_AE_BRACKETING = "ae-bracket-hdr";
+    public static final String KEY_QC_FACE_RECOGNITION = "face-recognition";
 
     private static final String VIDEO_QUALITY_HIGH = "high";
     private static final String VIDEO_QUALITY_MMS = "mms";
@@ -197,6 +201,14 @@ public class CameraSettings {
         return duration;
     }
 
+    public static List<String> getSupportedFaceRecognitionModes(Parameters params) {
+        String str = params.get(KEY_QC_SUPPORTED_FACE_RECOGNITION_MODES);
+        if (str == null) {
+            return null;
+        }
+        return split(str);
+    }
+
     public static List<String> getSupportedAEBracketingModes(Parameters params) {
         String str = params.get(KEY_QC_SUPPORTED_AE_BRACKETING_MODES);
         if (str == null) {
@@ -238,6 +250,7 @@ public class CameraSettings {
         ListPreference denoise = group.findPreference(KEY_DENOISE);
         ListPreference redeyeReduction = group.findPreference(KEY_REDEYE_REDUCTION);
         ListPreference aeBracketing = group.findPreference(KEY_AE_BRACKET_HDR);
+        ListPreference faceRC = group.findPreference(KEY_FACE_RECOGNITION);
         ListPreference jpegQuality = group.findPreference(KEY_JPEG_QUALITY);
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
 
@@ -278,6 +291,11 @@ public class CameraSettings {
         if (antiBanding != null) {
             filterUnsupportedOptions(group,
                     antiBanding, mParameters.getSupportedAntibanding());
+        }
+
+        if (faceRC != null) {
+            filterUnsupportedOptions(group,
+                    faceRC, getSupportedFaceRecognitionModes(mParameters));
         }
 
         if (autoExposure != null) {
