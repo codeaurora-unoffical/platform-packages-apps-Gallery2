@@ -36,6 +36,7 @@ import com.android.gallery3d.common.ApiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.Locale;
 
 /**
@@ -93,6 +94,9 @@ public class CameraSettings {
     public static final String DEFAULT_VIDEO_QUALITY_VALUE = "custom";
     public static final String KEY_SKIN_TONE_ENHANCEMENT = "pref_camera_skinToneEnhancement_key";
     public static final String KEY_SKIN_TONE_ENHANCEMENT_FACTOR = "pref_camera_skinToneEnhancement_factor_key";
+
+    private static final String KEY_QC_SUPPORTED_AE_BRACKETING_MODES = "ae-bracket-hdr-values";
+    public static final String KEY_QC_AE_BRACKETING = "ae-bracket-hdr";
 
     private static final String VIDEO_QUALITY_HIGH = "high";
     private static final String VIDEO_QUALITY_MMS = "mms";
@@ -193,6 +197,28 @@ public class CameraSettings {
         return duration;
     }
 
+    public static List<String> getSupportedAEBracketingModes(Parameters params) {
+        String str = params.get(KEY_QC_SUPPORTED_AE_BRACKETING_MODES);
+        if (str == null) {
+            return null;
+        }
+        return split(str);
+    }
+
+    // Splits a comma delimited string to an ArrayList of String.
+    // Return null if the passing string is null or the size is 0.
+    private static ArrayList<String> split(String str) {
+        if (str == null) return null;
+
+        // Use StringTokenizer because it is faster than split.
+        StringTokenizer tokenizer = new StringTokenizer(str, ",");
+        ArrayList<String> substrings = new ArrayList<String>();
+        while (tokenizer.hasMoreElements()) {
+            substrings.add(tokenizer.nextToken());
+        }
+        return substrings;
+    }
+
     private void qcomInitPreferences(PreferenceGroup group){
         //Qcom Preference add here
         ListPreference powerMode = group.findPreference(KEY_POWER_MODE);
@@ -211,7 +237,7 @@ public class CameraSettings {
         ListPreference histogram = group.findPreference(KEY_HISTOGRAM);
         ListPreference denoise = group.findPreference(KEY_DENOISE);
         ListPreference redeyeReduction = group.findPreference(KEY_REDEYE_REDUCTION);
-        ListPreference hdr = group.findPreference(KEY_AE_BRACKET_HDR);
+        ListPreference aeBracketing = group.findPreference(KEY_AE_BRACKET_HDR);
         ListPreference jpegQuality = group.findPreference(KEY_JPEG_QUALITY);
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
 
@@ -242,6 +268,11 @@ public class CameraSettings {
         if (colorEffect != null) {
             filterUnsupportedOptions(group,
                     colorEffect, mParameters.getSupportedColorEffects());
+        }
+
+        if (aeBracketing != null) {
+            filterUnsupportedOptions(group,
+                     aeBracketing, getSupportedAEBracketingModes(mParameters));
         }
 
         if (antiBanding != null) {
