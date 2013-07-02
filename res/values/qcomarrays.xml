@@ -102,6 +102,18 @@
         <item>green-tint</item>
     </string-array>
 
+    <!-- Camera Preferences AE Bracketing dialog box entries -->
+    <string-array name="pref_camera_ae_bracket_hdr_entries">
+        <item>@string/pref_camera_ae_bracket_hdr_entry_off</item>
+        <item>@string/pref_camera_ae_bracket_hdr_entry_on</item>
+    </string-array>
+
+    <!-- Do not localize entryvalues -->
+    <string-array name="pref_camera_ae_bracket_hdr_entryvalues">
+        <item>Off</item>
+        <item>AE-Bracket</item>
+    </string-array>
+
     <!-- Camera Preferences Touch AF/AEC dialog box entries -->
     <string-array name="pref_camera_touchafaec_entries">
         <item>@string/pref_camera_touchafaec_entry_off</item>
