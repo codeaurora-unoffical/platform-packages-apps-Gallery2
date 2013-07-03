@@ -152,7 +152,7 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
         	is.close();
         }
         catch (IOException e){}
-        //wss gif can't support ARGB_8888
+        //wss TS823VGT-736 gif can't support ARGB_8888
         if(bitmap.getConfig() == Bitmap.Config.ARGB_8888) {
             return bitmap;
         } else {
