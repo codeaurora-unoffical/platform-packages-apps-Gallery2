@@ -152,7 +152,12 @@ public class SaveCopyTask extends AsyncTask<ImagePreset, Void, Uri> {
         	is.close();
         }
         catch (IOException e){}
-        return bitmap;
+        //wss gif can't support ARGB_8888
+        if(bitmap.getConfig() == Bitmap.Config.ARGB_8888) {
+            return bitmap;
+        } else {
+            return bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        }
     }
 
     private static final String[] COPY_EXIF_ATTRIBUTES = new String[] {
