@@ -194,12 +194,12 @@ public class MoviePlayer implements
             mVideoView.suspend();
             mHasPaused = true;
         } else {
-            final Integer bookmark = mBookmarker.getBookmark(mUri);
-            if (bookmark != null) {
-                showResumeDialog(movieActivity, bookmark);
-            } else {
+            //final Integer bookmark = mBookmarker.getBookmark(mUri);
+            //if (bookmark != null) {
+            //    showResumeDialog(movieActivity, bookmark);
+            //} else {
                 startVideo();
-            }
+            //}
         }
     }
 
