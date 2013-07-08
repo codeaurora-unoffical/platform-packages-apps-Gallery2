@@ -165,11 +165,11 @@ public class OrientationManager implements OrientationSource {
             // We keep the last known orientation. So if the user first orient
             // the camera then point the camera to floor or sky, we still have
             // the correct orientation.
-            if (orientation == ORIENTATION_UNKNOWN) return;
-            mOrientation = roundOrientation(orientation, mOrientation);
+            //if (orientation == ORIENTATION_UNKNOWN) return;
+            //mOrientation = roundOrientation(orientation, mOrientation);
             // If the framework orientation is locked, we update the
             // compensation value and notify the listeners.
-            if (mOrientationLocked) updateCompensation();
+            //if (mOrientationLocked) updateCompensation();
         }
     }
 
