@@ -2193,6 +2193,11 @@ public class PhotoModule
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_NONZSL;
             mParameters.setCameraMode(0);
             mFocusManager.setZslEnable(false);
+            if (hdr.equals(mActivity.getString(R.string.setting_on_value)))
+                mParameters.set("num-snaps-per-shutter", "2");
+            else
+                mParameters.set("num-snaps-per-shutter", "1");
+
         }
         // Set face detetction parameter.
         String faceDetection = mPreferences.getString(
