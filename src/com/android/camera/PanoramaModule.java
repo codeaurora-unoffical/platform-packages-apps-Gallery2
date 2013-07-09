@@ -908,7 +908,7 @@ public class PanoramaModule implements CameraModule,
         if (jpegData != null) {
             String filename = PanoUtil.createName(
                     mActivity.getResources().getString(R.string.pano_file_name_format), mTimeTaken);
-            String filepath = Storage.generateFilepath(filename);
+            String filepath = Storage.generateFilepath(filename, "jpeg");
 
             Location loc = mLocationManager.getCurrentLocation();
             ExifInterface exif = new ExifInterface();
@@ -927,7 +927,7 @@ public class PanoramaModule implements CameraModule,
             }
             int jpegLength = (int) (new File(filepath).length());
             return Storage.addImage(mContentResolver, filename, mTimeTaken,
-                    loc, orientation, jpegLength, filepath, width, height);
+                    loc, orientation, jpegLength, filepath, width, height, "jpeg");
         }
         return null;
     }
