@@ -2419,7 +2419,7 @@ public class VideoModule implements CameraModule,
         Size s = mParameters.getPictureSize();
         mActivity.getMediaSaveService().addImage(
                 data, title, dateTaken, loc, s.width, s.height, orientation,
-                exif, mOnPhotoSavedListener, mContentResolver);
+                exif, mOnPhotoSavedListener, mContentResolver, "jpeg");
     }
 
     private boolean resetEffect() {

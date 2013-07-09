@@ -194,7 +194,7 @@ public class PhotoModule
     private ProgressBar brightnessProgressBar;
     // Constant from android.hardware.Camera.Parameters
     private static final String KEY_PICTURE_FORMAT = "picture-format";
-    private static final String PIXEL_FORMAT_RAW = "raw";
+    private static final String KEY_QC_RAW_PICUTRE_SIZE = "raw-size";
     private static final String PIXEL_FORMAT_JPEG = "jpeg";
 
     private static final int MIN_SCE_FACTOR = -10;
@@ -977,6 +977,20 @@ public class PhotoModule
                     width = s.height;
                     height = s.width;
                 }
+
+                String pictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
+                if (pictureFormat != null && !pictureFormat.equalsIgnoreCase(PIXEL_FORMAT_JPEG)) {
+                    // overwrite width and height if raw picture
+                    String pair = mParameters.get(KEY_QC_RAW_PICUTRE_SIZE);
+                    if (pair != null) {
+                        int pos = pair.indexOf('x');
+                        if (pos != -1) {
+                            width = Integer.parseInt(pair.substring(0, pos));
+                            height = Integer.parseInt(pair.substring(pos + 1));
+                        }
+                    }
+                }
+
                 String title = mNamedImages.getTitle();
                 long date = mNamedImages.getDate();
                 if (title == null) {
@@ -994,9 +1008,10 @@ public class PhotoModule
                         exif.setTag(directionRefTag);
                         exif.setTag(directionTag);
                     }
+                    String mPictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
                     mActivity.getMediaSaveService().addImage(
                             jpegData, title, date, mLocation, width, height,
-                            orientation, exif, mOnMediaSavedListener, mContentResolver);
+                            orientation, exif, mOnMediaSavedListener, mContentResolver, mPictureFormat);
                 }
             } else {
                 mJpegImageData = jpegData;
@@ -2172,7 +2187,7 @@ public class PhotoModule
             editor.putString(CameraSettings.KEY_PICTURE_FORMAT, mActivity.getString(R.string.pref_camera_picture_format_value_jpeg));
             editor.apply();
 
-            if(pictureFormat.equals("raw")) {
+            if(!pictureFormat.equals(PIXEL_FORMAT_JPEG)) {
                      mActivity.runOnUiThread(new Runnable() {
                      public void run() {
                 Toast.makeText(mActivity, R.string.error_app_unsupported_raw,

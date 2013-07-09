@@ -102,6 +102,7 @@ public class CameraSettings {
     public static final String KEY_QC_AE_BRACKETING = "ae-bracket-hdr";
     public static final String KEY_QC_FACE_RECOGNITION = "face-recognition";
 
+    private static final String KEY_QC_PICTURE_FORMAT = "picture-format-values";
     private static final String VIDEO_QUALITY_HIGH = "high";
     private static final String VIDEO_QUALITY_MMS = "mms";
     private static final String VIDEO_QUALITY_YOUTUBE = "youtube";
@@ -230,6 +231,13 @@ public class CameraSettings {
         }
         return substrings;
     }
+    private List<String> getSupportedPictureFormatLists() {
+        String str = mParameters.get(KEY_QC_PICTURE_FORMAT);
+        if (str == null) {
+            str = "jpeg,raw"; // if not set, fall back to default behavior
+        }
+        return split(str);
+    }
 
     private void qcomInitPreferences(PreferenceGroup group){
         //Qcom Preference add here
@@ -253,6 +261,7 @@ public class CameraSettings {
         ListPreference faceRC = group.findPreference(KEY_FACE_RECOGNITION);
         ListPreference jpegQuality = group.findPreference(KEY_JPEG_QUALITY);
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
+        ListPreference pictureFormat = group.findPreference(KEY_PICTURE_FORMAT);
 
         if (touchAfAec != null) {
             filterUnsupportedOptions(group,
@@ -314,6 +323,11 @@ public class CameraSettings {
         if (histogram!= null) {
             filterUnsupportedOptions(group,
                     histogram, mParameters.getSupportedHistogramModes());
+        }
+
+        if (pictureFormat!= null) {
+            filterUnsupportedOptions(group,
+                    pictureFormat, getSupportedPictureFormatLists());
         }
 
     }
