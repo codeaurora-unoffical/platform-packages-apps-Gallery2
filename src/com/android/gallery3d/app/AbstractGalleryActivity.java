@@ -173,14 +173,6 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
             registerReceiver(mMountReceiver, mMountFilter);
         }
         mPanoramaViewHelper.onStart();
-
-        gl_init();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        gl_init();
     }
 
     @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
@@ -198,15 +190,11 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
             mAlertDialog = null;
         }
         mPanoramaViewHelper.onStop();
-
-        // Resources are released validly when activity is invisible
-        gl_release();
     }
 
-    /*
-     * Initialize drawing data of openGL
-     */
-    private void gl_init() {
+    @Override
+    protected void onResume() {
+        super.onResume();
         mGLRootView.lockRenderThread();
         try {
             getStateManager().resume();
@@ -218,10 +206,9 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
         mOrientationManager.resume();
     }
 
-    /*
-     * Release drawing data of openGL
-     */
-    private void gl_release() {
+    @Override
+    protected void onPause() {
+        super.onPause();
         mOrientationManager.pause();
         mGLRootView.onPause();
         mGLRootView.lockRenderThread();
