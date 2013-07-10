@@ -242,6 +242,7 @@ public class MovieActivity extends Activity {
         super.onStart();
         mMovieHooker.onStart();
         registerScreenOff();
+	registerShutDown();
         if (LOG) {
         	QcomLog.v(TAG, "onStart()");
         }
@@ -258,6 +259,7 @@ public class MovieActivity extends Activity {
         }
         mMovieHooker.onStop();
         unregisterScreenOff();
+	unregisterShutDown();
         if (LOG) {
         	QcomLog.v(TAG, "onStop() isKeyguardLocked=" + isKeyguardLocked()
                 + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
@@ -405,15 +407,41 @@ public class MovieActivity extends Activity {
         }
         
     };
+
+     /// M:for live streaming. @{
+    //we do not stop live streaming when other dialog overlays it.
+    private BroadcastReceiver mShutDownReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (LOG) {
+            	QcomLog.v(TAG, "onReceive(" + intent.getAction() + ") mControlResumed=" + mControlResumed);
+            }
+            if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
+	          MovieActivity.this.finish();
+            }
+        }
+        
+    };
     
     private void registerScreenOff() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenOffReceiver, filter);
     }
+
+    private void registerShutDown() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SHUTDOWN);
+        registerReceiver(mShutDownReceiver, filter);
+    }
     
     private void unregisterScreenOff() {
         unregisterReceiver(mScreenOffReceiver);
+    }
+
+    private void unregisterShutDown() {
+        unregisterReceiver(mShutDownReceiver);
     }
     /// @}
     
