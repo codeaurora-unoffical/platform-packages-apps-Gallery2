@@ -105,11 +105,13 @@ public class Wallpaper extends Activity {
                 // Do not set wallpaper when from screencolor.
                 Bundle extras = intent.getExtras();
                 if (extras != null) {
+                    fromScreenColor = extras.getBoolean(KEY_FROM_SCREENCOLOR, false);
+                }
+                if (fromScreenColor) {
                     width = extras.getInt(KEY_ASPECT_X, 0);
                     height = extras.getInt(KEY_ASPECT_Y, 0);
                     spotlightX = extras.getFloat(KEY_SPOTLIGHT_X, 0);
                     spotlightY = extras.getFloat(KEY_SPOTLIGHT_Y, 0);
-                    fromScreenColor = extras.getBoolean(KEY_FROM_SCREENCOLOR, false);
                 } else {
                     width = getWallpaperDesiredMinimumWidth();
                     height = getWallpaperDesiredMinimumHeight();
