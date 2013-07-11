@@ -71,8 +71,12 @@ public class ImageFilterGeometry extends ImageFilter {
         // TODO: and be more memory efficient! (do it in native?)
         Rect cropBounds = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         RectF crop = mGeometry.getCropBounds(bitmap);
-        if (crop.width() > 0 && crop.height() > 0)
-            cropBounds = GeometryMath.roundNearest(crop);
+        if (crop.width() > 0 && crop.height() > 0) {
+            Rect tempRect = GeometryMath.roundNearest(crop);
+            if (tempRect.width() > 0 && tempRect.height() > 0) {
+                cropBounds = tempRect;
+            }
+        }
         Bitmap temp = null;
         if (mGeometry.hasSwitchedWidthHeight()) {
             temp = Bitmap.createBitmap(cropBounds.height(), cropBounds.width(), mConfig);
