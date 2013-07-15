@@ -449,6 +449,7 @@ public class AlbumSetPage extends ActivityState implements
         mAlbumSetView.pause();
         mEyePosition.pause();
         DetailsHelper.pause();
+        mActivity.closeOptionsMenu();
         // Call disableClusterMenu to avoid receiving callback after paused.
         // Don't hide menu here otherwise the list menu will disappear earlier than
         // the action bar, which is janky and unwanted behavior.
