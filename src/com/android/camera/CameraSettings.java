@@ -767,6 +767,11 @@ public class CameraSettings {
               supported.add(Integer.toString(CamcorderProfile.QUALITY_480P));
            }
         }
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_FWVGA)) {
+           if (checkSupportedVideoQuality(864,480)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_FWVGA));
+           }
+        }
         if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_WVGA)) {
            if (checkSupportedVideoQuality(800,480)){
               supported.add(Integer.toString(CamcorderProfile.QUALITY_WVGA));
