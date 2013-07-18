@@ -296,6 +296,13 @@ public class MoviePlayer implements
                 pauseVideo();
             }
         }
+
+        String scheme = mUri.getScheme();
+        if ("http".equalsIgnoreCase(scheme) || "rtsp".equalsIgnoreCase(scheme)) {
+            mHandler.removeCallbacks(mPlayingChecker);
+            mHandler.postDelayed(mPlayingChecker, 250);
+        }
+
         mHandler.post(mProgressChecker);
     }
 
