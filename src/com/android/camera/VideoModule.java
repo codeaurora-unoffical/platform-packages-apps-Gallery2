@@ -1170,8 +1170,11 @@ public class VideoModule implements CameraModule,
         switch (keyCode) {
             case KeyEvent.KEYCODE_CAMERA:
                 if (event.getRepeatCount() == 0) {
-                    mUI.clickShutter();
-                    return true;
+                    // Only recording when in full screen recording mode
+                    if (mActivity.isInCameraApp()) {
+                        mUI.clickShutter();
+                        return true;
+                    }
                 }
                 break;
             case KeyEvent.KEYCODE_DPAD_CENTER:
