@@ -1904,19 +1904,13 @@ public class PhotoModule
 
         if (ApiHelper.HAS_SURFACE_TEXTURE) {
             CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-            int oldWidth = screenNail.getTextureWidth();
-            int oldHeight = screenNail.getTextureHeight();
-            Size size = mParameters.getPreviewSize();
-            int previewWidth = size.width;
-            int previewHeight = size.height;
-            if (mCameraDisplayOrientation % 180 != 0) {
-                previewWidth = size.height;
-                previewHeight = size.width;
-            }
-            if ( (mUI.getSurfaceTexture() == null) ||
-                  (previewWidth != oldWidth) ||
-                  (previewHeight != oldHeight) ) {
-                screenNail.setSize(previewWidth, previewHeight);
+            if (mUI.getSurfaceTexture() == null) {
+                Size size = mParameters.getPreviewSize();
+                if (mCameraDisplayOrientation % 180 == 0) {
+                    screenNail.setSize(size.width, size.height);
+                } else {
+                    screenNail.setSize(size.height, size.width);
+                }
                 screenNail.enableAspectRatioClamping();
                 mActivity.notifyScreenNailChanged();
                 screenNail.acquireSurfaceTexture();
