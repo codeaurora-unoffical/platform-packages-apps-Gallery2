@@ -2223,7 +2223,10 @@ public class PhotoModule
                                   mActivity.getString(R.string.pref_camera_zsl_default));
         String hdr = mPreferences.getString(CameraSettings.KEY_CAMERA_HDR,
                 mActivity.getString(R.string.pref_camera_hdr_default));
-        mParameters.setZSLMode(zsl);
+        if((!isImageCaptureIntent())) {
+            Log.v(TAG, "setZSLMode value = " + zsl);
+            mParameters.setZSLMode(zsl);
+        }
         if(zsl.equals("on")) {
             //Switch on ZSL Camera mode
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_ZSL;
