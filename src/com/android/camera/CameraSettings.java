@@ -102,6 +102,17 @@ public class CameraSettings {
     public static final String KEY_QC_AE_BRACKETING = "ae-bracket-hdr";
     public static final String KEY_QC_FACE_RECOGNITION = "face-recognition";
 
+    //for flip
+    public static final String KEY_QC_PREVIEW_FLIP = "preview-flip";
+    public static final String KEY_QC_VIDEO_FLIP = "video-flip";
+    public static final String KEY_QC_SNAPSHOT_PICTURE_FLIP = "snapshot-picture-flip";
+    public static final String KEY_QC_SUPPORTED_FLIP_MODES = "flip-mode-values";
+
+    public static final String FLIP_MODE_OFF = "off";
+    public static final String FLIP_MODE_V = "flip-v";
+    public static final String FLIP_MODE_H = "flip-h";
+    public static final String FLIP_MODE_VH = "flip-vh";
+
     private static final String KEY_QC_PICTURE_FORMAT = "picture-format-values";
     private static final String VIDEO_QUALITY_HIGH = "high";
     private static final String VIDEO_QUALITY_MMS = "mms";
@@ -236,6 +247,14 @@ public class CameraSettings {
         if (str == null) {
             str = "jpeg,raw"; // if not set, fall back to default behavior
         }
+        return split(str);
+    }
+
+   public static List<String> getSupportedFlipMode(Parameters params){
+        String str = params.get(KEY_QC_SUPPORTED_FLIP_MODES);
+        if(str == null)
+            return null;
+
         return split(str);
     }
 

@@ -744,6 +744,21 @@ public class Util {
         }
     }
 
+   public static String getFilpModeString(int value){
+        switch(value){
+            case 0:
+                return CameraSettings.FLIP_MODE_OFF;
+            case 1:
+                return CameraSettings.FLIP_MODE_H;
+            case 2:
+                return CameraSettings.FLIP_MODE_V;
+            case 3:
+                return CameraSettings.FLIP_MODE_VH;
+            default:
+                return null;
+        }
+    }
+
     private static class ImageFileNamer {
         private SimpleDateFormat mFormat;
 
