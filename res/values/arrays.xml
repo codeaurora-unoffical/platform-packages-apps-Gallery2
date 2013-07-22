@@ -170,6 +170,7 @@
     <!-- Camera Preferences Picture size dialog box entries -->
     <string-array name="pref_camera_picturesize_entries" translatable="false">
         <item>@string/pref_camera_picturesize_entry_13mp</item>
+        <item>@string/pref_camera_picturesize_entry_12.8mp</item>
         <item>@string/pref_camera_picturesize_entry_12mp</item>
         <item>@string/pref_camera_picturesize_entry_8mp</item>
         <item>@string/pref_camera_picturesize_entry_8mp</item>
@@ -197,6 +198,7 @@
          driver -->
     <string-array name="pref_camera_picturesize_entryvalues" translatable="false">
         <item>4128x3096</item>
+        <item>4224x3000</item>
         <item>4000x3000</item>
         <item>3264x2448</item>
         <item>3200x2400</item>
