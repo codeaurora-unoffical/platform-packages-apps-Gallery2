@@ -1113,4 +1113,7 @@ CHAR LIMIT = NONE] -->
 
     <!-- The title of the audio effects dialog. -->
     <string name="audio_effects_dialog_title">Snapdragon Audio+</string>
+
+    <!-- The title of the menu item where user can auto upload to Baidu Yun. -->
+    <string name="menu_auto_upload_to_xcloud_switch">Auto upload to Baidu Yun</string>
 </resources>

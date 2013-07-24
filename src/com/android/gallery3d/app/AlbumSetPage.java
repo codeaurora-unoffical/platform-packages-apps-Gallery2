@@ -23,6 +23,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -57,6 +58,7 @@ import com.android.gallery3d.ui.SlotView;
 import com.android.gallery3d.ui.SynchronizedHandler;
 import com.android.gallery3d.util.Future;
 import com.android.gallery3d.util.GalleryUtils;
+import com.android.gallery3d.util.GalleryUtils.XCloudManager;
 import com.android.gallery3d.util.HelpUtils;
 
 import java.lang.ref.WeakReference;
@@ -80,6 +82,8 @@ public class AlbumSetPage extends ActivityState implements
 
     private static final int BIT_LOADING_RELOAD = 1;
     private static final int BIT_LOADING_SYNC = 2;
+
+    private static final String BAIDU_XCLOUD_PROPERTY = "persist.env.baidu.xcloud";
 
     private boolean mIsActive = false;
     private SlotView mSlotView;
@@ -560,6 +564,16 @@ public class AlbumSetPage extends ActivityState implements
             helpItem.setVisible(helpIntent != null);
             if (helpIntent != null) helpItem.setIntent(helpIntent);
 
+            // Add for Baidu xCloud Feature
+            boolean baiduXcloud = SystemProperties.getBoolean(BAIDU_XCLOUD_PROPERTY, true);
+            if (baiduXcloud) {
+                XCloudManager.getInstance().updateMenuState(menu, activity);
+            } else {
+                final MenuItem uploadSwitcher = menu.findItem(R.id.switch_auto_sync_to_xcloud);
+                if (uploadSwitcher != null)
+                    uploadSwitcher.setVisible(false);
+            }
+
             mActionBar.setTitle(mTitle);
             mActionBar.setSubtitle(mSubtitle);
             if (mShowClusterMenu != wasShowingClusterMenu) {
@@ -574,8 +588,31 @@ public class AlbumSetPage extends ActivityState implements
     }
 
     @Override
+    protected boolean onPrepareOptionsMenu(Menu menu) {
+        // Add for Baidu xCloud Feature
+        boolean baiduXcloud = SystemProperties.getBoolean(BAIDU_XCLOUD_PROPERTY, true);
+        if (baiduXcloud) {
+            XCloudManager.getInstance().updateMenuState(menu, (Activity)mActivity);
+        } else {
+            final MenuItem uploadSwitcher = menu.findItem(R.id.switch_auto_sync_to_xcloud);
+            if (uploadSwitcher != null)
+                uploadSwitcher.setVisible(false);
+        }
+
+        return true;
+    }
+
+    @Override
     protected boolean onItemSelected(MenuItem item) {
         Activity activity = mActivity;
+
+        // Add for Baidu xCloud Feature
+        boolean baiduXcloud = SystemProperties.getBoolean(BAIDU_XCLOUD_PROPERTY, true);
+        if (baiduXcloud) {
+            if (XCloudManager.getInstance().handleXCouldRelatedMenuItem(item, activity))
+                return true;
+        }
+
         switch (item.getItemId()) {
             case R.id.action_cancel:
                 activity.setResult(Activity.RESULT_CANCELED);

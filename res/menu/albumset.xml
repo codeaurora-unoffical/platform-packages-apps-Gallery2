@@ -34,4 +34,9 @@
             android:title="@string/help"
             android:visible="false"
             android:showAsAction="never" />
+    <!-- Add a switch for cooperating with xcloud -->
+    <item android:id="@+id/switch_auto_sync_to_xcloud"
+            android:title="@string/menu_auto_upload_to_xcloud_switch"
+            android:showAsAction="never"
+            android:checkable="true"/>
 </menu>

@@ -148,6 +148,13 @@ public class StateManager {
         return mStack.size();
     }
 
+    public boolean prepareOptionsMenu(Menu menu) {
+        if (!mStack.isEmpty()) {
+            return getTopState().onPrepareOptionsMenu(menu);
+        }
+        return true;
+    }
+
     public boolean itemSelected(MenuItem item) {
         if (!mStack.isEmpty()) {
             if (getTopState().onItemSelected(item)) return true;
