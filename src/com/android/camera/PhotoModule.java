@@ -603,8 +603,10 @@ public class PhotoModule
         View root = mUI.getRootView();
         // These depend on camera parameters.
 
-        int width = root.getWidth();
-        int height = root.getHeight();
+        int width = mUI.mPreviewFrameLayout.getWidth();
+        int height = mUI.mPreviewFrameLayout.getHeight();
+        openCameraCommon();
+        resizeForPreviewAspectRatio();
         mFocusManager.setPreviewSize(width, height);
         // Full-screen screennail
         if (Util.getDisplayRotation(mActivity) % 180 == 0) {
@@ -614,7 +616,6 @@ public class PhotoModule
         }
         // Set touch focus listener.
         mActivity.setSingleTapUpListener(root);
-        openCameraCommon();
         onFullScreenChanged(mActivity.isInCameraApp());
     }
 
@@ -651,6 +652,7 @@ public class PhotoModule
         mFocusManager.setMirror(mirror);
         mFocusManager.setParameters(mInitialParams);
         setupPreview();
+        resizeForPreviewAspectRatio();
 
         openCameraCommon();
 
@@ -680,9 +682,6 @@ public class PhotoModule
     public void onScreenSizeChanged(int width, int height, int previewWidth, int previewHeight) {
         Log.d(TAG, "Preview size changed.");
         if (mFocusManager != null) mFocusManager.setPreviewSize(width, height);
-        ((CameraScreenNail) mActivity.mCameraScreenNail).setPreviewFrameLayoutSize(
-                previewWidth, previewHeight);
-        mActivity.notifyScreenNailChanged();
     }
 
     private void resetExposureCompensation() {
@@ -1529,6 +1528,24 @@ public class PhotoModule
         }
     }
 
+    void setPreviewFrameLayoutCameraOrientation(){
+       CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
+       //if camera mount angle is 0 or 180, we want to resize preview
+       if(info.orientation % 180 == 0){
+           mUI.mPreviewFrameLayout.setRenderer(mUI.mPieRenderer);
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(true);
+       } else{
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(false);
+       }
+    }
+
+    private void resizeForPreviewAspectRatio() {
+        setPreviewFrameLayoutCameraOrientation();
+        Size size = mParameters.getPictureSize();
+        Log.e(TAG,"Width = "+ size.width+ "Height = "+size.height);
+        mUI.setAspectRatio((double) size.width / size.height);
+    }
+
     @Override
     public void installIntentFilter() {
     }
@@ -1698,6 +1715,7 @@ public class PhotoModule
     public void onConfigurationChanged(Configuration newConfig) {
         Log.v(TAG, "onConfigurationChanged");
         setDisplayOrientation();
+        resizeForPreviewAspectRatio();
     }
 
     @Override
@@ -2539,6 +2557,7 @@ public class PhotoModule
              if(mRestartPreview && mCameraState != PREVIEW_STOPPED) {
                 Log.v(TAG, "Restarting Preview...");
                 stopPreview();
+                resizeForPreviewAspectRatio();
                 startPreview();
                 setCameraState(IDLE);
             }
@@ -2590,6 +2609,7 @@ public class PhotoModule
             mRestartPreview = false;
         }
         setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+        resizeForPreviewAspectRatio();
         mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
             mPreferences);
         if (mSeekBarInitialized == true){
