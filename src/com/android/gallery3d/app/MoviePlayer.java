@@ -353,6 +353,7 @@ public class MoviePlayer implements
 
     private void pauseVideo() {
         mVideoView.pause();
+        setProgress();
         mController.showPaused();
     }
 
