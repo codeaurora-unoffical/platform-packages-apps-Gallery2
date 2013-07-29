@@ -163,7 +163,7 @@
      <string name="pref_camera_mce_default">enable</string>
 
      <!-- The message is shown in dialog when the app encounters an unsupported resolution for HFR mode -->
-     <string name="error_app_unsupported_hfr">Only VGA and WVGA are supported when HFR is ON</string>
+     <string name="error_app_unsupported_hfr">HFR is not supported for selected resolution</string>
 
      <!-- The message is shown in dialog when the app encounters an unsupported video codec for HFR mode -->
      <string name="error_app_unsupported_hfr_codec">Only H264 video encoding is supported when HFR is ON</string>
