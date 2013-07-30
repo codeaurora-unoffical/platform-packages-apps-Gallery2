@@ -88,6 +88,7 @@ import android.util.AttributeSet;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.SystemProperties;
 
 public class PhotoModule
     implements CameraModule,
@@ -296,6 +297,7 @@ public class PhotoModule
     private FocusOverlayManager mFocusManager;
 
     private String mSceneMode;
+    private String mCurrTouchAfAec = Parameters.TOUCH_AF_AEC_ON;
 
     private final Handler mHandler = new MainHandler();
     private PreferenceGroup mPreferenceGroup;
@@ -1290,7 +1292,7 @@ public class PhotoModule
             overrideCameraSettings(mParameters.getFlashMode(),
                     mParameters.getWhiteBalance(), mParameters.getFocusMode(),
                     Integer.toString(mParameters.getExposureCompensation()),
-                    mParameters.getTouchAfAec(), mParameters.getAutoExposure());
+                    mCurrTouchAfAec, mParameters.getAutoExposure());
         } else {
             overrideCameraSettings(null, null, null, null, null, null);
         }
@@ -1321,7 +1323,16 @@ public class PhotoModule
         // the camera then point the camera to floor or sky, we still have
         // the correct orientation.
         if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) return;
+
+        int oldOrientation = mOrientation;
         mOrientation = Util.roundOrientation(orientation, mOrientation);
+
+        if (oldOrientation != mOrientation) {
+            Log.v(TAG, "onOrientationChanged, update parameters");
+            if (mParameters != null && mCameraDevice != null) {
+                onSharedPreferenceChanged();
+            }
+        }
 
         // Show the toast after getting the first orientation changed.
         if (mHandler.hasMessages(SHOW_TAP_TO_FOCUS_TOAST)) {
@@ -1968,7 +1979,7 @@ public class PhotoModule
         if (mCameraDevice != null && mCameraState != PREVIEW_STOPPED) {
             Log.v(TAG, "stopPreview");
             mCameraDevice.stopPreview();
-            mFaceDetectionStarted = false;
+            //mFaceDetectionStarted = false;
         }
         setCameraState(PREVIEW_STOPPED);
         if (mFocusManager != null) mFocusManager.onPreviewStopped();
@@ -2032,6 +2043,7 @@ public class PhotoModule
                  CameraSettings.KEY_TOUCH_AF_AEC,
                  mActivity.getString(R.string.pref_camera_touchafaec_default));
             if (Util.isSupported(touchAfAec, mParameters.getSupportedTouchAfAec())) {
+                mCurrTouchAfAec = touchAfAec;
                 mParameters.setTouchAfAec(touchAfAec);
             }
         } else {
@@ -2277,6 +2289,47 @@ public class PhotoModule
                 mCameraDevice.setHistogramMode(null);
             }
         }
+        // Read Flip mode from adb command
+        //value: 0(default) - FLIP_MODE_OFF
+        //value: 1 - FLIP_MODE_H
+        //value: 2 - FLIP_MODE_V
+        //value: 3 - FLIP_MODE_VH
+        int preview_flip_value = SystemProperties.getInt("debug.camera.preview.flip", 0);
+        int video_flip_value = SystemProperties.getInt("debug.camera.video.flip", 0);
+        int picture_flip_value = SystemProperties.getInt("debug.camera.picture.flip", 0);
+        int rotation = Util.getJpegRotation(mCameraId, mOrientation);
+        mParameters.setRotation(rotation);
+        if (rotation == 90 || rotation == 270) {
+            // in case of 90 or 270 degree, V/H flip should reverse
+            if (preview_flip_value == 1) {
+                preview_flip_value = 2;
+            } else if (preview_flip_value == 2) {
+                preview_flip_value = 1;
+            }
+            if (video_flip_value == 1) {
+                video_flip_value = 2;
+            } else if (video_flip_value == 2) {
+                video_flip_value = 1;
+            }
+            if (picture_flip_value == 1) {
+                picture_flip_value = 2;
+            } else if (picture_flip_value == 2) {
+                picture_flip_value = 1;
+            }
+        }
+        String preview_flip = Util.getFilpModeString(preview_flip_value);
+        String video_flip = Util.getFilpModeString(video_flip_value);
+        String picture_flip = Util.getFilpModeString(picture_flip_value);
+        if(Util.isSupported(preview_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_PREVIEW_FLIP, preview_flip);
+        }
+        if(Util.isSupported(video_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_VIDEO_FLIP, video_flip);
+        }
+        if(Util.isSupported(picture_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_SNAPSHOT_PICTURE_FLIP, picture_flip);
+        }
+
      }
 
     @TargetApi(ApiHelper.VERSION_CODES.JELLY_BEAN)
