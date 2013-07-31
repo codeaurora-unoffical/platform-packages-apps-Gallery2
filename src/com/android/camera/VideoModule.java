@@ -591,6 +591,12 @@ public class VideoModule implements CameraModule,
             if (effectsActive()) {
                 mEffectsRecorder.setOrientationHint(mOrientation);
             }
+
+            Log.v(TAG, "onOrientationChanged, update parameters");
+            if (mParameters != null) {
+                setCameraParameters();
+            }
+
         }
 
         // Show the toast after getting the first orientation changed.
@@ -652,6 +658,11 @@ public class VideoModule implements CameraModule,
                 // back to use SurfaceTexture for preview and we need to stop then start
                 // the preview. This will cause the preview flicker since the preview
                 // will not be continuous for a short period of time.
+
+                // Get orientation directly from display rotation to make sure it's up
+                // to date. OnConfigurationChanged callback usually kicks in a bit later, if
+                // device is rotated during recording.
+                mDisplayRotation = Util.getDisplayRotation(mActivity);
                 ((CameraScreenNail) mActivity.mCameraScreenNail).animateCapture(mDisplayRotation);
 
                 mUI.enablePreviewThumb(true);
@@ -1603,6 +1614,19 @@ public class VideoModule implements CameraModule,
             return;
         }
 
+        if( mUnsupportedHFRVideoSize == true) {
+            Log.e(TAG, "Unsupported HFR and video size combinations");
+            Toast.makeText(mActivity,R.string.error_app_unsupported_hfr, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if( mUnsupportedHFRVideoCodec == true) {
+            Log.e(TAG, "Unsupported HFR and video codec combinations");
+            Toast.makeText(mActivity, R.string.error_app_unsupported_hfr_codec,
+            Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (!mActivity.mCameraDevice.waitDone()) return;
         mCurrentVideoUri = null;
         if (effectsActive()) {
@@ -1664,7 +1688,9 @@ public class VideoModule implements CameraModule,
         mUI.enableCameraControls(false);
 
         mMediaRecorderRecording = true;
-        mActivity.getOrientationManager().lockOrientation();
+        if (!Util.systemRotationLocked(mActivity)) {
+            mActivity.getOrientationManager().lockOrientation();
+        }
         mRecordingStartTime = SystemClock.uptimeMillis();
         mUI.showRecordingUI(true, mParameters.isZoomSupported());
 
@@ -1739,7 +1765,9 @@ public class VideoModule implements CameraModule,
                 fail = true;
             }
             mMediaRecorderRecording = false;
-            mActivity.getOrientationManager().unlockOrientation();
+            if (!Util.systemRotationLocked(mActivity)) {
+                mActivity.getOrientationManager().unlockOrientation();
+            }
 
             // If the activity is paused, this means activity is interrupted
             // during recording. Release the camera as soon as possible because
@@ -1970,8 +1998,49 @@ public class VideoModule implements CameraModule,
                 mParameters.getSupportedVideoHighFrameRateModes()) &&
                 !mUnsupportedHFRVideoSize) {
             mParameters.setVideoHighFrameRate(HighFrameRate);
-        } else {
+        } else
             mParameters.setVideoHighFrameRate("off");
+
+        // Read Flip mode from adb command
+        //value: 0(default) - FLIP_MODE_OFF
+        //value: 1 - FLIP_MODE_H
+        //value: 2 - FLIP_MODE_V
+        //value: 3 - FLIP_MODE_VH
+        int preview_flip_value = SystemProperties.getInt("debug.camera.preview.flip", 0);
+        int video_flip_value = SystemProperties.getInt("debug.camera.video.flip", 0);
+        int picture_flip_value = SystemProperties.getInt("debug.camera.picture.flip", 0);
+        int rotation = Util.getJpegRotation(mCameraId, mOrientation);
+        mParameters.setRotation(rotation);
+        if (rotation == 90 || rotation == 270) {
+            // in case of 90 or 270 degree, V/H flip should reverse
+            if (preview_flip_value == 1) {
+                preview_flip_value = 2;
+            } else if (preview_flip_value == 2) {
+                preview_flip_value = 1;
+            }
+            if (video_flip_value == 1) {
+                video_flip_value = 2;
+            } else if (video_flip_value == 2) {
+                video_flip_value = 1;
+            }
+            if (picture_flip_value == 1) {
+                picture_flip_value = 2;
+            } else if (picture_flip_value == 2) {
+                picture_flip_value = 1;
+            }
+        }
+        String preview_flip = Util.getFilpModeString(preview_flip_value);
+        String video_flip = Util.getFilpModeString(video_flip_value);
+        String picture_flip = Util.getFilpModeString(picture_flip_value);
+
+        if(Util.isSupported(preview_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_PREVIEW_FLIP, preview_flip);
+        }
+        if(Util.isSupported(video_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_VIDEO_FLIP, video_flip);
+        }
+        if(Util.isSupported(picture_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_SNAPSHOT_PICTURE_FLIP, picture_flip);
         }
     }
 
