@@ -54,6 +54,7 @@ public class PhotoMenu extends PieController
     private int mPopupStatus;
     private AbstractSettingPopup mPopup;
     private CameraActivity mActivity;
+    private int popupNum = 0;
 
     public PhotoMenu(CameraActivity activity, PhotoUI ui, PieRenderer pie) {
         super(activity, pie);
@@ -70,6 +71,7 @@ public class PhotoMenu extends PieController
         mPopup3 = null;
         mPopupStatus = POPUP_NONE;
         PieItem item = null;
+        popupNum = 0;
         final Resources res = mActivity.getResources();
         Locale locale = res.getConfiguration().locale;
         // the order is from left to right in the menu
@@ -126,6 +128,7 @@ public class PhotoMenu extends PieController
                 mPopupStatus = POPUP_FIRST_LEVEL;
                 }
                 mUI.showPopup(mPopup1);
+                popupNum = 1;
             }
         });
         mRenderer.addItem(item1);
@@ -139,7 +142,8 @@ public class PhotoMenu extends PieController
                     initializePopup();
                     mPopupStatus = POPUP_FIRST_LEVEL;
                 }
-                    mUI.showPopup(mPopup2);
+                mUI.showPopup(mPopup2);
+                popupNum = 2;
             }
         });
         mRenderer.addItem(item2);
@@ -154,7 +158,7 @@ public class PhotoMenu extends PieController
                     mPopupStatus = POPUP_FIRST_LEVEL;
                 }
                 mUI.showPopup(mPopup3);
-                mPopupStatus = POPUP_FIRST_LEVEL;
+                popupNum = 3;
             }
         });
         mRenderer.addItem(item3);
@@ -227,16 +231,22 @@ public class PhotoMenu extends PieController
      }
 
     public void popupDismissed() {
-        // the popup gets dismissed
-        if (mPopup1 != null) {
-            mPopup1 = null;
+        if (mPopupStatus == POPUP_SECOND_LEVEL) {
+            initializePopup();
+            mPopupStatus = POPUP_FIRST_LEVEL;
+                if (popupNum == 1)
+                    mUI.showPopup(mPopup1);
+                else if (popupNum == 2)
+                    mUI.showPopup(mPopup2);
+                else if (popupNum == 3)
+                    mUI.showPopup(mPopup3);
+                if(mPopup1 != null) mPopup1 = null;
+                if(mPopup2 != null) mPopup2 = null;
+                if(mPopup3 != null) mPopup3 = null;
+        } else {
+            initializePopup();
         }
-        if (mPopup2 != null) {
-            mPopup2 = null;
-        }
-        if (mPopup3 != null) {
-            mPopup3 = null;
-        }
+
     }
 
         @Override
