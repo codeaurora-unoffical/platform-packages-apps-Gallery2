@@ -582,6 +582,9 @@ public class VideoModule implements CameraModule,
         int newOrientation = Util.roundOrientation(orientation, mOrientation);
 
         if (mOrientation != newOrientation) {
+            if (mPreviewing == false){
+                return;
+            }
             mOrientation = newOrientation;
             // The input of effects recorder is affected by
             // android.hardware.Camera.setDisplayOrientation. Its value only
@@ -2188,11 +2191,11 @@ public class VideoModule implements CameraModule,
             screenNail.setSize(width, height);
             screenNail.enableAspectRatioClamping();
             mActivity.notifyScreenNailChanged();
+            if (screenNail.getSurfaceTexture() == null) {
+                screenNail.acquireSurfaceTexture();
+            }
         }
 
-        if (screenNail.getSurfaceTexture() == null) {
-            screenNail.acquireSurfaceTexture();
-        }
     }
 
     @Override
