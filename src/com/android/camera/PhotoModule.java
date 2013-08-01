@@ -133,6 +133,7 @@ public class PhotoModule
     private static final int CAMERA_DISABLED = 12;
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
+    private static final int SET_PHOTO_UI_PARAMS = 15;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -473,6 +474,13 @@ public class PhotoModule
                         Log.v(TAG, "Skin tone bar: disable");
                         disableSkinToneSeekBar();
                     }
+                    break;
+               }
+               case SET_PHOTO_UI_PARAMS: {
+                    setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+                    resizeForPreviewAspectRatio();
+                    mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                        mPreferences);
                     break;
                }
             }
@@ -2608,10 +2616,19 @@ public class PhotoModule
             setCameraState(IDLE);
             mRestartPreview = false;
         }
-        setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
-        resizeForPreviewAspectRatio();
-        mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
-            mPreferences);
+        /* Check if the PhotoUI Menu is initialized or not. This
+         * should be initialized during onCameraOpen() which should
+         * have been called by now. But for some reason that is not
+         * executed till now, then schedule these functionality for
+         * later by posting a message to the handler */
+        if (mUI.mMenuInitialized) {
+            setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+            resizeForPreviewAspectRatio();
+            mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                mPreferences);
+        } else {
+            mHandler.sendEmptyMessage(SET_PHOTO_UI_PARAMS);
+        }
         if (mSeekBarInitialized == true){
             Log.v(TAG, "onSharedPreferenceChanged Skin tone bar: change");
             // skin tone is enabled only for party and portrait BSM
