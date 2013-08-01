@@ -80,25 +80,6 @@ public class PhotoMenu extends PieController
             mRenderer.addItem(item);
         }
 
-        // countdown timer
-        final ListPreference ctpref = group.findPreference(CameraSettings.KEY_TIMER);
-        final ListPreference beeppref = group.findPreference(CameraSettings.KEY_TIMER_SOUND_EFFECTS);
-        item = makeItem(R.drawable.ic_timer);
-        item.setLabel(res.getString(R.string.pref_camera_timer_title).toUpperCase(locale));
-        item.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(PieItem item) {
-                CountdownTimerPopup timerPopup = (CountdownTimerPopup) mActivity.getLayoutInflater().inflate(
-                        R.layout.countdown_setting_popup, null, false);
-                timerPopup.initialize(ctpref, beeppref);
-                timerPopup.setSettingChangedListener(PhotoMenu.this);
-                mUI.dismissPopup();
-                mPopup = timerPopup;
-                mUI.showPopup(mPopup);
-            }
-        });
-        mRenderer.addItem(item);
-
         mOtherKeys1 = new String[] {
                 CameraSettings.KEY_SCENE_MODE,
                 CameraSettings.KEY_RECORD_LOCATION,
@@ -130,7 +111,9 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_WHITE_BALANCE,
                 CameraSettings.KEY_FLASH_MODE,
                 CameraSettings.KEY_REDEYE_REDUCTION,
-                CameraSettings.KEY_AE_BRACKET_HDR
+                CameraSettings.KEY_AE_BRACKET_HDR,
+                CameraSettings.KEY_TIMER,
+                CameraSettings.KEY_TIMER_SOUND_EFFECTS
         };
 
         PieItem item1 = makeItem(R.drawable.ic_settings_holo_light);
