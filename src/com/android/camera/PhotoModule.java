@@ -845,7 +845,7 @@ public class PhotoModule
         public void onShutter() {
             mShutterCallbackTime = System.currentTimeMillis();
             mShutterLag = mShutterCallbackTime - mCaptureStartTime;
-            Log.v(TAG, "mShutterLag = " + mShutterLag + "ms");
+            Log.e(TAG, "[KPI Perf] PROFILE_SHUTTER_LAG mShutterLag = " + mShutterLag + "ms");
             if (mAnimateFlash) {
                 mActivity.runOnUiThread(mFlashRunnable);
             }
