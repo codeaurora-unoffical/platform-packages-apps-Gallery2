@@ -896,6 +896,10 @@ public class PieRenderer extends OverlayRenderer
         return 2 * mCircleSize;
     }
 
+    public int getDiameter() {
+        return (mArcRadius + mRadiusInc + (mRadiusInc / 4));
+    }
+
     private int getRandomRange() {
         return (int)(-60 + 120 * Math.random());
     }
