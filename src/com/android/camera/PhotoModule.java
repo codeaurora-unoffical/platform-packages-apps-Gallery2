@@ -133,6 +133,7 @@ public class PhotoModule
     private static final int CAMERA_DISABLED = 12;
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
+    private static final int SET_PHOTO_UI_PARAMS = 15;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -475,6 +476,13 @@ public class PhotoModule
                     }
                     break;
                }
+               case SET_PHOTO_UI_PARAMS: {
+                    setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+                    resizeForPreviewAspectRatio();
+                    mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                        mPreferences);
+                    break;
+               }
             }
         }
     }
@@ -603,8 +611,10 @@ public class PhotoModule
         View root = mUI.getRootView();
         // These depend on camera parameters.
 
-        int width = root.getWidth();
-        int height = root.getHeight();
+        int width = mUI.mPreviewFrameLayout.getWidth();
+        int height = mUI.mPreviewFrameLayout.getHeight();
+        openCameraCommon();
+        resizeForPreviewAspectRatio();
         mFocusManager.setPreviewSize(width, height);
         // Full-screen screennail
         if (Util.getDisplayRotation(mActivity) % 180 == 0) {
@@ -614,7 +624,6 @@ public class PhotoModule
         }
         // Set touch focus listener.
         mActivity.setSingleTapUpListener(root);
-        openCameraCommon();
         onFullScreenChanged(mActivity.isInCameraApp());
     }
 
@@ -651,6 +660,7 @@ public class PhotoModule
         mFocusManager.setMirror(mirror);
         mFocusManager.setParameters(mInitialParams);
         setupPreview();
+        resizeForPreviewAspectRatio();
 
         openCameraCommon();
 
@@ -672,6 +682,7 @@ public class PhotoModule
 
         mUI.onCameraOpened(mPreferenceGroup, mPreferences, mParameters, this);
         updateSceneMode();
+        updateHdrMode();
         showTapToFocusToastIfNeeded();
 
 
@@ -680,9 +691,6 @@ public class PhotoModule
     public void onScreenSizeChanged(int width, int height, int previewWidth, int previewHeight) {
         Log.d(TAG, "Preview size changed.");
         if (mFocusManager != null) mFocusManager.setPreviewSize(width, height);
-        ((CameraScreenNail) mActivity.mCameraScreenNail).setPreviewFrameLayoutSize(
-                previewWidth, previewHeight);
-        mActivity.notifyScreenNailChanged();
     }
 
     private void resetExposureCompensation() {
@@ -838,7 +846,7 @@ public class PhotoModule
         public void onShutter() {
             mShutterCallbackTime = System.currentTimeMillis();
             mShutterLag = mShutterCallbackTime - mCaptureStartTime;
-            Log.v(TAG, "mShutterLag = " + mShutterLag + "ms");
+            Log.e(TAG, "[KPI Perf] PROFILE_SHUTTER_LAG mShutterLag = " + mShutterLag + "ms");
             if (mAnimateFlash) {
                 mActivity.runOnUiThread(mFlashRunnable);
             }
@@ -1285,6 +1293,17 @@ public class PhotoModule
         }
     }
 
+    private void updateHdrMode() {
+        String zsl = mPreferences.getString(CameraSettings.KEY_ZSL,
+                         mActivity.getString(R.string.pref_camera_zsl_default));
+        if (zsl.equals("on")) {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR,
+                                      mParameters.getAEBracket());
+        } else {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR, null);
+        }
+    }
+
     private void updateSceneMode() {
         // If scene mode is set, we cannot set flash mode, white balance, and
         // focus mode, instead, we read it from driver
@@ -1529,6 +1548,24 @@ public class PhotoModule
         }
     }
 
+    void setPreviewFrameLayoutCameraOrientation(){
+       CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
+       //if camera mount angle is 0 or 180, we want to resize preview
+       if(info.orientation % 180 == 0){
+           mUI.mPreviewFrameLayout.setRenderer(mUI.mPieRenderer);
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(true);
+       } else{
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(false);
+       }
+    }
+
+    private void resizeForPreviewAspectRatio() {
+        setPreviewFrameLayoutCameraOrientation();
+        Size size = mParameters.getPictureSize();
+        Log.e(TAG,"Width = "+ size.width+ "Height = "+size.height);
+        mUI.setAspectRatio((double) size.width / size.height);
+    }
+
     @Override
     public void installIntentFilter() {
     }
@@ -1698,6 +1735,7 @@ public class PhotoModule
     public void onConfigurationChanged(Configuration newConfig) {
         Log.v(TAG, "onConfigurationChanged");
         setDisplayOrientation();
+        resizeForPreviewAspectRatio();
     }
 
     @Override
@@ -2221,11 +2259,6 @@ public class PhotoModule
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_NONZSL;
             mParameters.setCameraMode(0);
             mFocusManager.setZslEnable(false);
-            if (hdr.equals(mActivity.getString(R.string.setting_on_value)))
-                mParameters.set("num-snaps-per-shutter", "2");
-            else
-                mParameters.set("num-snaps-per-shutter", "1");
-
         }
         // Set face detetction parameter.
         String faceDetection = mPreferences.getString(
@@ -2539,11 +2572,13 @@ public class PhotoModule
              if(mRestartPreview && mCameraState != PREVIEW_STOPPED) {
                 Log.v(TAG, "Restarting Preview...");
                 stopPreview();
+                resizeForPreviewAspectRatio();
                 startPreview();
                 setCameraState(IDLE);
             }
             mRestartPreview = false;
             updateSceneMode();
+            updateHdrMode();
             mUpdateSet = 0;
         } else {
             if (!mHandler.hasMessages(SET_CAMERA_PARAMETERS_WHEN_IDLE)) {
@@ -2589,9 +2624,19 @@ public class PhotoModule
             setCameraState(IDLE);
             mRestartPreview = false;
         }
-        setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
-        mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
-            mPreferences);
+        /* Check if the PhotoUI Menu is initialized or not. This
+         * should be initialized during onCameraOpen() which should
+         * have been called by now. But for some reason that is not
+         * executed till now, then schedule these functionality for
+         * later by posting a message to the handler */
+        if (mUI.mMenuInitialized) {
+            setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+            resizeForPreviewAspectRatio();
+            mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                mPreferences);
+        } else {
+            mHandler.sendEmptyMessage(SET_PHOTO_UI_PARAMS);
+        }
         if (mSeekBarInitialized == true){
             Log.v(TAG, "onSharedPreferenceChanged Skin tone bar: change");
             // skin tone is enabled only for party and portrait BSM

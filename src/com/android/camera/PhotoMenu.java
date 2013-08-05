@@ -54,6 +54,7 @@ public class PhotoMenu extends PieController
     private int mPopupStatus;
     private AbstractSettingPopup mPopup;
     private CameraActivity mActivity;
+    private int popupNum = 0;
 
     public PhotoMenu(CameraActivity activity, PhotoUI ui, PieRenderer pie) {
         super(activity, pie);
@@ -70,6 +71,7 @@ public class PhotoMenu extends PieController
         mPopup3 = null;
         mPopupStatus = POPUP_NONE;
         PieItem item = null;
+        popupNum = 0;
         final Resources res = mActivity.getResources();
         Locale locale = res.getConfiguration().locale;
         // the order is from left to right in the menu
@@ -79,25 +81,6 @@ public class PhotoMenu extends PieController
             item = makeSwitchItem(CameraSettings.KEY_CAMERA_HDR, true);
             mRenderer.addItem(item);
         }
-
-        // countdown timer
-        final ListPreference ctpref = group.findPreference(CameraSettings.KEY_TIMER);
-        final ListPreference beeppref = group.findPreference(CameraSettings.KEY_TIMER_SOUND_EFFECTS);
-        item = makeItem(R.drawable.ic_timer);
-        item.setLabel(res.getString(R.string.pref_camera_timer_title).toUpperCase(locale));
-        item.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(PieItem item) {
-                CountdownTimerPopup timerPopup = (CountdownTimerPopup) mActivity.getLayoutInflater().inflate(
-                        R.layout.countdown_setting_popup, null, false);
-                timerPopup.initialize(ctpref, beeppref);
-                timerPopup.setSettingChangedListener(PhotoMenu.this);
-                mUI.dismissPopup();
-                mPopup = timerPopup;
-                mUI.showPopup(mPopup);
-            }
-        });
-        mRenderer.addItem(item);
 
         mOtherKeys1 = new String[] {
                 CameraSettings.KEY_SCENE_MODE,
@@ -130,7 +113,9 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_WHITE_BALANCE,
                 CameraSettings.KEY_FLASH_MODE,
                 CameraSettings.KEY_REDEYE_REDUCTION,
-                CameraSettings.KEY_AE_BRACKET_HDR
+                CameraSettings.KEY_AE_BRACKET_HDR,
+                CameraSettings.KEY_TIMER,
+                CameraSettings.KEY_TIMER_SOUND_EFFECTS
         };
 
         PieItem item1 = makeItem(R.drawable.ic_settings_holo_light);
@@ -143,6 +128,7 @@ public class PhotoMenu extends PieController
                 mPopupStatus = POPUP_FIRST_LEVEL;
                 }
                 mUI.showPopup(mPopup1);
+                popupNum = 1;
             }
         });
         mRenderer.addItem(item1);
@@ -156,7 +142,8 @@ public class PhotoMenu extends PieController
                     initializePopup();
                     mPopupStatus = POPUP_FIRST_LEVEL;
                 }
-                    mUI.showPopup(mPopup2);
+                mUI.showPopup(mPopup2);
+                popupNum = 2;
             }
         });
         mRenderer.addItem(item2);
@@ -171,7 +158,7 @@ public class PhotoMenu extends PieController
                     mPopupStatus = POPUP_FIRST_LEVEL;
                 }
                 mUI.showPopup(mPopup3);
-                mPopupStatus = POPUP_FIRST_LEVEL;
+                popupNum = 3;
             }
         });
         mRenderer.addItem(item3);
@@ -244,16 +231,22 @@ public class PhotoMenu extends PieController
      }
 
     public void popupDismissed() {
-        // the popup gets dismissed
-        if (mPopup1 != null) {
-            mPopup1 = null;
+        if (mPopupStatus == POPUP_SECOND_LEVEL) {
+            initializePopup();
+            mPopupStatus = POPUP_FIRST_LEVEL;
+                if (popupNum == 1)
+                    mUI.showPopup(mPopup1);
+                else if (popupNum == 2)
+                    mUI.showPopup(mPopup2);
+                else if (popupNum == 3)
+                    mUI.showPopup(mPopup3);
+                if(mPopup1 != null) mPopup1 = null;
+                if(mPopup2 != null) mPopup2 = null;
+                if(mPopup3 != null) mPopup3 = null;
+        } else {
+            initializePopup();
         }
-        if (mPopup2 != null) {
-            mPopup2 = null;
-        }
-        if (mPopup3 != null) {
-            mPopup3 = null;
-        }
+
     }
 
         @Override
