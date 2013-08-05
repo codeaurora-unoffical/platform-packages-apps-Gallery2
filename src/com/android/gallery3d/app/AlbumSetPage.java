@@ -641,14 +641,6 @@ public class AlbumSetPage extends ActivityState implements
                 GalleryUtils.startCameraActivity(activity);
                 return true;
             }
-            case R.id.action_manage_offline: {
-                Bundle data = new Bundle();
-                String mediaPath = mActivity.getDataManager().getTopSetPath(
-                    DataManager.INCLUDE_ALL);
-                data.putString(AlbumSetPage.KEY_MEDIA_PATH, mediaPath);
-                mActivity.getStateManager().startState(ManageCachePage.class, data);
-                return true;
-            }
             default:
                 return false;
         }
