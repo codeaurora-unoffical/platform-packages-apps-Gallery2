@@ -682,6 +682,7 @@ public class PhotoModule
 
         mUI.onCameraOpened(mPreferenceGroup, mPreferences, mParameters, this);
         updateSceneMode();
+        updateHdrMode();
         showTapToFocusToastIfNeeded();
 
 
@@ -1289,6 +1290,17 @@ public class PhotoModule
                 ((CameraScreenNail) mActivity.mCameraScreenNail).setFullScreen(full);
             }
             return;
+        }
+    }
+
+    private void updateHdrMode() {
+        String zsl = mPreferences.getString(CameraSettings.KEY_ZSL,
+                         mActivity.getString(R.string.pref_camera_zsl_default));
+        if (zsl.equals("on")) {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR,
+                                      mParameters.getAEBracket());
+        } else {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR, null);
         }
     }
 
@@ -2253,11 +2265,6 @@ public class PhotoModule
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_NONZSL;
             mParameters.setCameraMode(0);
             mFocusManager.setZslEnable(false);
-            if (hdr.equals(mActivity.getString(R.string.setting_on_value)))
-                mParameters.set("num-snaps-per-shutter", "2");
-            else
-                mParameters.set("num-snaps-per-shutter", "1");
-
         }
         // Set face detetction parameter.
         String faceDetection = mPreferences.getString(
@@ -2577,6 +2584,7 @@ public class PhotoModule
             }
             mRestartPreview = false;
             updateSceneMode();
+            updateHdrMode();
             mUpdateSet = 0;
         } else {
             if (!mHandler.hasMessages(SET_CAMERA_PARAMETERS_WHEN_IDLE)) {
