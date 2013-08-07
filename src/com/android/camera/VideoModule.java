@@ -1640,6 +1640,14 @@ public class VideoModule implements CameraModule,
             return;
         }
 
+        String HighFrameRate = mParameters.getVideoHighFrameRate();
+        if(!("off".equals(HighFrameRate)) && mCaptureTimeLapse) {
+            Log.e(TAG, "HFR and Time lapse recording combinations unsupported");
+            Toast.makeText(mActivity, R.string.error_app_unsupported_hfr_timelapse,
+            Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (!mActivity.mCameraDevice.waitDone()) return;
         mCurrentVideoUri = null;
         if (effectsActive()) {
