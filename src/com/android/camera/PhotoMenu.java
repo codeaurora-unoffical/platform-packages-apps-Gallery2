@@ -224,6 +224,8 @@ public class PhotoMenu extends PieController
      popup3.setSettingChangedListener(this);
      popup3.initialize(mPreferenceGroup, mOtherKeys3);
      mPopup3 = popup3;
+
+     freshUiItems();
      }
 
     public void popupDismissed() {
@@ -267,6 +269,12 @@ public class PhotoMenu extends PieController
         if (pref != null && !value.equals(pref.getValue())) {
             pref.setValue(value);
             reloadPreferences();
+        }
+    }
+
+    private void freshUiItems() {
+        if (mListener != null) {
+            mListener.onSharedPreferenceChanged();
         }
     }
 
