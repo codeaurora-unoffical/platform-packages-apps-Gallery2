@@ -1999,7 +1999,7 @@ public class PhotoModule
             w = size.height;
             h = size.width;
         }
-        if (snail.getWidth() != w || snail.getHeight() != h) {
+        if (snail.getTextureWidth() != w || snail.getTextureHeight() != h) {
             snail.setSize(w, h);
         }
         snail.enableAspectRatioClamping();
