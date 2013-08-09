@@ -262,7 +262,19 @@
     <string-array name="pref_camera_touchafaec_entryvalues">
         <item>touch-off</item>
         <item>touch-on</item>
-   </string-array>
+    </string-array>
+
+    <!-- DIS dialog box entries -->
+    <string-array name="pref_camera_dis_entries">
+        <item>@string/pref_camera_dis_entry_off</item>
+        <item>@string/pref_camera_dis_entry_on</item>
+    </string-array>
+
+    <!-- Do not localize entryvalues -->
+    <string-array name="pref_camera_dis_entryvalues">
+        <item>disable</item>
+        <item>enable</item>
+    </string-array>
 
     <!-- Face Recognition dialog box entries -->
     <string-array name="pref_camera_facerc_entries">
