@@ -1301,10 +1301,14 @@ public class VideoModule implements CameraModule,
         mActivity.mCameraDevice.unlock();
         mActivity.mCameraDevice.waitDone();
         mMediaRecorder.setCamera(mActivity.mCameraDevice.getCamera());
-        if (!mCaptureTimeLapse) {
+        String hfr = mParameters.getVideoHighFrameRate();
+        if (!mCaptureTimeLapse && ((hfr == null) || ("off".equals(hfr)))) {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
             mProfile.audioCodec = mAudioEncoder;
+        } else {
+            mProfile.audioCodec = -1; //not set
         }
+
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         mProfile.videoCodec = mVideoEncoder;
