@@ -2064,10 +2064,21 @@ public class VideoModule implements CameraModule,
         if(Util.isSupported(picture_flip, CameraSettings.getSupportedFlipMode(mParameters))){
             mParameters.set(CameraSettings.KEY_QC_SNAPSHOT_PICTURE_FLIP, picture_flip);
         }
+
+        // Set Video HDR.
+        String videoHDR = mPreferences.getString(
+                CameraSettings.KEY_VIDEO_HDR,
+                mActivity.getString(R.string.pref_camera_video_hdr_default));
+        Log.v(TAG, "Video HDR Setting =" + videoHDR);
+        if (isSupported(videoHDR, mParameters.getSupportedVideoHDRModes())) {
+             mParameters.setVideoHDRMode(videoHDR);
+        } else
+             mParameters.setVideoHDRMode("off");
     }
 
     @SuppressWarnings("deprecation")
     private void setCameraParameters() {
+        Log.d(TAG,"Preview dimension in App->"+mDesiredPreviewWidth+"X"+mDesiredPreviewHeight);
         mParameters.setPreviewSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
         mParameters.setPreviewFrameRate(mProfile.videoFrameRate);
 
