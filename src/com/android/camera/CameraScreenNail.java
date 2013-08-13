@@ -67,6 +67,7 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
     // sure some code are atomic. For example, requestRender and setting
     // mAnimState.
     private Object mLock = new Object();
+    private boolean mLockWaiting = false;
 
     private OnFrameDrawnListener mOneTimeFrameDrawnListener;
     private int mRenderWidth;
@@ -420,7 +421,10 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
             // as the origin (0, 0).
             canvas.translate(0, height);
             canvas.scale(1, -1, 1);
-            getSurfaceTexture().getTransformMatrix(mTextureTransformMatrix);
+            SurfaceTexture surfaceTexture = getSurfaceTexture();
+            if (surfaceTexture == null)
+                return;
+            surfaceTexture.getTransformMatrix(mTextureTransformMatrix);
             updateTransformMatrix(mTextureTransformMatrix);
             canvas.drawTexture(mExtTexture, mTextureTransformMatrix, 0, 0, width, height);
             canvas.endRenderTarget();
@@ -481,9 +485,11 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
     public SurfaceTexture getSurfaceTexture() {
         synchronized (mLock) {
             SurfaceTexture surfaceTexture = super.getSurfaceTexture();
-            if (surfaceTexture == null && mAcquireTexture) {
+            if (surfaceTexture == null && mAcquireTexture && (!mLockWaiting)) {
                 try {
+                    mLockWaiting = true;
                     mLock.wait();
+                    mLockWaiting = false;
                     surfaceTexture = super.getSurfaceTexture();
                 } catch (InterruptedException e) {
                     Log.w(TAG, "unexpected interruption");
