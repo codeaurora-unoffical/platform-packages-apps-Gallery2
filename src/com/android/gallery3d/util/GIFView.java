@@ -1,55 +1,51 @@
 package com.android.gallery3d.util;
 
-import java.io.InputStream;
+import com.android.gallery3d.R;
+
 import android.content.Context;
+import android.content.ContentResolver;
+import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.net.Uri;
-import android.content.res.AssetManager;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import android.database.Cursor;
 import android.widget.ImageView;
-import java.io.FileInputStream;
-
-import com.android.gallery3d.R;
-
-import android.content.ContentResolver;
 import android.widget.Toast;
 
-public class GIFView extends ImageView implements GifAction{
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.IOException;
+
+public class GIFView extends ImageView implements GifAction {
 
     private static final String TAG = "GIFView";
-	
-    private GifDecoder gifDecoder = null;
 
-    private Bitmap currentImage = null;
-	
     private static boolean isRun = false;
-	
     private static boolean pause = true;
 
+    private GifDecoder gifDecoder = null;
+    private Bitmap currentImage = null;
+
     private int W;
-    
     private int H;
-	
+
     private DrawThread drawThread = null;
 
     Uri mUri;
     private Context mContext;
-	
+
     public GIFView(Context context) {
         super(context);
-        mContext=context;
-   
+        mContext = context;
     }
 
-    public boolean setDrawable(Uri uri){
-        if (null == uri){
+    public boolean setDrawable(Uri uri) {
+        if (null == uri) {
             return false;
         }
         isRun = true;
@@ -60,7 +56,6 @@ public class GIFView extends ImageView implements GifAction{
         InputStream input = null;
         try {
             input = cr.openInputStream(uri);
-            
             if (input instanceof FileInputStream) {
                 FileInputStream f = (FileInputStream) input;
                 mSize = (int) f.getChannel().size();
@@ -71,188 +66,110 @@ public class GIFView extends ImageView implements GifAction{
             }
 
         } catch (IOException e) {
-            
-        } finally {
-           
+            Log.e(TAG, "catch exception:" + e);
         }
-        //wss , return if file is invalid
-        if(mSize == 0){
-        	return false;
-        }
-
-        if(mSize > 1024*1024){  //gif must be smaller than 1MB
-            if (null != input) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                }
-            }
-            Toast.makeText(mContext, R.string.gif_image_too_large, Toast.LENGTH_LONG).show();
+        if (mSize == 0) {
             return false;
         }
-        
-		setGifDecoderImage(input);
-        
-        
-		
-        android.content.ContentResolver resolver = mContext.getContentResolver();
-        Cursor c = resolver.query(uri, new String[]{"_data"}, null, null, null);
-		
-//        if ( c != null && 1 == c.getCount()){
-//            c.moveToFirst();
-//            
-//            AssetManager am = mContext.getAssets();
-//            try{
-//            	System.out.println(">>>>>>>>>1 "+c.getString(0));
-//                setGifDecoderImage(am.open(c.getString(0), AssetManager.ACCESS_RANDOM));
-//            }catch(FileNotFoundException e){
-//                Log.v(TAG, "e:" + e);
-//            }catch(IOException e){
-//                Log.v(TAG, "e:" + e);
-//            }finally{
-//                c.close();
-//            }
-//            
-//            return true;
-//        }
-//        else{
-//        	AssetManager am1 = mContext.getAssets();                           
-//            try {
-//            	System.out.println(">>>>>>>>2 "+mUri.getPath());
-//    			setGifDecoderImage(am1.open(mUri.getPath(), AssetManager.ACCESS_UNKNOWN));
-//    		} catch (IOException e1) {
-//    			e1.printStackTrace();
-//    		}
-//    		return true;
-//        }
+
+        setGifDecoderImage(input);
         return true;
     }
-    
-    private void setGifDecoderImage(InputStream is){
-    	 if(gifDecoder != null){
+
+    private void setGifDecoderImage(InputStream is) {
+        if (gifDecoder != null) {
             gifDecoder.free();
-            gifDecoder= null;
-    	 }
-    	 gifDecoder = new GifDecoder(is,this);
-    	 gifDecoder.start();
+            gifDecoder = null;
+        }
+        gifDecoder = new GifDecoder(is, this);
+        gifDecoder.start();
     }
-    
+
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        //wangmiao add
-        W = ViewGifImage.dm.widthPixels;//480;
-        H = ViewGifImage.dm.heightPixels;//800;
-        //Log.w(TAG,"the width is "+W +"the hight is "+H);
-        if(gifDecoder == null){
+        W = ViewGifImage.dm.widthPixels;
+        H = ViewGifImage.dm.heightPixels;
+        if (gifDecoder == null) {
             return;
         }
-            
-        if(currentImage == null){
+
+        if (currentImage == null) {
             currentImage = gifDecoder.getImage();
         }
-        if(currentImage == null){
-            setImageURI(mUri);  // if can not play this gif, we just try to show it as jpg by parsing mUri, bug: T81-4307
+        if (currentImage == null) {
+            // if this gif can not be displayed, just try to show it as jpg by parsing mUri
+            setImageURI(mUri);
             return;
         }
         setImageURI(null);
         int saveCount = canvas.getSaveCount();
         canvas.save();
         canvas.translate(getPaddingLeft(), getPaddingTop());
-        //canvas.drawBitmap(currentImage, (W - currentImage.getWidth()) / 2, (H - currentImage.getHeight())/2, null);
-        Rect sRect = null;        
+        Rect sRect = null;
         Rect dRect = null;
-        
+
         int imageHeight = currentImage.getHeight();
         int imageWidth = currentImage.getWidth();
 
-        //int newHeight = H/2;
-        int newHeight = H;        
-        int newWidth = W;
-        
-        if (newWidth < imageWidth)
-        {
-            if (newHeight < imageHeight)
-            {
-                //h big, w big;                            
-                //Log.w(TAG," h big, w big");
-                if (imageHeight*W > imageWidth*H)
-                {
-                   //too height                
-                   //newHeight = H/2;
-                   newWidth = (imageWidth * newHeight)/imageHeight;    
-                   //Log.w(TAG," h too big = "+ newHeight+" w big = "+newWidth);                
+        int displayHeight = H;
+        int displayWidth = W;
+
+        if (displayWidth < imageWidth) {
+            if (displayHeight < imageHeight) {
+                if (imageHeight * W > imageWidth * H) {
+                    displayWidth = (imageWidth * displayHeight) / imageHeight;
+                } else {
+                    displayHeight = (imageHeight * displayWidth) / imageWidth;
                 }
-                else
-                {
-                    //newWidth = W;
-                    newHeight = (imageHeight * newWidth)/imageWidth;   
-                    //Log.w(TAG," h big = "+ newHeight+" w too big = "+newWidth);
-                }                
-                
-                //sRect = new Rect(0, 0, currentImage.getWidth(), currentImage.getHeight());                
-                dRect = new Rect((W - newWidth) / 2, 0, (W + newWidth) / 2, newHeight);
+            } else {
+                displayHeight = (imageHeight * displayWidth) / imageWidth;
             }
-            else
-            {
-                //h small, w big;
-                newHeight = (imageHeight * newWidth)/imageWidth;
-                dRect = new Rect(0, 0, newWidth, newHeight);
-            }
+            dRect = new Rect((W - displayWidth) / 2, (H - displayHeight) / 2,
+                    (W + displayWidth) / 2, (H + displayHeight) / 2);
             canvas.drawBitmap(currentImage, sRect, dRect, null);
-            
-        }
-        else if (newHeight < imageHeight)
-        {
-            //h big, w small;        
-            newWidth = (imageWidth * newHeight)/imageHeight;
-            dRect = new Rect((W - newWidth) / 2, 0, 
-                (W + newWidth) / 2, newHeight);    
-            canvas.drawBitmap(currentImage, sRect, dRect, null);                
-        }
-        else
-        {
-            //h small, w small;
+        } else if (displayHeight < imageHeight) {
+            displayWidth = (imageWidth * displayHeight) / imageHeight;
+            dRect = new Rect((W - displayWidth) / 2, 0,
+                    (W + displayWidth) / 2, displayHeight);
+            canvas.drawBitmap(currentImage, sRect, dRect, null);
+        } else {
             canvas.drawBitmap(currentImage, (W - imageWidth) / 2, (H - imageHeight) / 2, null);
         }
-        
         canvas.restoreToCount(saveCount);
     }
- 
-    public void parseOk(boolean parseStatus,int frameIndex){
-        if(parseStatus){
-            if(gifDecoder != null){
-                if(frameIndex == -1){
-                    if(gifDecoder.getFrameCount() > 1){  
-                        if(drawThread == null){
-                            drawThread = new DrawThread();
-                        } else{
-                            drawThread = null;
-                            drawThread = new DrawThread();
-                        }
-                        drawThread.start();
-                    }
+
+    public void parseOk(boolean parseStatus, int frameIndex) {
+        if (parseStatus) {
+            if (gifDecoder != null && frameIndex == -1
+                    && gifDecoder.getFrameCount() > 1) {
+                if (drawThread == null) {
+                    drawThread = new DrawThread();
+                } else {
+                    drawThread = null;
+                    drawThread = new DrawThread();
                 }
+                drawThread.start();
             }
-        }else{
-            Log.e("gif","parse error");
+        } else {
+            Log.e(TAG, "parse error");
         }
     }
 
-    private Handler redrawHandler = new Handler(){
-    	public void handleMessage(Message msg) {
-           invalidate();
-    	}
+    private Handler redrawHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            invalidate();
+        }
     };
-    
-    private class DrawThread extends Thread{
-        public void run(){
-            if(gifDecoder == null){
+
+    private class DrawThread extends Thread {
+        public void run() {
+            if (gifDecoder == null) {
                 return;
             }
-			
-            while(isRun){
-                if(pause == false){
-                    if(!isShown()){
+
+            while (isRun) {
+                if (pause == false) {
+                    if (!isShown()) {
                         isRun = false;
                         pause = true;
                         break;
@@ -260,17 +177,21 @@ public class GIFView extends ImageView implements GifAction{
                     GifFrame frame = gifDecoder.next();
                     currentImage = frame.image;
                     long sp = frame.delay;
-                    if(sp == 0) sp = 200;  //wangmiao add merge from T92
-                    if(redrawHandler != null){
+                    if (sp == 0) {
+                        sp = 200;
+                    }
+                    if (redrawHandler != null) {
                         Message msg = redrawHandler.obtainMessage();
                         redrawHandler.sendMessage(msg);
-                        try{
+                        try {
                             Thread.sleep(sp);
-                        } catch(InterruptedException e){}
-                    }else{
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, "catch exception:" + e);
+                        }
+                    } else {
                         break;
                     }
-                } else{
+                } else {
                     break;
                 }
             }
@@ -278,23 +199,16 @@ public class GIFView extends ImageView implements GifAction{
             pause = false;
         }
     }
-    public void freeMemory()
-    {
+
+    public void freeMemory() {
         isRun = false;
         pause = true;
-        if (drawThread != null)
-        {
-            //drawThread.isStop = true;
+        if (drawThread != null) {
             drawThread = null;
         }
-        if (gifDecoder != null)
-        {   
-            Log.w(TAG," free");
+        if (gifDecoder != null) {
             gifDecoder.free();
             gifDecoder = null;
         }
     }
 }
-
-
-
