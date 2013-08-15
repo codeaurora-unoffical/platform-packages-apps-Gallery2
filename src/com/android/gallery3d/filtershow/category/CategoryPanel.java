@@ -50,7 +50,9 @@ public class CategoryPanel extends Fragment {
         switch (adapter) {
             case MainPanel.LOOKS: {
                 mAdapter = activity.getCategoryLooksAdapter();
-                mAdapter.initializeSelection(MainPanel.LOOKS);
+                if (mAdapter != null) {
+                    mAdapter.initializeSelection(MainPanel.LOOKS);
+                }
                 break;
             }
             case MainPanel.BORDERS: {
