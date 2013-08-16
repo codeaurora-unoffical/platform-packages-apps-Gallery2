@@ -85,9 +85,9 @@ public class ClusterAlbum extends MediaSet implements ContentListener {
             }
         };
         dataManager.mapMediaItems(subset, consumer, 0);
-        ArrayList<MediaItem> result = new ArrayList<MediaItem>(end - start);
+        ArrayList<MediaItem> result = new ArrayList<MediaItem>();
         for (int i = 0; i < buf.length; i++) {
-            result.add(buf[i]);
+            if(buf[i] != null) result.add(buf[i]);
         }
         return result;
     }
