@@ -274,9 +274,11 @@ public class PhotoPage extends ActivityState implements
             // Get default media set by the URI
             MediaItem mediaItem = (MediaItem)
                     mActivity.getDataManager().getMediaObject(itemPath);
-            mModel = new SinglePhotoDataAdapter(mActivity, mPhotoView, mediaItem);
-            mPhotoView.setModel(mModel);
-            updateCurrentPhoto(mediaItem);
+            if(mediaItem != null){
+                mModel = new SinglePhotoDataAdapter(mActivity, mPhotoView, mediaItem);
+                mPhotoView.setModel(mModel);
+                updateCurrentPhoto(mediaItem);
+            }
         }
 
         mHandler = new SynchronizedHandler(mActivity.getGLRoot()) {
