@@ -90,7 +90,8 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_FOCUS_MODE,
                 CameraSettings.KEY_PICTURE_FORMAT,
                 CameraSettings.KEY_JPEG_QUALITY,
-                CameraSettings.KEY_ZSL
+                CameraSettings.KEY_ZSL,
+                CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
         mOtherKeys2 = new String[] {
