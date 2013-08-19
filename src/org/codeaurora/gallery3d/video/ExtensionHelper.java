@@ -22,7 +22,10 @@ public class ExtensionHelper {
         if (SystemProperties.getBoolean("persist.env.video.stereo", false)) {
             group.addHooker(new StereoAudioHooker()); // add it for common feature.
         }
-
+        if (SystemProperties.getBoolean("persist.env.video.streaming", false)) {
+            group.addHooker(new StreamingHooker());
+            group.addHooker(new BookmarkHooker());
+        }
         return group;
     }
 }
