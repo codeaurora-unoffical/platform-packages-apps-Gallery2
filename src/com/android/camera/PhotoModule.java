@@ -185,6 +185,7 @@ public class PhotoModule
     // The degrees of the device rotated clockwise from its natural orientation.
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     private ComboPreferences mPreferences;
+    private boolean mSaveToSDCard = false;
 
     private static final String sTempCropFilename = "crop-temp";
 
@@ -555,6 +556,9 @@ public class PhotoModule
         RightValue = (TextView)mRootView.findViewById(R.id.skintoneright);
         LeftValue = (TextView)mRootView.findViewById(R.id.skintoneleft);
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     private void initializeControlByIntent() {
@@ -2817,6 +2821,17 @@ public class PhotoModule
             } else {
                 disableSkinToneSeekBar();
             }
+        }
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mActivity.updateStorageSpaceAndHint();
+    }
+
+    @Override
+    public void onFirstLevelMenuDismiss() {
+        if (mSaveToSDCard != Storage.isSaveSDCard()) {
+            mSaveToSDCard = Storage.isSaveSDCard();
+            mActivity.keepCameraScreenNail();
         }
     }
 
