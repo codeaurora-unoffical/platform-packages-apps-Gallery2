@@ -373,13 +373,14 @@ public class MovieActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         boolean enabled = mPrefs.getBoolean(Key.global_enabled.toString(), false);
                         mBassBoostEffect.setStrength((short)
-                                mPrefs.getInt(Key.bb_strength.toString(), 0));
+                            mPrefs.getInt(Key.bb_strength.toString(), 0));
                         mBassBoostEffect.setEnabled(enabled);
                         mVirtualizerEffect.setStrength((short)
                             mPrefs.getInt(Key.virt_strength.toString(), 0));
                         mVirtualizerEffect.setEnabled(enabled);
                     }
                 })
+                .setCancelable(false)
                 .create();
             mEffectDialog.show();
         }
@@ -399,13 +400,22 @@ public class MovieActivity extends Activity {
             if (mPrefs.getBoolean(Key.global_enabled.toString(), false)) {
                 if (mBassBoostSupported) {
                     mBassBoostEffect.setStrength((short)
-                            mPrefs.getInt(Key.bb_strength.toString(), 0));
+                        mPrefs.getInt(Key.bb_strength.toString(), 0));
                     mBassBoostEffect.setEnabled(true);
                 }
                 if (mVirtualizerSupported) {
                     mVirtualizerEffect.setStrength((short)
                         mPrefs.getInt(Key.virt_strength.toString(), 0));
                     mVirtualizerEffect.setEnabled(true);
+                }
+            } else {
+                if (mBassBoostSupported) {
+                    mBassBoostEffect.setStrength((short)
+                        mPrefs.getInt(Key.bb_strength.toString(), 0));
+                }
+                if (mVirtualizerSupported) {
+                    mVirtualizerEffect.setStrength((short)
+                        mPrefs.getInt(Key.virt_strength.toString(), 0));
                 }
             }
         }
