@@ -527,6 +527,7 @@ public class VideoModule implements CameraModule,
         if (effectsActive()) {
             mUI.enableShutter(false);
         }
+        Storage.init(mPreferences);
     }
 
     // SingleTapListener
@@ -1564,7 +1565,12 @@ public class VideoModule implements CameraModule,
         // Used when emailing.
         String filename = title + convertOutputFormatToFileExt(outputFileFormat);
         String mime = convertOutputFormatToMimeType(outputFileFormat);
-        String path = Storage.DIRECTORY + '/' + filename;
+        String path = null;
+        if (Storage.isSaveSDCard() && SDCard.instance().isWriteable()) {
+            path = SDCard.instance().getDirectory() + '/' + filename;
+        } else {
+            path = Storage.DIRECTORY + '/' + filename;
+        }
         String tmpPath = path + ".tmp";
         mCurrentVideoValues = new ContentValues(9);
         mCurrentVideoValues.put(Video.Media.TITLE, title);
@@ -2401,6 +2407,8 @@ public class VideoModule implements CameraModule,
                 setCameraParameters();
             }
             mUI.updateOnScreenIndicators(mParameters, mPreferences);
+            Storage.updateSavePath();
+            mActivity.updateStorageSpaceAndHint();
         }
     }
 
