@@ -19,6 +19,9 @@ public class ExtensionHelper {
         if (SystemProperties.getBoolean("persist.env.video.loop", false)) {
             group.addHooker(new LoopVideoHooker()); // add it for common feature.
         }
+        if (SystemProperties.getBoolean("persist.env.video.stereo", false)) {
+            group.addHooker(new StereoAudioHooker()); // add it for common feature.
+        }
 
         return group;
     }
