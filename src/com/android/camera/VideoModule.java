@@ -182,6 +182,9 @@ public class VideoModule implements CameraModule,
 
     private int mPendingSwitchCameraId;
 
+    private static final String KEY_PREVIEW_FORMAT = "preview-format";
+    private static final String QC_FORMAT_NV12_VENUS = "nv12-venus";
+
     private final Handler mHandler = new MainHandler();
     private VideoUI mUI;
     // The degrees of the device rotated clockwise from its natural orientation.
@@ -808,11 +811,20 @@ public class VideoModule implements CameraModule,
         editor.apply();
     }
 
+     private boolean is4KEnabled() {
+        if (mProfile.quality == CamcorderProfile.QUALITY_4kUHD ||
+            mProfile.quality == CamcorderProfile.QUALITY_4kDCI) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
     private void getDesiredPreviewSize() {
         mParameters = mActivity.mCameraDevice.getParameters();
         if (ApiHelper.HAS_GET_SUPPORTED_VIDEO_SIZE) {
-            if (mParameters.getSupportedVideoSizes() == null || effectsActive()) {
+            if (mParameters.getSupportedVideoSizes() == null || effectsActive() || is4KEnabled()) {
                 mDesiredPreviewWidth = mProfile.videoFrameWidth;
                 mDesiredPreviewHeight = mProfile.videoFrameHeight;
             } else {  // Driver supports separates outputs for preview and video.
@@ -2001,6 +2013,12 @@ public class VideoModule implements CameraModule,
         if(yv12formatset.equals("true")) {
             Log.v(TAG, "preview format set to YV12");
             mParameters.setPreviewFormat (ImageFormat.YV12);
+        }
+
+        // if 4K recoding is enabled, set preview format to NV12_VENUS
+        if (is4KEnabled()) {
+            Log.e(TAG, "4K enabled, preview format set to NV12_VENUS");
+            mParameters.set(KEY_PREVIEW_FORMAT, QC_FORMAT_NV12_VENUS);
         }
 
         // Set High Frame Rate.
