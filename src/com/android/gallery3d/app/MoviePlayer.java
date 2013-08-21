@@ -317,7 +317,9 @@ public class MoviePlayer implements
                 R.string.resume_playing_resume, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mVideoView.seekTo(bookmark);
+                if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+                    mVideoView.seekTo(bookmark);
+                }
                 startVideo();
             }
         });
@@ -342,7 +344,9 @@ public class MoviePlayer implements
 
     public void onResume() {
         if (mHasPaused) {
-            mVideoView.seekTo(mVideoPosition);
+            if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+                mVideoView.seekTo(mVideoPosition);
+            }
             mVideoView.resume();
 
             // If we have slept for too long, pause the play
@@ -466,13 +470,17 @@ public class MoviePlayer implements
 
     @Override
     public void onSeekMove(int time) {
-        mVideoView.seekTo(time);
+        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+            mVideoView.seekTo(time);
+        }
     }
 
     @Override
     public void onSeekEnd(int time, int start, int end) {
         mDragging = false;
-        mVideoView.seekTo(time);
+        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+            mVideoView.seekTo(time);
+        }
         setProgress();
     }
 
