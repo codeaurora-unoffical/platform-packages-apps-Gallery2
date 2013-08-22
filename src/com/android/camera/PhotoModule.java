@@ -1825,7 +1825,9 @@ public class PhotoModule
             return false;
         case KeyEvent.KEYCODE_CAMERA:
             if (mFirstTimeInitialized && event.getRepeatCount() == 0) {
-                onShutterButtonClick();
+                // Only capture when in full screen capture mode
+                if (mActivity.isInCameraApp())
+                    onShutterButtonClick();
             }
             return true;
         case KeyEvent.KEYCODE_DPAD_LEFT:
