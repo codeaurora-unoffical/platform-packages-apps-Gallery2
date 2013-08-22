@@ -1999,7 +1999,7 @@ public class PhotoModule
             w = size.height;
             h = size.width;
         }
-        if (snail.getWidth() != w || snail.getHeight() != h) {
+        if (snail.getTextureWidth() != w || snail.getTextureHeight() != h) {
             snail.setSize(w, h);
         }
         snail.enableAspectRatioClamping();
@@ -2276,16 +2276,10 @@ public class PhotoModule
                 mFaceDetectionEnabled = false;
             }
         }
-        // skin tone ie enabled only for auto,party and portrait BSM
-        // when color effects are not enabled
-        if((Parameters.SCENE_MODE_PARTY.equals(mSceneMode) ||
-            Parameters.SCENE_MODE_PORTRAIT.equals(mSceneMode)) &&
-            (Parameters.EFFECT_NONE.equals(colorEffect))) {
-             //Set Skin Tone Correction factor
-             Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
-             if(mSeekBarInitialized == true)
-                 mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
-        }
+        //Set Skin Tone Correction factor
+        Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
+        if(mSeekBarInitialized == true)
+             mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
 
         //Set Histogram
         String histogram = mPreferences.getString(
@@ -2924,6 +2918,7 @@ class JpegEncodingQualityMappings {
 class GraphView extends View {
     private Bitmap  mBitmap;
     private Paint   mPaint = new Paint();
+    private Paint   mPaintRect = new Paint();
     private Canvas  mCanvas = new Canvas();
     private float   mScale = (float)3;
     private float   mWidth;
@@ -2939,6 +2934,8 @@ class GraphView extends View {
         super(context,attrs);
 
         mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        mPaintRect.setColor(0xFFFFFFFF);
+        mPaintRect.setStyle(Paint.Style.FILL);
     }
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -2971,7 +2968,7 @@ class GraphView extends View {
             float graphwidth = mWidth - (2 * border);
             float left,top,right,bottom;
             float bargap = 0.0f;
-            float barwidth = 1.0f;
+            float barwidth = graphwidth/STATS_SIZE;
 
             cavas.drawColor(0xFFAAAAAA);
             paint.setColor(Color.BLACK);
@@ -2984,7 +2981,6 @@ class GraphView extends View {
                 float x = (float)(32 * j)+ border;
                 cavas.drawLine(x, border, x, graphheight + border, paint);
             }
-            paint.setColor(0xFFFFFFFF);
             synchronized(PhotoModule.statsdata) {
                  //Assumption: The first element contains
                 //            the maximum value.
@@ -3007,7 +3003,7 @@ class GraphView extends View {
                     top = graphheight + border;
                     right = left + barwidth;
                     bottom = top - scaled;
-                    cavas.drawRect(left, top, right, bottom, paint);
+                    cavas.drawRect(left, top, right, bottom, mPaintRect);
                 }
             }
             canvas.drawBitmap(mBitmap, 0, 0, null);
