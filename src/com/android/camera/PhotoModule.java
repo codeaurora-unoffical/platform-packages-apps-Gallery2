@@ -2672,6 +2672,10 @@ public class PhotoModule
         }
     }
 
+    @Override
+    public void onCameraPickerSuperClicked() {
+    }
+
     // Preview texture has been copied. Now camera can be released and the
     // animation can be started.
     @Override
