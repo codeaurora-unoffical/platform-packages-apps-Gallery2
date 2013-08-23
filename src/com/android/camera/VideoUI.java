@@ -516,11 +516,19 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
 
         @Override
         public void onZoomStart() {
+            if (mPieRenderer != null) {
+                mPieRenderer.hide();
+                mPieRenderer.setBlockFocus(true);
+            }
         }
 
         @Override
         public void onZoomEnd() {
+            if (mPieRenderer != null) {
+                mPieRenderer.setBlockFocus(false);
+            }
         }
+
     }
 
     @Override
