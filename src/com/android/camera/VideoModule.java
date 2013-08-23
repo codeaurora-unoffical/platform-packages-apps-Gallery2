@@ -1167,8 +1167,11 @@ public class VideoModule implements CameraModule,
         switch (keyCode) {
             case KeyEvent.KEYCODE_CAMERA:
                 if (event.getRepeatCount() == 0) {
-                    mUI.clickShutter();
-                    return true;
+                    // Only recording when in full screen recording mode
+                    if (mActivity.isInCameraApp()) {
+                        mUI.clickShutter();
+                        return true;
+                    }
                 }
                 break;
             case KeyEvent.KEYCODE_DPAD_CENTER:
@@ -1622,8 +1625,6 @@ public class VideoModule implements CameraModule,
 
     private void startVideoRecording() {
         Log.v(TAG, "startVideoRecording");
-        mUI.enablePreviewThumb(false);
-        mActivity.setSwipingEnabled(false);
 
         mActivity.updateStorageSpaceAndHint();
         if (mActivity.getStorageSpace() <= Storage.LOW_STORAGE_THRESHOLD) {
@@ -1640,6 +1641,14 @@ public class VideoModule implements CameraModule,
         if( mUnsupportedHFRVideoCodec == true) {
             Log.e(TAG, "Unsupported HFR and video codec combinations");
             Toast.makeText(mActivity, R.string.error_app_unsupported_hfr_codec,
+            Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String HighFrameRate = mParameters.getVideoHighFrameRate();
+        if(!("off".equals(HighFrameRate)) && mCaptureTimeLapse) {
+            Log.e(TAG, "HFR and Time lapse recording combinations unsupported");
+            Toast.makeText(mActivity, R.string.error_app_unsupported_hfr_timelapse,
             Toast.LENGTH_SHORT).show();
             return;
         }
@@ -1685,6 +1694,9 @@ public class VideoModule implements CameraModule,
                 return;
             }
         }
+
+        mUI.enablePreviewThumb(false);
+        mActivity.setSwipingEnabled(false);
 
         // Make sure the video recording has started before announcing
         // this in accessibility.
@@ -2595,11 +2607,17 @@ public class VideoModule implements CameraModule,
             // We need to keep a preview frame for the animation before
             // releasing the camera. This will trigger onPreviewTextureCopied.
             ((CameraScreenNail) mActivity.mCameraScreenNail).copyTexture();
-            // Disable all camera controls.
-            mSwitchingCamera = true;
         } else {
             switchCamera();
         }
+    }
+
+    @Override
+    public void onCameraPickerSuperClicked() {
+        if (mPaused || mPendingSwitchCameraId != -1) return;
+
+        // Disable all camera controls.
+        mSwitchingCamera = true;
     }
 
     @Override
