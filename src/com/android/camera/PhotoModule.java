@@ -187,6 +187,7 @@ public class PhotoModule
     private static final String sTempCropFilename = "crop-temp";
 
     private ContentProviderClient mMediaProviderClient;
+    private ShutterButton mShutterButton;
     private boolean mFaceDetectionStarted = false;
 
     private static final int MINIMUM_BRIGHTNESS = 0;
@@ -725,6 +726,8 @@ public class PhotoModule
         mLocationManager.recordLocation(recordLocation);
 
         keepMediaProviderInstance();
+
+        mShutterButton = mActivity.getShutterButton();
 
         mUI.initializeFirstTime();
         MediaSaveService s = mActivity.getMediaSaveService();
@@ -1816,7 +1819,8 @@ public class PhotoModule
         case KeyEvent.KEYCODE_VOLUME_UP:
         case KeyEvent.KEYCODE_VOLUME_DOWN:
         case KeyEvent.KEYCODE_FOCUS:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized) {
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
+                  mShutterButton.getVisibility() == View.VISIBLE) {
                 if (event.getRepeatCount() == 0) {
                     onShutterButtonFocus(true);
                 }
@@ -1825,7 +1829,9 @@ public class PhotoModule
             return false;
         case KeyEvent.KEYCODE_CAMERA:
             if (mFirstTimeInitialized && event.getRepeatCount() == 0) {
-                onShutterButtonClick();
+                // Only capture when in full screen capture mode
+                if (mActivity.isInCameraApp() && mShutterButton.getVisibility() == View.VISIBLE)
+                    onShutterButtonClick();
             }
             return true;
         case KeyEvent.KEYCODE_DPAD_LEFT:
@@ -1879,7 +1885,8 @@ public class PhotoModule
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
         case KeyEvent.KEYCODE_VOLUME_DOWN:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized) {
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
+                  mShutterButton.getVisibility() == View.VISIBLE) {
                 onShutterButtonClick();
                 return true;
             }
@@ -2223,7 +2230,10 @@ public class PhotoModule
                                   mActivity.getString(R.string.pref_camera_zsl_default));
         String hdr = mPreferences.getString(CameraSettings.KEY_CAMERA_HDR,
                 mActivity.getString(R.string.pref_camera_hdr_default));
-        mParameters.setZSLMode(zsl);
+        if((!isImageCaptureIntent())) {
+            Log.v(TAG, "setZSLMode value = " + zsl);
+            mParameters.setZSLMode(zsl);
+        }
         if(zsl.equals("on")) {
             //Switch on ZSL Camera mode
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_ZSL;
@@ -2663,6 +2673,10 @@ public class PhotoModule
         } else {
             switchCamera();
         }
+    }
+
+    @Override
+    public void onCameraPickerSuperClicked() {
     }
 
     // Preview texture has been copied. Now camera can be released and the
