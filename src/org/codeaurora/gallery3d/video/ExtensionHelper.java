@@ -2,6 +2,7 @@ package org.codeaurora.gallery3d.video;
 
 import android.content.Context;
 import android.os.SystemProperties;
+import android.util.Log;
 
 import com.android.gallery3d.app.MovieActivity;
 import org.codeaurora.gallery3d.ext.ActivityHookerGroup;
@@ -25,6 +26,10 @@ public class ExtensionHelper {
         if (SystemProperties.getBoolean("persist.env.video.streaming", false)) {
             group.addHooker(new StreamingHooker());
             group.addHooker(new BookmarkHooker());
+        }
+        if (SystemProperties.getBoolean("persist.env.video.playlist", false)) {
+            group.addHooker(new MovieListHooker()); // add it for common feature.
+            group.addHooker(new StepOptionSettingsHooker());
         }
         return group;
     }
