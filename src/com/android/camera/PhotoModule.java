@@ -2040,6 +2040,8 @@ public class PhotoModule
     private void updateCameraParametersZoom() {
         // Set zoom.
         if (mParameters.isZoomSupported()) {
+            Parameters p = mCameraDevice.getParameters();
+            mZoomValue = p.getZoom();
             mParameters.setZoom(mZoomValue);
         }
     }
