@@ -591,6 +591,12 @@ public class VideoModule implements CameraModule,
             if (effectsActive()) {
                 mEffectsRecorder.setOrientationHint(mOrientation);
             }
+
+            Log.v(TAG, "onOrientationChanged, update parameters");
+            if (mParameters != null) {
+                setCameraParameters();
+            }
+
         }
 
         // Show the toast after getting the first orientation changed.
@@ -652,6 +658,11 @@ public class VideoModule implements CameraModule,
                 // back to use SurfaceTexture for preview and we need to stop then start
                 // the preview. This will cause the preview flicker since the preview
                 // will not be continuous for a short period of time.
+
+                // Get orientation directly from display rotation to make sure it's up
+                // to date. OnConfigurationChanged callback usually kicks in a bit later, if
+                // device is rotated during recording.
+                mDisplayRotation = Util.getDisplayRotation(mActivity);
                 ((CameraScreenNail) mActivity.mCameraScreenNail).animateCapture(mDisplayRotation);
 
                 mUI.enablePreviewThumb(true);
@@ -829,7 +840,20 @@ public class VideoModule implements CameraModule,
                 ". mDesiredPreviewHeight=" + mDesiredPreviewHeight);
     }
 
+    void setPreviewFrameLayoutCameraOrientation(){
+       CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
+
+       //if camera mount angle is 0 or 180, we want to resize preview
+       if(info.orientation % 180 == 0){
+           mUI.mPreviewFrameLayout.setRenderer(mUI.mPieRenderer);
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(true);
+       } else{
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(false);
+       }
+    }
+
     private void resizeForPreviewAspectRatio() {
+        setPreviewFrameLayoutCameraOrientation();
         mUI.setAspectRatio(
                 (double) mProfile.videoFrameWidth / mProfile.videoFrameHeight);
     }
@@ -1277,10 +1301,14 @@ public class VideoModule implements CameraModule,
         mActivity.mCameraDevice.unlock();
         mActivity.mCameraDevice.waitDone();
         mMediaRecorder.setCamera(mActivity.mCameraDevice.getCamera());
-        if (!mCaptureTimeLapse) {
+        String hfr = mParameters.getVideoHighFrameRate();
+        if (!mCaptureTimeLapse && ((hfr == null) || ("off".equals(hfr)))) {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
             mProfile.audioCodec = mAudioEncoder;
+        } else {
+            mProfile.audioCodec = -1; //not set
         }
+
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         mProfile.videoCodec = mVideoEncoder;
@@ -1603,6 +1631,19 @@ public class VideoModule implements CameraModule,
             return;
         }
 
+        if( mUnsupportedHFRVideoSize == true) {
+            Log.e(TAG, "Unsupported HFR and video size combinations");
+            Toast.makeText(mActivity,R.string.error_app_unsupported_hfr, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if( mUnsupportedHFRVideoCodec == true) {
+            Log.e(TAG, "Unsupported HFR and video codec combinations");
+            Toast.makeText(mActivity, R.string.error_app_unsupported_hfr_codec,
+            Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (!mActivity.mCameraDevice.waitDone()) return;
         mCurrentVideoUri = null;
         if (effectsActive()) {
@@ -1664,7 +1705,9 @@ public class VideoModule implements CameraModule,
         mUI.enableCameraControls(false);
 
         mMediaRecorderRecording = true;
-        mActivity.getOrientationManager().lockOrientation();
+        if (!Util.systemRotationLocked(mActivity)) {
+            mActivity.getOrientationManager().lockOrientation();
+        }
         mRecordingStartTime = SystemClock.uptimeMillis();
         mUI.showRecordingUI(true, mParameters.isZoomSupported());
 
@@ -1739,7 +1782,9 @@ public class VideoModule implements CameraModule,
                 fail = true;
             }
             mMediaRecorderRecording = false;
-            mActivity.getOrientationManager().unlockOrientation();
+            if (!Util.systemRotationLocked(mActivity)) {
+                mActivity.getOrientationManager().unlockOrientation();
+            }
 
             // If the activity is paused, this means activity is interrupted
             // during recording. Release the camera as soon as possible because
@@ -1927,6 +1972,15 @@ public class VideoModule implements CameraModule,
             mParameters.setColorEffect(colorEffect);
         }
 
+        String disMode = mPreferences.getString(
+                CameraSettings.KEY_DIS,
+                mActivity.getString(R.string.pref_camera_dis_default));
+        Log.v(TAG, "DIS value =" + disMode);
+        if (isSupported(disMode,
+                        CameraSettings.getSupportedDISModes(mParameters))) {
+            mParameters.set(CameraSettings.KEY_QC_DIS_MODE, disMode);
+        }
+
         mUnsupportedHFRVideoSize = false;
         mUnsupportedHFRVideoCodec = false;
         // To set preview format as YV12 , run command
@@ -1946,14 +2000,17 @@ public class VideoModule implements CameraModule,
             String hfrsize = videoWidth+"x"+videoHeight;
             Log.v(TAG, "current set resolution is : "+hfrsize);
             try {
-                for(Size size :  mParameters.getSupportedHfrSizes()){
-                    if(size != null) {
-                        Log.v(TAG, "supported hfr size : "+ size.width+ " "+size.height);
-                        if(videoWidth <= size.width && videoHeight <= size.height) {
-                            mUnsupportedHFRVideoSize = false;
-                            Log.v(TAG,"Current hfr resolution is supported");
-                            break;
-                        }
+                Size size = null;
+                if(isSupported(HighFrameRate,mParameters.getSupportedVideoHighFrameRateModes())){
+                    int index = mParameters.getSupportedVideoHighFrameRateModes().indexOf(
+                        HighFrameRate);
+                    size = mParameters.getSupportedHfrSizes().get(index);
+                }
+                if(size != null) {
+                    Log.v(TAG, "supported hfr size : "+ size.width+ " "+size.height);
+                    if(videoWidth <= size.width && videoHeight <= size.height) {
+                        mUnsupportedHFRVideoSize = false;
+                        Log.v(TAG,"Current hfr resolution is supported");
                     }
                 }
             } catch (NullPointerException e){
@@ -1970,13 +2027,65 @@ public class VideoModule implements CameraModule,
                 mParameters.getSupportedVideoHighFrameRateModes()) &&
                 !mUnsupportedHFRVideoSize) {
             mParameters.setVideoHighFrameRate(HighFrameRate);
-        } else {
+        } else
             mParameters.setVideoHighFrameRate("off");
+
+        // Read Flip mode from adb command
+        //value: 0(default) - FLIP_MODE_OFF
+        //value: 1 - FLIP_MODE_H
+        //value: 2 - FLIP_MODE_V
+        //value: 3 - FLIP_MODE_VH
+        int preview_flip_value = SystemProperties.getInt("debug.camera.preview.flip", 0);
+        int video_flip_value = SystemProperties.getInt("debug.camera.video.flip", 0);
+        int picture_flip_value = SystemProperties.getInt("debug.camera.picture.flip", 0);
+        int rotation = Util.getJpegRotation(mCameraId, mOrientation);
+        mParameters.setRotation(rotation);
+        if (rotation == 90 || rotation == 270) {
+            // in case of 90 or 270 degree, V/H flip should reverse
+            if (preview_flip_value == 1) {
+                preview_flip_value = 2;
+            } else if (preview_flip_value == 2) {
+                preview_flip_value = 1;
+            }
+            if (video_flip_value == 1) {
+                video_flip_value = 2;
+            } else if (video_flip_value == 2) {
+                video_flip_value = 1;
+            }
+            if (picture_flip_value == 1) {
+                picture_flip_value = 2;
+            } else if (picture_flip_value == 2) {
+                picture_flip_value = 1;
+            }
         }
+        String preview_flip = Util.getFilpModeString(preview_flip_value);
+        String video_flip = Util.getFilpModeString(video_flip_value);
+        String picture_flip = Util.getFilpModeString(picture_flip_value);
+
+        if(Util.isSupported(preview_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_PREVIEW_FLIP, preview_flip);
+        }
+        if(Util.isSupported(video_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_VIDEO_FLIP, video_flip);
+        }
+        if(Util.isSupported(picture_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_SNAPSHOT_PICTURE_FLIP, picture_flip);
+        }
+
+        // Set Video HDR.
+        String videoHDR = mPreferences.getString(
+                CameraSettings.KEY_VIDEO_HDR,
+                mActivity.getString(R.string.pref_camera_video_hdr_default));
+        Log.v(TAG, "Video HDR Setting =" + videoHDR);
+        if (isSupported(videoHDR, mParameters.getSupportedVideoHDRModes())) {
+             mParameters.setVideoHDRMode(videoHDR);
+        } else
+             mParameters.setVideoHDRMode("off");
     }
 
     @SuppressWarnings("deprecation")
     private void setCameraParameters() {
+        Log.d(TAG,"Preview dimension in App->"+mDesiredPreviewWidth+"X"+mDesiredPreviewHeight);
         mParameters.setPreviewSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
         mParameters.setPreviewFrameRate(mProfile.videoFrameRate);
 
@@ -2079,8 +2188,8 @@ public class VideoModule implements CameraModule,
         }
 
         CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        int oldWidth = screenNail.getWidth();
-        int oldHeight = screenNail.getHeight();
+        int oldWidth = screenNail.getTextureWidth();
+        int oldHeight = screenNail.getTextureHeight();
 
         if (oldWidth != width || oldHeight != height) {
             screenNail.setSize(width, height);
@@ -2179,6 +2288,7 @@ public class VideoModule implements CameraModule,
     public void onConfigurationChanged(Configuration newConfig) {
         Log.v(TAG, "onConfigurationChanged");
         setDisplayOrientation();
+        resizeForPreviewAspectRatio();
     }
 
     @Override

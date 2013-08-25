@@ -88,6 +88,7 @@ import android.util.AttributeSet;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.SystemProperties;
 
 public class PhotoModule
     implements CameraModule,
@@ -132,6 +133,7 @@ public class PhotoModule
     private static final int CAMERA_DISABLED = 12;
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
+    private static final int SET_PHOTO_UI_PARAMS = 15;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -296,6 +298,7 @@ public class PhotoModule
     private FocusOverlayManager mFocusManager;
 
     private String mSceneMode;
+    private String mCurrTouchAfAec = Parameters.TOUCH_AF_AEC_ON;
 
     private final Handler mHandler = new MainHandler();
     private PreferenceGroup mPreferenceGroup;
@@ -473,6 +476,13 @@ public class PhotoModule
                     }
                     break;
                }
+               case SET_PHOTO_UI_PARAMS: {
+                    setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+                    resizeForPreviewAspectRatio();
+                    mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                        mPreferences);
+                    break;
+               }
             }
         }
     }
@@ -601,8 +611,10 @@ public class PhotoModule
         View root = mUI.getRootView();
         // These depend on camera parameters.
 
-        int width = root.getWidth();
-        int height = root.getHeight();
+        int width = mUI.mPreviewFrameLayout.getWidth();
+        int height = mUI.mPreviewFrameLayout.getHeight();
+        openCameraCommon();
+        resizeForPreviewAspectRatio();
         mFocusManager.setPreviewSize(width, height);
         // Full-screen screennail
         if (Util.getDisplayRotation(mActivity) % 180 == 0) {
@@ -612,7 +624,6 @@ public class PhotoModule
         }
         // Set touch focus listener.
         mActivity.setSingleTapUpListener(root);
-        openCameraCommon();
         onFullScreenChanged(mActivity.isInCameraApp());
     }
 
@@ -649,6 +660,7 @@ public class PhotoModule
         mFocusManager.setMirror(mirror);
         mFocusManager.setParameters(mInitialParams);
         setupPreview();
+        resizeForPreviewAspectRatio();
 
         openCameraCommon();
 
@@ -670,6 +682,7 @@ public class PhotoModule
 
         mUI.onCameraOpened(mPreferenceGroup, mPreferences, mParameters, this);
         updateSceneMode();
+        updateHdrMode();
         showTapToFocusToastIfNeeded();
 
 
@@ -678,9 +691,6 @@ public class PhotoModule
     public void onScreenSizeChanged(int width, int height, int previewWidth, int previewHeight) {
         Log.d(TAG, "Preview size changed.");
         if (mFocusManager != null) mFocusManager.setPreviewSize(width, height);
-        ((CameraScreenNail) mActivity.mCameraScreenNail).setPreviewFrameLayoutSize(
-                previewWidth, previewHeight);
-        mActivity.notifyScreenNailChanged();
     }
 
     private void resetExposureCompensation() {
@@ -836,7 +846,7 @@ public class PhotoModule
         public void onShutter() {
             mShutterCallbackTime = System.currentTimeMillis();
             mShutterLag = mShutterCallbackTime - mCaptureStartTime;
-            Log.v(TAG, "mShutterLag = " + mShutterLag + "ms");
+            Log.e(TAG, "[KPI Perf] PROFILE_SHUTTER_LAG mShutterLag = " + mShutterLag + "ms");
             if (mAnimateFlash) {
                 mActivity.runOnUiThread(mFlashRunnable);
             }
@@ -1283,6 +1293,17 @@ public class PhotoModule
         }
     }
 
+    private void updateHdrMode() {
+        String zsl = mPreferences.getString(CameraSettings.KEY_ZSL,
+                         mActivity.getString(R.string.pref_camera_zsl_default));
+        if (zsl.equals("on")) {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR,
+                                      mParameters.getAEBracket());
+        } else {
+            mUI.overrideSettings(CameraSettings.KEY_CAMERA_HDR, null);
+        }
+    }
+
     private void updateSceneMode() {
         // If scene mode is set, we cannot set flash mode, white balance, and
         // focus mode, instead, we read it from driver
@@ -1290,7 +1311,7 @@ public class PhotoModule
             overrideCameraSettings(mParameters.getFlashMode(),
                     mParameters.getWhiteBalance(), mParameters.getFocusMode(),
                     Integer.toString(mParameters.getExposureCompensation()),
-                    mParameters.getTouchAfAec(), mParameters.getAutoExposure());
+                    mCurrTouchAfAec, mParameters.getAutoExposure());
         } else {
             overrideCameraSettings(null, null, null, null, null, null);
         }
@@ -1321,7 +1342,16 @@ public class PhotoModule
         // the camera then point the camera to floor or sky, we still have
         // the correct orientation.
         if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) return;
+
+        int oldOrientation = mOrientation;
         mOrientation = Util.roundOrientation(orientation, mOrientation);
+
+        if (oldOrientation != mOrientation) {
+            Log.v(TAG, "onOrientationChanged, update parameters");
+            if (mParameters != null && mCameraDevice != null) {
+                onSharedPreferenceChanged();
+            }
+        }
 
         // Show the toast after getting the first orientation changed.
         if (mHandler.hasMessages(SHOW_TAP_TO_FOCUS_TOAST)) {
@@ -1518,6 +1548,24 @@ public class PhotoModule
         }
     }
 
+    void setPreviewFrameLayoutCameraOrientation(){
+       CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
+       //if camera mount angle is 0 or 180, we want to resize preview
+       if(info.orientation % 180 == 0){
+           mUI.mPreviewFrameLayout.setRenderer(mUI.mPieRenderer);
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(true);
+       } else{
+           mUI.mPreviewFrameLayout.cameraOrientationPreviewResize(false);
+       }
+    }
+
+    private void resizeForPreviewAspectRatio() {
+        setPreviewFrameLayoutCameraOrientation();
+        Size size = mParameters.getPictureSize();
+        Log.e(TAG,"Width = "+ size.width+ "Height = "+size.height);
+        mUI.setAspectRatio((double) size.width / size.height);
+    }
+
     @Override
     public void installIntentFilter() {
     }
@@ -1687,6 +1735,7 @@ public class PhotoModule
     public void onConfigurationChanged(Configuration newConfig) {
         Log.v(TAG, "onConfigurationChanged");
         setDisplayOrientation();
+        resizeForPreviewAspectRatio();
     }
 
     @Override
@@ -1904,19 +1953,13 @@ public class PhotoModule
 
         if (ApiHelper.HAS_SURFACE_TEXTURE) {
             CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-            int oldWidth = screenNail.getTextureWidth();
-            int oldHeight = screenNail.getTextureHeight();
-            Size size = mParameters.getPreviewSize();
-            int previewWidth = size.width;
-            int previewHeight = size.height;
-            if (mCameraDisplayOrientation % 180 != 0) {
-                previewWidth = size.height;
-                previewHeight = size.width;
-            }
-            if ( (mUI.getSurfaceTexture() == null) ||
-                  (previewWidth != oldWidth) ||
-                  (previewHeight != oldHeight) ) {
-                screenNail.setSize(previewWidth, previewHeight);
+            if (mUI.getSurfaceTexture() == null) {
+                Size size = mParameters.getPreviewSize();
+                if (mCameraDisplayOrientation % 180 == 0) {
+                    screenNail.setSize(size.width, size.height);
+                } else {
+                    screenNail.setSize(size.height, size.width);
+                }
                 screenNail.enableAspectRatioClamping();
                 mActivity.notifyScreenNailChanged();
                 screenNail.acquireSurfaceTexture();
@@ -1956,7 +1999,7 @@ public class PhotoModule
             w = size.height;
             h = size.width;
         }
-        if (snail.getWidth() != w || snail.getHeight() != h) {
+        if (snail.getTextureWidth() != w || snail.getTextureHeight() != h) {
             snail.setSize(w, h);
         }
         snail.enableAspectRatioClamping();
@@ -1968,7 +2011,7 @@ public class PhotoModule
         if (mCameraDevice != null && mCameraState != PREVIEW_STOPPED) {
             Log.v(TAG, "stopPreview");
             mCameraDevice.stopPreview();
-            mFaceDetectionStarted = false;
+            //mFaceDetectionStarted = false;
         }
         setCameraState(PREVIEW_STOPPED);
         if (mFocusManager != null) mFocusManager.onPreviewStopped();
@@ -2032,6 +2075,7 @@ public class PhotoModule
                  CameraSettings.KEY_TOUCH_AF_AEC,
                  mActivity.getString(R.string.pref_camera_touchafaec_default));
             if (Util.isSupported(touchAfAec, mParameters.getSupportedTouchAfAec())) {
+                mCurrTouchAfAec = touchAfAec;
                 mParameters.setTouchAfAec(touchAfAec);
             }
         } else {
@@ -2215,11 +2259,6 @@ public class PhotoModule
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_NONZSL;
             mParameters.setCameraMode(0);
             mFocusManager.setZslEnable(false);
-            if (hdr.equals(mActivity.getString(R.string.setting_on_value)))
-                mParameters.set("num-snaps-per-shutter", "2");
-            else
-                mParameters.set("num-snaps-per-shutter", "1");
-
         }
         // Set face detetction parameter.
         String faceDetection = mPreferences.getString(
@@ -2237,16 +2276,10 @@ public class PhotoModule
                 mFaceDetectionEnabled = false;
             }
         }
-        // skin tone ie enabled only for auto,party and portrait BSM
-        // when color effects are not enabled
-        if((Parameters.SCENE_MODE_PARTY.equals(mSceneMode) ||
-            Parameters.SCENE_MODE_PORTRAIT.equals(mSceneMode)) &&
-            (Parameters.EFFECT_NONE.equals(colorEffect))) {
-             //Set Skin Tone Correction factor
-             Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
-             if(mSeekBarInitialized == true)
-                 mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
-        }
+        //Set Skin Tone Correction factor
+        Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
+        if(mSeekBarInitialized == true)
+             mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
 
         //Set Histogram
         String histogram = mPreferences.getString(
@@ -2277,6 +2310,47 @@ public class PhotoModule
                 mCameraDevice.setHistogramMode(null);
             }
         }
+        // Read Flip mode from adb command
+        //value: 0(default) - FLIP_MODE_OFF
+        //value: 1 - FLIP_MODE_H
+        //value: 2 - FLIP_MODE_V
+        //value: 3 - FLIP_MODE_VH
+        int preview_flip_value = SystemProperties.getInt("debug.camera.preview.flip", 0);
+        int video_flip_value = SystemProperties.getInt("debug.camera.video.flip", 0);
+        int picture_flip_value = SystemProperties.getInt("debug.camera.picture.flip", 0);
+        int rotation = Util.getJpegRotation(mCameraId, mOrientation);
+        mParameters.setRotation(rotation);
+        if (rotation == 90 || rotation == 270) {
+            // in case of 90 or 270 degree, V/H flip should reverse
+            if (preview_flip_value == 1) {
+                preview_flip_value = 2;
+            } else if (preview_flip_value == 2) {
+                preview_flip_value = 1;
+            }
+            if (video_flip_value == 1) {
+                video_flip_value = 2;
+            } else if (video_flip_value == 2) {
+                video_flip_value = 1;
+            }
+            if (picture_flip_value == 1) {
+                picture_flip_value = 2;
+            } else if (picture_flip_value == 2) {
+                picture_flip_value = 1;
+            }
+        }
+        String preview_flip = Util.getFilpModeString(preview_flip_value);
+        String video_flip = Util.getFilpModeString(video_flip_value);
+        String picture_flip = Util.getFilpModeString(picture_flip_value);
+        if(Util.isSupported(preview_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_PREVIEW_FLIP, preview_flip);
+        }
+        if(Util.isSupported(video_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_VIDEO_FLIP, video_flip);
+        }
+        if(Util.isSupported(picture_flip, CameraSettings.getSupportedFlipMode(mParameters))){
+            mParameters.set(CameraSettings.KEY_QC_SNAPSHOT_PICTURE_FLIP, picture_flip);
+        }
+
      }
 
     @TargetApi(ApiHelper.VERSION_CODES.JELLY_BEAN)
@@ -2492,11 +2566,13 @@ public class PhotoModule
              if(mRestartPreview && mCameraState != PREVIEW_STOPPED) {
                 Log.v(TAG, "Restarting Preview...");
                 stopPreview();
+                resizeForPreviewAspectRatio();
                 startPreview();
                 setCameraState(IDLE);
             }
             mRestartPreview = false;
             updateSceneMode();
+            updateHdrMode();
             mUpdateSet = 0;
         } else {
             if (!mHandler.hasMessages(SET_CAMERA_PARAMETERS_WHEN_IDLE)) {
@@ -2542,9 +2618,19 @@ public class PhotoModule
             setCameraState(IDLE);
             mRestartPreview = false;
         }
-        setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
-        mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
-            mPreferences);
+        /* Check if the PhotoUI Menu is initialized or not. This
+         * should be initialized during onCameraOpen() which should
+         * have been called by now. But for some reason that is not
+         * executed till now, then schedule these functionality for
+         * later by posting a message to the handler */
+        if (mUI.mMenuInitialized) {
+            setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
+            resizeForPreviewAspectRatio();
+            mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
+                mPreferences);
+        } else {
+            mHandler.sendEmptyMessage(SET_PHOTO_UI_PARAMS);
+        }
         if (mSeekBarInitialized == true){
             Log.v(TAG, "onSharedPreferenceChanged Skin tone bar: change");
             // skin tone is enabled only for party and portrait BSM
@@ -2832,6 +2918,7 @@ class JpegEncodingQualityMappings {
 class GraphView extends View {
     private Bitmap  mBitmap;
     private Paint   mPaint = new Paint();
+    private Paint   mPaintRect = new Paint();
     private Canvas  mCanvas = new Canvas();
     private float   mScale = (float)3;
     private float   mWidth;
@@ -2847,6 +2934,8 @@ class GraphView extends View {
         super(context,attrs);
 
         mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        mPaintRect.setColor(0xFFFFFFFF);
+        mPaintRect.setStyle(Paint.Style.FILL);
     }
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -2879,7 +2968,7 @@ class GraphView extends View {
             float graphwidth = mWidth - (2 * border);
             float left,top,right,bottom;
             float bargap = 0.0f;
-            float barwidth = 1.0f;
+            float barwidth = graphwidth/STATS_SIZE;
 
             cavas.drawColor(0xFFAAAAAA);
             paint.setColor(Color.BLACK);
@@ -2892,7 +2981,6 @@ class GraphView extends View {
                 float x = (float)(32 * j)+ border;
                 cavas.drawLine(x, border, x, graphheight + border, paint);
             }
-            paint.setColor(0xFFFFFFFF);
             synchronized(PhotoModule.statsdata) {
                  //Assumption: The first element contains
                 //            the maximum value.
@@ -2915,7 +3003,7 @@ class GraphView extends View {
                     top = graphheight + border;
                     right = left + barwidth;
                     bottom = top - scaled;
-                    cavas.drawRect(left, top, right, bottom, paint);
+                    cavas.drawRect(left, top, right, bottom, mPaintRect);
                 }
             }
             canvas.drawBitmap(mBitmap, 0, 0, null);
