@@ -788,6 +788,9 @@ public class VideoModule implements CameraModule,
         }
     }
 
+    @Override
+    public void onShutterButtonLongClick() {}
+
     private void qcomReadVideoPreferences() {
         String videoEncoder = mPreferences.getString(
                CameraSettings.KEY_VIDEO_ENCODER,
