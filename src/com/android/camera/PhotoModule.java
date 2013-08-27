@@ -134,6 +134,7 @@ public class PhotoModule
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
     private static final int SET_PHOTO_UI_PARAMS = 15;
+    private static final int CONFIGURE_SKIN_TONE_FACTOR = 16;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -481,6 +482,14 @@ public class PhotoModule
                     resizeForPreviewAspectRatio();
                     mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
                         mPreferences);
+                    break;
+               }
+               case CONFIGURE_SKIN_TONE_FACTOR: {
+                    if (isCameraIdle()) {
+                        mParameters = mCameraDevice.getParameters();
+                        mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
+                        mCameraDevice.setParameters(mParameters);
+                    }
                     break;
                }
             }
@@ -1088,9 +1097,8 @@ public class PhotoModule
             }
             if(value != mskinToneValue && mCameraDevice != null) {
                 mskinToneValue = value;
-                mParameters = mCameraDevice.getParameters();
-                mParameters.set("skinToneEnhancement", String.valueOf(mskinToneValue));
-                mCameraDevice.setParameters(mParameters);
+                Message msg = mHandler.obtainMessage(CONFIGURE_SKIN_TONE_FACTOR, mskinToneValue, 0);
+                mHandler.sendMessage(msg);
             }
         }
 
