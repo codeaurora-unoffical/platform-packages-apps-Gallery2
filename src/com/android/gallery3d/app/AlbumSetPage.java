@@ -139,6 +139,7 @@ public class AlbumSetPage extends ActivityState implements
 
         @Override
         protected void render(GLCanvas canvas) {
+            mSlotView.invalidate();
             canvas.save(GLCanvas.SAVE_FLAG_MATRIX);
             GalleryUtils.setViewPointMatrix(mMatrix,
                     getWidth() / 2 + mX, getHeight() / 2 + mY, mZ);
