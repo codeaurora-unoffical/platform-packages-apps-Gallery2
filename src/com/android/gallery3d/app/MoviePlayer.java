@@ -213,6 +213,8 @@ public class MoviePlayer implements
                 }
                 mKeyguardLocked = false;
                 mCanResumed = false;
+            } else if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
+                onDestroy();
             }
         }
     };
@@ -289,6 +291,7 @@ public class MoviePlayer implements
         final IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(Intent.ACTION_SHUTDOWN);
         mContext.registerReceiver(mReceiver, filter);
 
         Intent i = new Intent(SERVICECMD);
