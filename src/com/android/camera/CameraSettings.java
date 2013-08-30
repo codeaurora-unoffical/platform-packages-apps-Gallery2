@@ -799,6 +799,16 @@ public class CameraSettings {
 
     @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
     private void getFineResolutionQuality(ArrayList<String> supported) {
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_4kDCI)) {
+           if (checkSupportedVideoQuality(4096,2160)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_4kDCI));
+           }
+        }
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_4kUHD)) {
+           if (checkSupportedVideoQuality(3840,2160)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_4kUHD));
+           }
+        }
         if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_1080P)) {
            if (checkSupportedVideoQuality(1920,1080)){
               supported.add(Integer.toString(CamcorderProfile.QUALITY_1080P));
