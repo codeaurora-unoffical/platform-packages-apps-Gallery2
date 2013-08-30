@@ -180,7 +180,7 @@
     <string name="widget_type" msgid="1364653978966343448">"Scegli immagini"</string>
     <string name="slideshow_dream_name" msgid="6915963319933437083">"Presentazione"</string>
     <string name="albums" msgid="7320787705180057947">"Album"</string>
-    <string name="times" msgid="2023033894889499219">"Volte"</string>
+    <string name="times" msgid="2023033894889499219">"Data"</string>
     <string name="locations" msgid="6649297994083130305">"Luoghi"</string>
     <string name="people" msgid="4114003823747292747">"Persone"</string>
     <string name="tags" msgid="5539648765482935955">"Tag"</string>
@@ -256,8 +256,10 @@
     <string name="pref_camera_picturesize_entry_13mp" msgid="675309554194481780">"13M pixel"</string>
     <string name="pref_camera_picturesize_entry_8mp" msgid="259953780932849079">"8 MP"</string>
     <string name="pref_camera_picturesize_entry_5mp" msgid="2882928212030661159">"5 MP"</string>
+    <string name="pref_camera_picturesize_entry_4mp" msgid="933242108272469142">"4 Mpixel"</string>
     <string name="pref_camera_picturesize_entry_3mp" msgid="741415860337400696">"3 MP"</string>
     <string name="pref_camera_picturesize_entry_2mp" msgid="1753709802245460393">"2 MP"</string>
+    <string name="pref_camera_picturesize_entry_2mp_wide" msgid="5359490802026616612">"2 Mpixel (16:9)"</string>
     <string name="pref_camera_picturesize_entry_1_3mp" msgid="829109608140747258">"1,3 MP"</string>
     <string name="pref_camera_picturesize_entry_1mp" msgid="1669725616780375066">"1 MP"</string>
     <string name="pref_camera_picturesize_entry_vga" msgid="806934254162981919">"VGA"</string>

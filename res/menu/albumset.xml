@@ -21,17 +21,13 @@
     <item android:id="@+id/action_select"
             android:title="@string/select_album"
             android:showAsAction="never" />
-    <item android:id="@+id/action_manage_offline"
-            android:title="@string/make_available_offline"
-            android:showAsAction="never" />
-    <item android:id="@+id/action_sync_picasa_albums"
-            android:title="@string/sync_picasa_albums"
-            android:showAsAction="never" />
-    <item android:id="@+id/action_settings"
-            android:title="@string/settings"
-            android:showAsAction="never" />
     <item android:id="@+id/action_general_help"
             android:title="@string/help"
             android:visible="false"
             android:showAsAction="never" />
+    <!-- Add a switch for cooperating with xcloud -->
+    <item android:id="@+id/switch_auto_sync_to_xcloud"
+            android:title="@string/menu_auto_upload_to_xcloud_switch"
+            android:showAsAction="never"
+            android:checkable="true"/>
 </menu>

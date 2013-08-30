@@ -455,6 +455,7 @@ public class PieRenderer extends OverlayRenderer
         mFadeOut.setAnimationListener(new AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
+                item.performSuperClick();
             }
 
             @Override
@@ -894,6 +895,10 @@ public class PieRenderer extends OverlayRenderer
 
     public int getSize() {
         return 2 * mCircleSize;
+    }
+
+    public int getDiameter() {
+        return (mArcRadius + mRadiusInc + (mRadiusInc / 4));
     }
 
     private int getRandomRange() {

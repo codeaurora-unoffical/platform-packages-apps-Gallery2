@@ -51,6 +51,30 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.util.Calendar;
+import android.content.ContentValues;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
+import android.view.Menu;
+import android.view.MenuItem;
+
 public class GalleryUtils {
     private static final String TAG = "GalleryUtils";
     private static final String MAPS_PACKAGE_NAME = "com.google.android.apps.maps";
@@ -400,5 +424,236 @@ public class GalleryUtils {
         int w = item.getWidth();
         int h = item.getHeight();
         return (h > 0 && w / h >= 2);
+    }
+
+    // Add for Baidu xCloud Feature
+    public static class AESUtils {
+
+        private final static String PWD = "qrd@baidu";
+
+        private final static long DEFAULT_TIMESTAMP = 1351077888044L;
+
+        private static AESUtils instance;
+
+        public static AESUtils getInstance() {
+            if (instance == null) {
+                instance = new AESUtils();
+            }
+            return instance;
+        }
+
+        private AESUtils() {
+        }
+
+        private byte[] hex2Byte(String hex) {
+            if (hex.length() < 1) {
+                return null;
+            }
+            byte[] r = new byte[hex.length() / 2];
+            for (int i = 0; i < hex.length() / 2; i++) {
+                int h = Integer.parseInt(hex.substring(i * 2, i * 2 + 1), 16);
+                int l = Integer.parseInt(hex.substring(i * 2 + 1, i * 2 + 2),
+                        16);
+                r[i] = (byte) (h * 16 + l);
+            }
+            return r;
+        }
+
+        private String passGen(long timestamp) {
+            return PWD + timestamp;
+        }
+
+        private String byte2Hex(byte buf[]) {
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < buf.length; i++) {
+                String hex = Integer.toHexString(buf[i] & 0xFF);
+                if (hex.length() == 1) {
+                    hex = '0' + hex;
+                }
+                sb.append(hex.toUpperCase());
+            }
+            return sb.toString();
+        }
+
+        public String encrypt(String content) {
+            return encrypt(content, DEFAULT_TIMESTAMP);
+        }
+
+        public String encrypt(String content, long timestamp) {
+            if (timestamp == 0) {
+                throw new RuntimeException("timestamp can't be null");
+            }
+            try {
+                KeyGenerator kgen = KeyGenerator.getInstance("AES");
+                SecureRandom sr = SecureRandom.getInstance( "SHA1PRNG", "Crypto" );
+                sr.setSeed(passGen(timestamp).getBytes());
+                kgen.init(128, sr);
+                SecretKey secretKey = kgen.generateKey();
+                byte[] enCodeFormat = secretKey.getEncoded();
+                SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
+                Cipher cipher = Cipher.getInstance("AES");
+                byte[] byteContent = content.getBytes("utf-8");
+                cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(
+                        new byte[cipher.getBlockSize()]));
+                byte[] bytes = cipher.doFinal(byteContent);
+                String result = byte2Hex(bytes);
+                return result;
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchPaddingException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (IllegalBlockSizeException e) {
+                e.printStackTrace();
+            } catch (BadPaddingException e) {
+                e.printStackTrace();
+            } catch (NoSuchProviderException e) {
+                e.printStackTrace();
+            } catch (InvalidAlgorithmParameterException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        public String decrypt(String content) {
+            return decrypt(content, DEFAULT_TIMESTAMP);
+        }
+
+        public String decrypt(String content, long timestamp) {
+            try {
+                KeyGenerator kgen = KeyGenerator.getInstance("AES");
+                SecureRandom sr = SecureRandom.getInstance( "SHA1PRNG", "Crypto" );
+                sr.setSeed(passGen(timestamp).getBytes());
+                kgen.init(128, sr);
+                SecretKey secretKey = kgen.generateKey();
+                byte[] enCodeFormat = secretKey.getEncoded();
+                SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
+                Cipher cipher = Cipher.getInstance("AES");
+                cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(
+                        new byte[cipher.getBlockSize()]));
+                byte[] bytes = cipher.doFinal(hex2Byte(content));
+                String result = new String(bytes, "UTF-8");
+                return result;
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchPaddingException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+            } catch (IllegalBlockSizeException e) {
+                e.printStackTrace();
+            } catch (BadPaddingException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (NoSuchProviderException e) {
+                e.printStackTrace();
+            } catch (InvalidAlgorithmParameterException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    public static class XCloudManager {
+
+        private static boolean DBG_XCOULD = true;
+
+        private static String BAIDU_CLOUD_APK_NAME = "com.baidu.netdisk_qualcomm";
+
+        private static Uri sUri = Uri.parse("content://com.baidu.xcloud.content/album");
+
+        private static XCloudManager sInstance = null;
+        private static Object sSyncRoot = new Object();
+        public static XCloudManager getInstance() {
+            if (sInstance == null) {
+                synchronized(sSyncRoot) {
+                    if (sInstance == null)
+                        sInstance = new XCloudManager();
+                }
+            }
+            return sInstance;
+        }
+
+        private XCloudManager() {
+        }
+
+        private void loge(String message) {
+            loge(message, null);
+        }
+
+        private void loge(String message, Exception e) {
+            if (DBG_XCOULD)
+                Log.e("XCLOUD-QC-GALLERY", message, e);
+        }
+
+        private boolean isXCloudInstalled(Context context) {
+            boolean installed = false;
+            try {
+                ApplicationInfo info = context.getPackageManager().getApplicationInfo(
+                        BAIDU_CLOUD_APK_NAME, PackageManager.GET_PROVIDERS);
+                installed = info != null;
+            } catch (NameNotFoundException e) {
+                installed = false;
+            }
+            loge("Is xcloud installed ? " + installed);
+            return installed;
+        }
+
+        private boolean isAutoUploadEnabled(Context context) {
+            boolean enabled = false;
+
+            Cursor cursor = context.getContentResolver().query(sUri, null, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToNext()) {
+                        String tmp = AESUtils.getInstance()
+                                .decrypt(cursor.getString(0));
+                        enabled = (tmp != null && tmp.equals("on"));
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+            loge("Is auto upload enabled ? " + enabled);
+            return enabled;
+        }
+
+        private void setAutoUploadEnabled(boolean enabled, Context context) {
+            loge("Setting auto upload to " + enabled);
+            long timestamp = Calendar.getInstance().getTimeInMillis();
+            String isBackup = enabled ? "on" : "off";
+            ContentValues cvs = new ContentValues();
+            cvs.put("timestamp", timestamp);
+            cvs.put(AESUtils.getInstance().encrypt("autoalbum", timestamp),
+                    AESUtils.getInstance().encrypt(isBackup, timestamp));
+            context.getContentResolver().update(sUri, cvs, null, null);
+        }
+
+        public void updateMenuState(Menu menu, Context context) {
+            loge("Updating menu state");
+            MenuItem uploadSwitcher = menu.findItem(R.id.switch_auto_sync_to_xcloud);
+            if (uploadSwitcher != null) {
+                if (isXCloudInstalled(context)) {
+                    uploadSwitcher.setVisible(true);
+                    uploadSwitcher.setChecked(isAutoUploadEnabled(context));
+                } else {
+                    uploadSwitcher.setVisible(false);
+                }
+            }
+        }
+
+        public boolean handleXCouldRelatedMenuItem(MenuItem item, Context context) {
+            switch (item.getItemId()) {
+            case R.id.switch_auto_sync_to_xcloud:
+                setAutoUploadEnabled(!item.isChecked(), context);
+                return true;
+            default:
+                return false;
+            }
+        }
     }
 }

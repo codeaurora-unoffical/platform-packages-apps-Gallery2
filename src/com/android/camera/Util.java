@@ -39,6 +39,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.FloatMath;
@@ -373,6 +374,11 @@ public class Util {
         if (x > max) return max;
         if (x < min) return min;
         return x;
+    }
+
+    public static boolean systemRotationLocked(Activity activity) {
+        return Settings.System.getInt(activity.getContentResolver(),
+                Settings.System.ACCELEROMETER_ROTATION, 0) == 0;
     }
 
     public static int getDisplayRotation(Activity activity) {
@@ -741,6 +747,21 @@ public class Util {
             } else {
                 loc = null;
             }
+        }
+    }
+
+   public static String getFilpModeString(int value){
+        switch(value){
+            case 0:
+                return CameraSettings.FLIP_MODE_OFF;
+            case 1:
+                return CameraSettings.FLIP_MODE_H;
+            case 2:
+                return CameraSettings.FLIP_MODE_V;
+            case 3:
+                return CameraSettings.FLIP_MODE_VH;
+            default:
+                return null;
         }
     }
 
