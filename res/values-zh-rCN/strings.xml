@@ -69,9 +69,9 @@
     <string name="close" msgid="5585646033158453043">"关闭"</string>
     <string name="switch_to_camera" msgid="7280111806675169992">"切换到相机"</string>
   <plurals name="number_of_items_selected">
-    <item quantity="zero" msgid="2142579311530586258">"选中了 %1$d 项"</item>
-    <item quantity="one" msgid="2478365152745637768">"选中了 %1$d 项"</item>
-    <item quantity="other" msgid="754722656147810487">"选中了 %1$d 项"</item>
+    <item quantity="zero" msgid="2142579311530586258">"%1$d 项选中了"</item>
+    <item quantity="one" msgid="2478365152745637768">"%1$d 项选中了"</item>
+    <item quantity="other" msgid="754722656147810487">"%1$d 项选中了"</item>
   </plurals>
   <plurals name="number_of_albums_selected">
     <item quantity="zero" msgid="749292746814788132">"选中了 %1$d 本相册"</item>
@@ -105,6 +105,7 @@
     <string name="group_by_size" msgid="153766174950394155">"按大小分组"</string>
     <string name="untagged" msgid="7281481064509590402">"未加标签"</string>
     <string name="no_location" msgid="4043624857489331676">"无位置信息"</string>
+    <string name="no_faces">"无人物信息"</string>
     <string name="no_connectivity" msgid="7164037617297293668">"出现网络问题，系统无法识别某些位置。"</string>
     <string name="sync_album_error" msgid="1020688062900977530">"无法下载此相册中的照片，请稍后重试。"</string>
     <string name="show_images_only" msgid="7263218480867672653">"仅限图片"</string>
@@ -256,8 +257,10 @@
     <string name="pref_camera_picturesize_entry_13mp" msgid="675309554194481780">"1300万像素"</string>
     <string name="pref_camera_picturesize_entry_8mp" msgid="259953780932849079">"800 万像素"</string>
     <string name="pref_camera_picturesize_entry_5mp" msgid="2882928212030661159">"500 万像素"</string>
+    <string name="pref_camera_picturesize_entry_4mp" msgid="933242108272469142">"400万像素"</string>
     <string name="pref_camera_picturesize_entry_3mp" msgid="741415860337400696">"300 万像素"</string>
     <string name="pref_camera_picturesize_entry_2mp" msgid="1753709802245460393">"200 万像素"</string>
+    <string name="pref_camera_picturesize_entry_2mp_wide" msgid="5359490802026616612">"200万像素(16:9)"</string>
     <string name="pref_camera_picturesize_entry_1_3mp" msgid="829109608140747258">"130 万像素"</string>
     <string name="pref_camera_picturesize_entry_1mp" msgid="1669725616780375066">"100 万像素"</string>
     <string name="pref_camera_picturesize_entry_vga" msgid="806934254162981919">"VGA"</string>
@@ -434,4 +437,13 @@
     <item quantity="one" msgid="6949174783125614798">"%1$d张照片"</item>
     <item quantity="other" msgid="3813306834113858135">"%1$d张照片"</item>
   </plurals>
+
+    <string name="bass_boost_strength" msgid="882301530007752270">"低音增强"</string>
+    <string name="virtualizer_strength" msgid="5035111173763913313">"3D 音效"</string>
+    <string name="audio_effects" msgid="612896145300512593">"音效"</string>
+    <string name="headset_plug">此类音效需插入耳机。</string>
+    <string name="audio_effects_dialog_title">骁龙音效+</string>
+    <string name="menu_auto_upload_to_xcloud_switch">Wifi下自动上传到百度云</string>
+    <string name="fail_trim">抱歉，不能修剪该视频文件</string>
+    <string name="can_not_trim">只有mp4文件才能修剪</string>
 </resources>

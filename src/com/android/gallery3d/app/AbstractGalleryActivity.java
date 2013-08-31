@@ -250,6 +250,15 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        try {
+            return getStateManager().prepareOptionsMenu(menu);
+        } catch(Exception e) {
+            return true;
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         // send the back event to the top sub-state
         GLRoot root = getGLRoot();

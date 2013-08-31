@@ -64,6 +64,7 @@ public class PhotoUI implements PieListener,
     private PreviewGestures mGestures;
 
     private View mRootView;
+    protected PreviewFrameLayout mPreviewFrameLayout;
     private Object mSurfaceTexture;
     private volatile SurfaceHolder mSurfaceHolder;
 
@@ -83,7 +84,7 @@ public class PhotoUI implements PieListener,
 
     private OnScreenIndicators mOnScreenIndicators;
 
-    private PieRenderer mPieRenderer;
+    protected PieRenderer mPieRenderer;
     private ZoomRenderer mZoomRenderer;
     private Toast mNotSelectableToast;
 
@@ -93,6 +94,7 @@ public class PhotoUI implements PieListener,
     private int mPreviewWidth = 0;
     private int mPreviewHeight = 0;
     private View mPreviewThumb;
+    public boolean mMenuInitialized = false;
 
     private OnLayoutChangeListener mLayoutListener = new OnLayoutChangeListener() {
         @Override
@@ -127,7 +129,8 @@ public class PhotoUI implements PieListener,
         initIndicators();
         mCountDownView = (CountDownView) (mRootView.findViewById(R.id.count_down_to_capture));
         mCountDownView.setCountDownFinishedListener((OnCountDownFinishedListener) mController);
-
+        mPreviewFrameLayout = (PreviewFrameLayout) mRootView.findViewById(R.id.frame);
+        mPreviewFrameLayout.setOnLayoutChangeListener(mActivity);
         if (ApiHelper.HAS_FACE_DETECTION) {
             ViewStub faceViewStub = (ViewStub) mRootView
                     .findViewById(R.id.face_view_stub);
@@ -160,6 +163,7 @@ public class PhotoUI implements PieListener,
             mMenu.setListener(listener);
         }
         mMenu.initialize(prefGroup);
+        mMenuInitialized = true;
 
         if (mZoomRenderer == null) {
             mZoomRenderer = new ZoomRenderer(mActivity);
@@ -188,6 +192,10 @@ public class PhotoUI implements PieListener,
 
         initializeZoom(params);
         updateOnScreenIndicators(params, prefGroup, prefs);
+    }
+
+    public void setAspectRatio(double ratio) {
+        mPreviewFrameLayout.setAspectRatio(ratio);
     }
 
     private void openMenu() {
@@ -299,12 +307,13 @@ public class PhotoUI implements PieListener,
     public void hideGpsOnScreenIndicator() { }
 
     public void overrideSettings(final String ... keyvalues) {
+        if (mMenu == null) return;
         mMenu.overrideSettings(keyvalues);
     }
 
     public void updateOnScreenIndicators(Camera.Parameters params,
             PreferenceGroup group, ComboPreferences prefs) {
-        if (params == null) return;
+        if (params == null || group == null) return;
         mOnScreenIndicators.updateSceneOnScreenIndicator(params.getSceneMode());
         mOnScreenIndicators.updateExposureOnScreenIndicator(params,
                 CameraSettings.readExposure(prefs));
@@ -459,6 +468,7 @@ public class PhotoUI implements PieListener,
         mShutterButton.setVisibility(View.INVISIBLE);
         Util.fadeIn(mReviewRetakeButton);
         pauseFaceDetection();
+        enableGestures(false);
     }
 
     protected void hidePostCaptureAlert() {
@@ -468,6 +478,7 @@ public class PhotoUI implements PieListener,
         mShutterButton.setVisibility(View.VISIBLE);
         Util.fadeOut(mReviewRetakeButton);
         resumeFaceDetection();
+        enableGestures(true);
     }
 
     public void setDisplayOrientation(int orientation) {

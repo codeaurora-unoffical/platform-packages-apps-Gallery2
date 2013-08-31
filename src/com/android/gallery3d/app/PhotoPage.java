@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.widget.RelativeLayout;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
+import android.media.MediaFile;
 
 import com.android.camera.CameraActivity;
 import com.android.camera.ProxyLauncher;
@@ -72,6 +73,7 @@ import com.android.gallery3d.ui.SelectionManager;
 import com.android.gallery3d.ui.SynchronizedHandler;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.UsageStatistics;
+import com.android.gallery3d.util.ViewGifImage;
 
 public abstract class PhotoPage extends ActivityState implements
         PhotoView.Listener, AppBridge.Server, ShareActionProvider.OnShareTargetSelectedListener,
@@ -820,6 +822,16 @@ public abstract class PhotoPage extends ActivityState implements
             if (!mHaveImageEditor) {
                 supportedOperations &= ~MediaObject.SUPPORT_EDIT;
             }
+        // If current photo page is single item only, to cut some menu items
+        boolean singleItemOnly = mData.getBoolean("SingleItemOnly", false);
+        if (singleItemOnly) {
+            supportedOperations &= ~MediaObject.SUPPORT_DELETE;
+            supportedOperations &= ~MediaObject.SUPPORT_ROTATE;
+            supportedOperations &= ~MediaObject.SUPPORT_SHARE;
+            supportedOperations &= ~MediaObject.SUPPORT_CROP;
+            supportedOperations &= ~MediaObject.SUPPORT_INFO;
+        }
+
         }
         MenuExecutor.updateMenuOperation(menu, supportedOperations);
     }
@@ -1098,8 +1110,14 @@ public abstract class PhotoPage extends ActivityState implements
                 Intent intent = new Intent(mActivity, TrimVideo.class);
                 intent.setData(manager.getContentUri(path));
                 // We need the file path to wrap this into a RandomAccessFile.
-                intent.putExtra(KEY_MEDIA_ITEM_PATH, current.getFilePath());
-                mActivity.startActivityForResult(intent, REQUEST_TRIM);
+                String str = MediaFile.getMimeTypeForFile(current.getFilePath());
+                if("video/mp4".equals(str)){
+                    intent.putExtra(KEY_MEDIA_ITEM_PATH, current.getFilePath());
+                    mActivity.startActivityForResult(intent, REQUEST_TRIM);
+                } else {
+                    Toast.makeText(mActivity, mActivity.getString(R.string.can_not_trim),
+                        Toast.LENGTH_SHORT).show();
+                }
                 return true;
             }
             case R.id.action_mute: {
@@ -1171,6 +1189,10 @@ public abstract class PhotoPage extends ActivityState implements
         MediaItem item = mModel.getMediaItem(0);
         if (item == null || item == mScreenNailItem) {
             // item is not ready or it is camera preview, ignore
+            return;
+        }
+        if (item.getMimeType().equals(MediaItem.MIME_TYPE_GIF)) {
+            viewAnimateGif((Activity) mActivity, item.getContentUri());
             return;
         }
 
@@ -1568,4 +1590,9 @@ public abstract class PhotoPage extends ActivityState implements
         }
     }
 
+    private static void viewAnimateGif(Activity activity, Uri uri) {
+        Intent intent = new Intent("com.android.gallery3d.VIEW_GIF", uri);
+        intent.setClass(activity, ViewGifImage.class);
+        activity.startActivity(intent);
+    }
 }

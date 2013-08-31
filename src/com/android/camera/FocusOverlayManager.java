@@ -91,6 +91,7 @@ public class FocusOverlayManager {
     private boolean mPreviousMoving;
     private boolean mFocusDefault;
     private boolean mZslEnabled = false;  //QCom Parameter to disable focus for ZSL
+    private boolean mTouchAFRunning = false;
 
     private FocusUI mUI;
 
@@ -362,6 +363,10 @@ public class FocusOverlayManager {
         // Use margin to set the focus indicator to the touched area.
         mUI.setFocusPosition(x, y);
 
+        if (mZslEnabled) {
+            mTouchAFRunning = true;
+        }
+
         // Stop face detection because we want to specify focus and metering area.
         mListener.stopFaceDetection();
 
@@ -502,14 +507,15 @@ public class FocusOverlayManager {
         // Put focus indicator to the center. clear reset position
         mUI.clearFocus();
         // Initialize mFocusArea.
-        if (mFocusAreaSupported) {
-            initializeFocusAreas(mPreviewWidth / 2, mPreviewHeight / 2);
-        }
+        mFocusArea = null;
         // Initialize mMeteringArea.
-        if (mMeteringAreaSupported) {
-            initializeMeteringAreas(mPreviewWidth / 2, mPreviewHeight / 2);
-        }
+        mMeteringArea = null;
+
         mFocusDefault = true;
+        if (mTouchAFRunning && mZslEnabled) {
+            mTouchAFRunning = false;
+            mListener.setFocusParameters();
+        }
     }
 
     private void calculateTapArea(int x, int y, float areaMultiple, Rect rect) {
@@ -565,4 +571,13 @@ public class FocusOverlayManager {
     public void setZslEnable(boolean value) {
         mZslEnabled = value;
     }
+
+    public boolean isZslEnabled() {
+        return mZslEnabled;
+    }
+
+    public boolean isTouch() {
+        return mTouchAFRunning;
+    }
+
 }

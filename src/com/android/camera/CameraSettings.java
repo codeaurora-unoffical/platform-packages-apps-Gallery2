@@ -91,16 +91,31 @@ public class CameraSettings {
 
     public static final String KEY_VIDEO_SNAPSHOT_SIZE = "pref_camera_videosnapsize_key";
     public static final String KEY_VIDEO_HIGH_FRAME_RATE = "pref_camera_hfr_key";
+    public static final String KEY_VIDEO_HDR = "pref_camera_video_hdr_key";
     public static final String DEFAULT_VIDEO_QUALITY_VALUE = "custom";
     public static final String KEY_SKIN_TONE_ENHANCEMENT = "pref_camera_skinToneEnhancement_key";
     public static final String KEY_SKIN_TONE_ENHANCEMENT_FACTOR = "pref_camera_skinToneEnhancement_factor_key";
 
     public static final String KEY_FACE_RECOGNITION = "pref_camera_facerc_key";
+    public static final String KEY_DIS = "pref_camera_dis_key";
 
     private static final String KEY_QC_SUPPORTED_AE_BRACKETING_MODES = "ae-bracket-hdr-values";
     private static final String KEY_QC_SUPPORTED_FACE_RECOGNITION_MODES = "face-recognition-values";
+    private static final String KEY_QC_SUPPORTED_DIS_MODES = "dis-values";
     public static final String KEY_QC_AE_BRACKETING = "ae-bracket-hdr";
     public static final String KEY_QC_FACE_RECOGNITION = "face-recognition";
+    public static final String KEY_QC_DIS_MODE = "dis";
+
+    //for flip
+    public static final String KEY_QC_PREVIEW_FLIP = "preview-flip";
+    public static final String KEY_QC_VIDEO_FLIP = "video-flip";
+    public static final String KEY_QC_SNAPSHOT_PICTURE_FLIP = "snapshot-picture-flip";
+    public static final String KEY_QC_SUPPORTED_FLIP_MODES = "flip-mode-values";
+
+    public static final String FLIP_MODE_OFF = "off";
+    public static final String FLIP_MODE_V = "flip-v";
+    public static final String FLIP_MODE_H = "flip-h";
+    public static final String FLIP_MODE_VH = "flip-vh";
 
     private static final String KEY_QC_PICTURE_FORMAT = "picture-format-values";
     private static final String VIDEO_QUALITY_HIGH = "high";
@@ -210,6 +225,14 @@ public class CameraSettings {
         return split(str);
     }
 
+    public static List<String> getSupportedDISModes(Parameters params) {
+        String str = params.get(KEY_QC_SUPPORTED_DIS_MODES);
+        if (str == null) {
+            return null;
+        }
+        return split(str);
+    }
+
     public static List<String> getSupportedAEBracketingModes(Parameters params) {
         String str = params.get(KEY_QC_SUPPORTED_AE_BRACKETING_MODES);
         if (str == null) {
@@ -239,6 +262,14 @@ public class CameraSettings {
         return split(str);
     }
 
+   public static List<String> getSupportedFlipMode(Parameters params){
+        String str = params.get(KEY_QC_SUPPORTED_FLIP_MODES);
+        if(str == null)
+            return null;
+
+        return split(str);
+    }
+
     private void qcomInitPreferences(PreferenceGroup group){
         //Qcom Preference add here
         ListPreference powerMode = group.findPreference(KEY_POWER_MODE);
@@ -261,11 +292,16 @@ public class CameraSettings {
         ListPreference faceRC = group.findPreference(KEY_FACE_RECOGNITION);
         ListPreference jpegQuality = group.findPreference(KEY_JPEG_QUALITY);
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
+        ListPreference videoHdr = group.findPreference(KEY_VIDEO_HDR);
         ListPreference pictureFormat = group.findPreference(KEY_PICTURE_FORMAT);
 
         if (touchAfAec != null) {
             filterUnsupportedOptions(group,
                     touchAfAec, mParameters.getSupportedTouchAfAec());
+        }
+
+        if (!mParameters.isPowerModeSupported() && powerMode != null) {
+            removePreference(group, powerMode.getKey());
         }
 
         if (selectableZoneAf != null) {
@@ -287,6 +323,12 @@ public class CameraSettings {
             filterUnsupportedOptions(group,
                     denoise, mParameters.getSupportedDenoiseModes());
         }
+
+        if (videoHdr != null) {
+            filterUnsupportedOptions(group,
+                    videoHdr, mParameters.getSupportedVideoHDRModes());
+        }
+
         if (colorEffect != null) {
             filterUnsupportedOptions(group,
                     colorEffect, mParameters.getSupportedColorEffects());
@@ -351,6 +393,7 @@ public class CameraSettings {
                 group.findPreference(KEY_VIDEOCAMERA_FLASH_MODE);
         ListPreference videoEffect = group.findPreference(KEY_VIDEO_EFFECT);
         ListPreference cameraHdr = group.findPreference(KEY_CAMERA_HDR);
+        ListPreference disMode = group.findPreference(KEY_DIS);
 
         // Since the screen could be loaded from different resources, we need
         // to check if the preference is available here
@@ -374,6 +417,10 @@ public class CameraSettings {
         if (flashMode != null) {
             filterUnsupportedOptions(group,
                     flashMode, mParameters.getSupportedFlashModes());
+        }
+        if (disMode != null) {
+            filterUnsupportedOptions(group,
+                    disMode, getSupportedDISModes(mParameters));
         }
         if (focusMode != null) {
             if (!Util.isFocusAreaSupported(mParameters)) {
@@ -765,6 +812,11 @@ public class CameraSettings {
         if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_480P)) {
            if (checkSupportedVideoQuality(720,480)){
               supported.add(Integer.toString(CamcorderProfile.QUALITY_480P));
+           }
+        }
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_FWVGA)) {
+           if (checkSupportedVideoQuality(864,480)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_FWVGA));
            }
         }
         if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_WVGA)) {
