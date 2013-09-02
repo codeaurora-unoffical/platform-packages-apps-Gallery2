@@ -536,10 +536,20 @@ public class CropActivity extends Activity {
                 } else if (mRotation > 0) {
                     Matrix m = new Matrix();
                     m.setRotate(mRotation);
-                    Bitmap tmp = Bitmap.createBitmap(crop, 0, 0, crop.getWidth(),
-                            crop.getHeight(), m, true);
-                    if (tmp != null) {
-                        crop = tmp;
+                    // For a big-sized image (e.g: 10000x5000) with high-resolution
+                    // createBitmap leads to OOM
+                    try {
+                        Bitmap tmp = Bitmap.createBitmap(crop, 0, 0, crop.getWidth(),
+                                crop.getHeight(), m, true);
+                        if (tmp != null) {
+                            crop = tmp;
+                        }
+                    } catch (java.lang.OutOfMemoryError err) {
+                        Log.e(LOGTAG, "failed to create bitmap:" + err );
+                        //delete the image URI as it might lead a blank image.
+                        getContentResolver().delete(mOutUri, null, null);
+                        mOutUri = null;
+                        return false;
                     }
                 }
                 // Get output compression format
