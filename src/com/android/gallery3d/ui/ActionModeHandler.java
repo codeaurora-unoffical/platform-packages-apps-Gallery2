@@ -398,9 +398,11 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
         updateSelectionMenu();
 
         // Disable share actions until share intent is in good shape
-        if (mSharePanoramaMenuItem != null) mSharePanoramaMenuItem.setEnabled(false);
-        if (mShareMenuItem != null) mShareMenuItem.setEnabled(false);
+        if (mSharePanoramaMenuItem != null) mSharePanoramaMenuItem.setVisible(false);
+        if (mShareMenuItem != null) mShareMenuItem.setVisible(false);
+
         MenuExecutor.updateMenuOperation(mMenu,MediaObject.SUPPORT_DELETE);
+
         // Generate sharing intent and update supported operations in the background
         // The task can take a long time and be canceled in the mean time.
         mMenuTask = mActivity.getThreadPool().submit(new Job<Void>() {
@@ -458,7 +460,7 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                                 canSharePanoramas && supportCallback.mAllPanorama360,
                                 canSharePanoramas && supportCallback.mHasPanorama360);
                         if (mSharePanoramaMenuItem != null) {
-                            mSharePanoramaMenuItem.setEnabled(true);
+                            mSharePanoramaMenuItem.setVisible(true);
                             if (canSharePanoramas && supportCallback.mAllPanorama360) {
                                 mShareMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
                                 mShareMenuItem.setTitle(
@@ -472,7 +474,11 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                             mSharePanoramaActionProvider.setShareIntent(share_panorama_intent);
                         }
                         if (mShareMenuItem != null) {
-                            mShareMenuItem.setEnabled(canShare);
+                            if (share_intent.getAction() == null) {
+                                mShareMenuItem.setVisible(false);
+                            } else {
+                                mShareMenuItem.setVisible(canShare);
+                            }
                             mShareActionProvider.setShareIntent(share_intent);
                         }
                     }
