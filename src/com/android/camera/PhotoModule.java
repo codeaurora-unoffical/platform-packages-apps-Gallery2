@@ -301,6 +301,7 @@ public class PhotoModule
 
     private String mSceneMode;
     private String mCurrTouchAfAec = Parameters.TOUCH_AF_AEC_ON;
+    private String mCurrFlashMode = Parameters.FLASH_MODE_AUTO;
 
     private final Handler mHandler = new MainHandler();
     private PreferenceGroup mPreferenceGroup;
@@ -1319,7 +1320,7 @@ public class PhotoModule
         // If scene mode is set, we cannot set flash mode, white balance, and
         // focus mode, instead, we read it from driver
         if (!Parameters.SCENE_MODE_AUTO.equals(mSceneMode)) {
-            overrideCameraSettings(mParameters.getFlashMode(),
+            overrideCameraSettings(mCurrFlashMode,
                     mParameters.getWhiteBalance(), mParameters.getFocusMode(),
                     Integer.toString(mParameters.getExposureCompensation()),
                     mCurrTouchAfAec, mParameters.getAutoExposure());
@@ -2520,6 +2521,7 @@ public class PhotoModule
             String flashMode = mPreferences.getString(
                     CameraSettings.KEY_FLASH_MODE,
                     mActivity.getString(R.string.pref_camera_flashmode_default));
+            mCurrFlashMode = flashMode;
             List<String> supportedFlash = mParameters.getSupportedFlashModes();
             if (Util.isSupported(flashMode, supportedFlash)) {
                 mParameters.setFlashMode(flashMode);
@@ -2550,6 +2552,7 @@ public class PhotoModule
             mParameters.setFocusMode(mFocusManager.getFocusMode());
         } else {
             mFocusManager.overrideFocusMode(mParameters.getFocusMode());
+            mParameters.setFlashMode(Parameters.FLASH_MODE_OFF);
         }
 
         if (mContinousFocusSupported && ApiHelper.HAS_AUTO_FOCUS_MOVE_CALLBACK) {
