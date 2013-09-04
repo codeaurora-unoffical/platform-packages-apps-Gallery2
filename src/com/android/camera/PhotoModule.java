@@ -1966,7 +1966,19 @@ public class PhotoModule
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(true);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_VOLUME_DOWN:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(false);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
             if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
                   mShutterButton.getVisibility() == View.VISIBLE) {
@@ -2034,12 +2046,7 @@ public class PhotoModule
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
         case KeyEvent.KEYCODE_VOLUME_DOWN:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
-                  mShutterButton.getVisibility() == View.VISIBLE) {
-                onShutterButtonClick();
-                return true;
-            }
-            return false;
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
             if (mFirstTimeInitialized) {
                 onShutterButtonFocus(false);
@@ -3211,5 +3218,10 @@ class GraphView extends View {
     }
     public void setPhotoModuleObject(PhotoModule photoModule) {
         mPhotoModule = photoModule;
+    }
+
+    public void onScaleChangeDraw(PhotoUI ui)
+    {
+        ui.onScaleChangeDraw(mCanvas);
     }
 }
