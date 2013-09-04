@@ -579,6 +579,7 @@ public class MoviePlayer implements
         }
         if (start) {
             mVideoView.start();
+            mActivityContext.initEffects(mVideoView.getAudioSessionId());
         }
         //we may start video from stopVideo,
         //this case, we should reset canReplay flag according canReplay and loop
@@ -1096,6 +1097,7 @@ public class MoviePlayer implements
                 mVideoView.stopPlayback();
                 mVideoView.setVisibility(View.INVISIBLE);
                 clearVideoInfo();
+                mActivityContext.releaseEffects();
                 mMovieItem = next;
                 mActivityContext.refreshMovieInfo(mMovieItem);
                 doStartVideo(false, 0, 0);
@@ -1132,6 +1134,7 @@ public class MoviePlayer implements
             mVideoView.setVisibility(View.INVISIBLE);
             mVideoView.setVisibility(View.VISIBLE);
             clearVideoInfo();
+            mActivityContext.releaseEffects();
             mFirstBePlayed = false;
             mController.setCanReplay(true);
             mController.showEnded();

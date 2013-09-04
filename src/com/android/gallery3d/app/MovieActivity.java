@@ -350,8 +350,12 @@ public class MovieActivity extends Activity {
             mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mBassBoostEffect.setEnabled(isChecked);
-                    mVirtualizerEffect.setEnabled(isChecked);
+                    if(mBassBoostEffect != null) {
+                        mBassBoostEffect.setEnabled(isChecked);
+                    }
+                    if(mVirtualizerEffect != null) {
+                        mVirtualizerEffect.setEnabled(isChecked);
+                    }
                     mBassBoostKnob.setEnabled(isChecked);
                     mVirtualizerKnob.setEnabled(isChecked);
                 }
@@ -428,12 +432,16 @@ public class MovieActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         boolean enabled = mPrefs.getBoolean(Key.global_enabled.toString(), false);
-                        mBassBoostEffect.setStrength((short)
-                            mPrefs.getInt(Key.bb_strength.toString(), 0));
-                        mBassBoostEffect.setEnabled(enabled);
-                        mVirtualizerEffect.setStrength((short)
-                            mPrefs.getInt(Key.virt_strength.toString(), 0));
-                        mVirtualizerEffect.setEnabled(enabled);
+                        if(mBassBoostEffect != null) {
+                            mBassBoostEffect.setStrength((short)
+                                mPrefs.getInt(Key.bb_strength.toString(), 0));
+                            mBassBoostEffect.setEnabled(enabled);
+                        }
+                        if(mVirtualizerEffect != null) {
+                            mVirtualizerEffect.setStrength((short)
+                                mPrefs.getInt(Key.virt_strength.toString(), 0));
+                            mVirtualizerEffect.setEnabled(enabled);
+                        }
                     }
                 })
                 .setCancelable(false)
@@ -442,7 +450,7 @@ public class MovieActivity extends Activity {
         }
     }
 
-    private void initEffects(int sessionId) {
+    public void initEffects(int sessionId) {
         // Singleton instance
         if ((mBassBoostEffect == null) && mBassBoostSupported) {
             mBassBoostEffect = new BassBoost(0, sessionId);
@@ -478,7 +486,7 @@ public class MovieActivity extends Activity {
 
     }
 
-    private void releaseEffects() {
+    public void releaseEffects() {
         if (mBassBoostEffect != null) {
             mBassBoostEffect.setEnabled(false);
             mBassBoostEffect.release();
@@ -589,11 +597,11 @@ public class MovieActivity extends Activity {
 
         registerMediaButton(true);
 
-        initEffects(mPlayer.getAudioSessionId());
         mResumed = true;
         if (!isKeyguardLocked() && !mControlResumed && mPlayer != null) {
             mPlayer.onResume();
             mControlResumed = true;
+            //initEffects(mPlayer.getAudioSessionId());
         }
         enhanceActionBar();
         super.onResume();
