@@ -45,20 +45,15 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="next">"下一個"</string>
     <string name="previous">"上一個"</string>
 
-    <string name="rtp">RTP</string>
-    <string name="rtcp">RTCP</string>
+    <string name="rtp_rtcp">RTP/RTCP</string>
     <string name="min_port">最小端口:</string>
     <string name="max_port">最大端口:</string>
     <string name="buffer_size">緩存大小</string>
     <string name="apn">優先接入點</string>
     <string name="rtp_min_port">RTP最小端口</string>
     <string name="rtp_max_port">RTP最大端口</string>
-    <string name="rtcp_min_port">RTCP最小端口</string>
-    <string name="rtcp_max_port">RTCP最大端口</string>
     <string name="set_rtp_min_port">設置RTP最小端口</string>
     <string name="set_rtp_max_port">設置RTP最大端口</string>
-    <string name="set_rtcp_min_port">設置RTCP最小端口</string>
-    <string name="set_rtcp_max_port">設置RTCP最大端口</string>
     <string name="set_buffer_size">設置緩衝大小</string>
     <string name="set_apn">選擇接入優先點</string>
     <string name="setting">設置</string>

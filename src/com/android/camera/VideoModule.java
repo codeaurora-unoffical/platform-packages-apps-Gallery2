@@ -95,6 +95,7 @@ public class VideoModule implements CameraModule,
     private static final int SWITCH_CAMERA_START_ANIMATION = 9;
     private static final int HIDE_SURFACE_VIEW = 10;
     private static final int CAPTURE_ANIMATION_DONE = 11;
+    private static final int START_PREVIEW_DONE = 12;
 
     private static final int SCREEN_DELAY = 2 * 60 * 1000;
 
@@ -182,6 +183,9 @@ public class VideoModule implements CameraModule,
 
     private int mPendingSwitchCameraId;
 
+    private static final String KEY_PREVIEW_FORMAT = "preview-format";
+    private static final String QC_FORMAT_NV12_VENUS = "nv12-venus";
+
     private final Handler mHandler = new MainHandler();
     private VideoUI mUI;
     // The degrees of the device rotated clockwise from its natural orientation.
@@ -191,6 +195,8 @@ public class VideoModule implements CameraModule,
 
     private boolean mRestoreFlash;  // This is used to check if we need to restore the flash
                                     // status when going back from gallery.
+
+    private StartPreviewThread mStartPreviewThread;
 
     private final MediaSaveService.OnMediaSavedListener mOnVideoSavedListener =
             new MediaSaveService.OnMediaSavedListener() {
@@ -220,6 +226,16 @@ public class VideoModule implements CameraModule,
         @Override
         public void run() {
             openCamera();
+        }
+    }
+
+    private class StartPreviewThread extends Thread {
+        @Override
+        public void run() {
+            try {
+                startPreview();
+            }catch (Exception e) {
+            }
         }
     }
 
@@ -371,6 +387,11 @@ public class VideoModule implements CameraModule,
                     break;
                 }
 
+                case START_PREVIEW_DONE: {
+                    mStartPreviewThread = null;
+                    break;
+                }
+
                 default:
                     Log.v(TAG, "Unhandled message: " + msg.what);
                     break;
@@ -472,14 +493,16 @@ public class VideoModule implements CameraModule,
             // ignore
         }
 
+        CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
+        if (screenNail.getSurfaceTexture() == null) {
+            screenNail.acquireSurfaceTexture();
+        }
+
         readVideoPreferences();
         mUI.setPrefChangedListener(this);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startPreview();
-            }
-        }).start();
+
+        mStartPreviewThread = new StartPreviewThread();
+        mStartPreviewThread.start();
 
         mQuickCapture = mActivity.getIntent().getBooleanExtra(EXTRA_QUICK_CAPTURE, false);
         mLocationManager = new LocationManager(mActivity, null);
@@ -808,11 +831,20 @@ public class VideoModule implements CameraModule,
         editor.apply();
     }
 
+     private boolean is4KEnabled() {
+        if (mProfile.quality == CamcorderProfile.QUALITY_4kUHD ||
+            mProfile.quality == CamcorderProfile.QUALITY_4kDCI) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
     private void getDesiredPreviewSize() {
         mParameters = mActivity.mCameraDevice.getParameters();
         if (ApiHelper.HAS_GET_SUPPORTED_VIDEO_SIZE) {
-            if (mParameters.getSupportedVideoSizes() == null || effectsActive()) {
+            if (mParameters.getSupportedVideoSizes() == null || effectsActive() || is4KEnabled()) {
                 mDesiredPreviewWidth = mProfile.videoFrameWidth;
                 mDesiredPreviewHeight = mProfile.videoFrameHeight;
             } else {  // Driver supports separates outputs for preview and video.
@@ -896,12 +928,14 @@ public class VideoModule implements CameraModule,
             }
             readVideoPreferences();
             resizeForPreviewAspectRatio();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    startPreview();
-                }
-            }).start();
+
+            CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
+            screenNail.cancelAcquire();
+            if (screenNail.getSurfaceTexture() == null) {
+                screenNail.acquireSurfaceTexture();
+            }
+            mStartPreviewThread = new StartPreviewThread();
+            mStartPreviewThread.start();
         } else {
             // preview already started
             mUI.enableShutter(true);
@@ -1011,6 +1045,7 @@ public class VideoModule implements CameraModule,
 
     private void onPreviewStarted() {
         mUI.enableShutter(true);
+        mHandler.sendEmptyMessage(START_PREVIEW_DONE);
     }
 
     @Override
@@ -1035,6 +1070,16 @@ public class VideoModule implements CameraModule,
 
     // By default, we want to close the effects as well with the camera.
     private void closeCamera() {
+        CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
+        screenNail.cancelAcquire();
+        try {
+            if (mStartPreviewThread != null) {
+                mStartPreviewThread.interrupt();
+                mStartPreviewThread.join();
+                mStartPreviewThread = null;
+            }
+        } catch (InterruptedException e) {
+        }
         closeCamera(true);
     }
 
@@ -2003,6 +2048,12 @@ public class VideoModule implements CameraModule,
             mParameters.setPreviewFormat (ImageFormat.YV12);
         }
 
+        // if 4K recoding is enabled, set preview format to NV12_VENUS
+        if (is4KEnabled()) {
+            Log.e(TAG, "4K enabled, preview format set to NV12_VENUS");
+            mParameters.set(KEY_PREVIEW_FORMAT, QC_FORMAT_NV12_VENUS);
+        }
+
         // Set High Frame Rate.
         String HighFrameRate = mPreferences.getString(
             CameraSettings.KEY_VIDEO_HIGH_FRAME_RATE,
@@ -2209,7 +2260,7 @@ public class VideoModule implements CameraModule,
             mActivity.notifyScreenNailChanged();
         }
 
-        if (screenNail.getSurfaceTexture() == null) {
+        if (mStartPreviewThread == null && screenNail.getSurfaceTexture() == null) {
             screenNail.acquireSurfaceTexture();
         }
     }

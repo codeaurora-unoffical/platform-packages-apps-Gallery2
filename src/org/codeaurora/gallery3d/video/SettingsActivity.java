@@ -3,6 +3,7 @@ package org.codeaurora.gallery3d.video;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -31,17 +32,25 @@ import java.util.ArrayList;
 
 public class SettingsActivity extends PreferenceActivity {
 
+    private static final String LOG_TAG = "SettingsActivity";
+
     public static final String PREFERENCE_RTP_MINPORT = "rtp_min_port";
     public static final String PREFERENCE_RTP_MAXPORT = "rtp_max_port";
-    public static final String PREFERENCE_RTCP_MINPORT = "rtcp_min_port";
-    public static final String PREFERENCE_RTCP_MAXPORT = "rtcp_max_port";
+    private static final String PREFERENCE_KEEP_ALIVE_INTERVAL_SECOND = "keep_alive_interval_second";
+    private static final String PREFERENCE_CACHE_MIN_SIZE = "cache_min_size";
+    private static final String PREFERENCE_CACHE_MAX_SIZE = "cache_max_size";
     public static final String PREFERENCE_BUFFER_SIZE = "buffer_size";
     public static final String PREFERENCE_APN = "apn";
 
+    private static final int DEFAULT_RTP_MINPORT = 15550;
+    private static final int DEFAULT_RTP_MAXPORT = 65535;
+    private static final int DEFAULT_CACHE_MIN_SIZE = 4 * 1024 * 1024;
+    private static final int DEFAULT_CACHE_MAX_SIZE = 20 * 1024 * 1024;
+    private static final int DEFAULT_KEEP_ALIVE_INTERVAL_SECOND = 15;
+
+    private SharedPreferences mPref;
     private EditTextPreference mRtpMinPort;
     private EditTextPreference mRtpMaxPort;
-    private EditTextPreference mRtcpMinPort;
-    private EditTextPreference mRtcpMaxPort;
     private EditTextPreference mBufferSize;
     private PreferenceScreen mApn;
     private CheckBoxPreference mRepeat;
@@ -60,71 +69,72 @@ public class SettingsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.rtsp_settings_preferences);
 
-        SharedPreferences mPref;
         mPref = getPreferenceScreen().getSharedPreferences();
-        String rtpMinport = mPref.getString(PREFERENCE_RTP_MINPORT, "8192");
-        String rtpMaxport = mPref.getString(PREFERENCE_RTP_MAXPORT, "65535");
-        String rtcpMinport = mPref.getString(PREFERENCE_RTCP_MAXPORT, null);
-        String rtcpMaxport = mPref.getString(PREFERENCE_RTCP_MAXPORT, null);
-        String bufferSize = mPref.getString(PREFERENCE_BUFFER_SIZE, null);
+        final String rtpMinPortStr = mPref.getString(PREFERENCE_RTP_MINPORT, Integer.toString(DEFAULT_RTP_MINPORT));
+        final String rtpMaxPortStr = mPref.getString(PREFERENCE_RTP_MAXPORT, Integer.toString(DEFAULT_RTP_MAXPORT));
+        final String bufferSizeStr = mPref.getString(PREFERENCE_BUFFER_SIZE, Integer.toString(DEFAULT_CACHE_MAX_SIZE));
 
         mRtpMinPort = (EditTextPreference) findPreference(PREFERENCE_RTP_MINPORT);
         mRtpMinPort.getEditText().setKeyListener(DigitsKeyListener.getInstance("0123456789"));
-        mRtpMinPort.setSummary(rtpMinport);
-        mRtpMinPort.setText(rtpMinport);
+        mRtpMinPort.setSummary(rtpMinPortStr);
+        mRtpMinPort.setText(rtpMinPortStr);
         mRtpMinPort.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 final String summary = newValue.toString();
+                final int rtpMinPort;
+                try {
+                    rtpMinPort = Integer.valueOf(summary);
+                } catch (NumberFormatException e) {
+                    Log.e(LOG_TAG, "Failed to parse rtp min port");
+                    return false;
+                }
                 mRtpMinPort.setSummary(summary);
+                mRtpMinPort.setText(summary);
                 Log.d("rtsp", "z66 summary = " + summary);
-                android.provider.Settings.System.putString(getContentResolver(),
-                        "streaming_min_udp_port", summary);
+                enableRtpPortSetting();
                 return true;
             }
         });
 
         mRtpMaxPort = (EditTextPreference) findPreference(PREFERENCE_RTP_MAXPORT);
         mRtpMaxPort.getEditText().setKeyListener(DigitsKeyListener.getInstance("0123456789"));
-        mRtpMaxPort.setSummary(rtpMaxport);
-        mRtpMaxPort.setText(rtpMaxport);
+        mRtpMaxPort.setSummary(rtpMaxPortStr);
+        mRtpMaxPort.setText(rtpMaxPortStr);
         mRtpMaxPort.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 final String summary = newValue.toString();
+                final int rtpMaxPort;
+                try {
+                    rtpMaxPort = Integer.valueOf(summary);
+                } catch (NumberFormatException e) {
+                    Log.e(LOG_TAG, "Failed to parse rtp max port");
+                    return false;
+                }
                 mRtpMaxPort.setSummary(summary);
+                mRtpMaxPort.setText(summary);
                 Log.w("rtsp", "z82 summary = " + summary);
-                android.provider.Settings.System.putString(getContentResolver(),
-                        "streaming_max_udp_port", summary);
-                return true;
-            }
-        });
-        mRtcpMinPort = (EditTextPreference) findPreference(PREFERENCE_RTCP_MINPORT);
-        mRtcpMinPort.getEditText().setKeyListener(DigitsKeyListener.getInstance("0123456789"));
-        mRtcpMinPort.setSummary(rtcpMinport);
-        mRtcpMinPort.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                mRtcpMinPort.setSummary(summary);
-                return true;
-            }
-        });
-        mRtcpMaxPort = (EditTextPreference) findPreference(PREFERENCE_RTCP_MAXPORT);
-        mRtcpMaxPort.getEditText().setKeyListener(DigitsKeyListener.getInstance("0123456789"));
-        mRtcpMaxPort.setSummary(rtcpMaxport);
-        mRtcpMaxPort.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                mRtcpMaxPort.setSummary(summary);
+                enableRtpPortSetting();
                 return true;
             }
         });
 
         mBufferSize = (EditTextPreference) findPreference(PREFERENCE_BUFFER_SIZE);
         mBufferSize.getEditText().setKeyListener(DigitsKeyListener.getInstance("0123456789"));
-        mBufferSize.setSummary(bufferSize);
+        mBufferSize.setSummary(bufferSizeStr);
+        mBufferSize.setText(bufferSizeStr);
         mBufferSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 final String summary = newValue.toString();
+                final int bufferSize;
+                try {
+                    bufferSize = Integer.valueOf(summary);
+                } catch (NumberFormatException e) {
+                    Log.e(LOG_TAG, "Failed to parse buffer size");
+                    return false;
+                }
                 mBufferSize.setSummary(summary);
+                mBufferSize.setText(summary);
+                enableBufferSetting();
                 return true;
             }
         });
@@ -249,4 +259,41 @@ public class SettingsActivity extends PreferenceActivity {
         }
         return result.toArray(new String[2]);
     }
+
+    private void enableRtpPortSetting() {
+        final String rtpMinPortStr = mPref.getString(PREFERENCE_RTP_MINPORT, Integer.toString(DEFAULT_RTP_MINPORT));
+        final String rtpMaxPortStr = mPref.getString(PREFERENCE_RTP_MAXPORT, Integer.toString(DEFAULT_RTP_MAXPORT));
+        final int rtpMinPort;
+        final int rtpMaxPort;
+        try {
+            rtpMinPort = Integer.valueOf(rtpMinPortStr);
+            rtpMaxPort = Integer.valueOf(rtpMaxPortStr);
+        } catch (NumberFormatException e) {
+            Log.e(LOG_TAG, "Failed to parse rtp ports");
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setClassName("com.android.settings", "com.android.settings.StreamingSettingsEnablerActivity");
+        intent.putExtra(PREFERENCE_RTP_MINPORT, rtpMinPort);
+        intent.putExtra(PREFERENCE_RTP_MAXPORT, rtpMaxPort);
+        startActivity(intent);
+    }
+
+    private void enableBufferSetting() {
+        final String bufferSizeStr = mPref.getString(PREFERENCE_BUFFER_SIZE, Integer.toString(DEFAULT_CACHE_MAX_SIZE));
+        final int cacheMaxSize;
+        try {
+            cacheMaxSize = Integer.valueOf(bufferSizeStr);
+        } catch (NumberFormatException e) {
+            Log.e(LOG_TAG, "Failed to parse cache max size");
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setClassName("com.android.settings", "com.android.settings.StreamingSettingsEnablerActivity");
+        intent.putExtra(PREFERENCE_CACHE_MIN_SIZE, DEFAULT_CACHE_MIN_SIZE);
+        intent.putExtra(PREFERENCE_CACHE_MAX_SIZE, cacheMaxSize);
+        intent.putExtra(PREFERENCE_KEEP_ALIVE_INTERVAL_SECOND, DEFAULT_KEEP_ALIVE_INTERVAL_SECOND);
+        startActivity(intent);
+    }
+
 }
