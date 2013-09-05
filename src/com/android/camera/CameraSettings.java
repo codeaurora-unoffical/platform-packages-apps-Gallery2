@@ -194,6 +194,25 @@ public class CameraSettings {
         removePreference(group, key);
     }
 
+    public void removeUnsupportedVideoEncoder(
+            PreferenceGroup group,
+            ListPreference pref,
+            List<String> supportedEntries,
+            List<String> supportedValue) {
+        if (supportedValue == null) {
+            removePreference(group, pref.getKey());
+            return;
+        }
+
+        pref.filterVideoEncoder(supportedEntries, supportedValue);
+        if (pref.getEntries().length < 1) {
+            removePreference(group, pref.getKey());
+            return;
+        }
+
+        resetIfInvalid(pref);
+    }
+
     public static boolean setCameraPictureSize(
             String candidate, List<Size> supported, Parameters parameters) {
         int index = candidate.indexOf('x');
