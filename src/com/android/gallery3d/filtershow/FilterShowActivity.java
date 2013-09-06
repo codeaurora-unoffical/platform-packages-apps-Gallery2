@@ -364,19 +364,17 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         // Google-build borders
         FiltersManager.getManager().addBorders(this, borders);
 
+        mCategoryBordersAdapter = new CategoryAdapter(this);
         for (int i = 0; i < borders.size(); i++) {
             FilterRepresentation filter = borders.elementAt(i);
             if (i == 0) {
                 filter.setName(getString(R.string.none));
+            } else {
+                if (filter.getTextId() != 0) {
+                    filter.setName(getString(filter.getTextId()) + " " + i);
+                }
             }
-        }
-
-        mCategoryBordersAdapter = new CategoryAdapter(this);
-        for (FilterRepresentation representation : borders) {
-            if (representation.getTextId() != 0) {
-                representation.setName(getString(representation.getTextId()));
-            }
-            mCategoryBordersAdapter.add(new Action(this, representation, Action.FULL_VIEW));
+            mCategoryBordersAdapter.add(new Action(this, filter, Action.FULL_VIEW));
         }
     }
 
