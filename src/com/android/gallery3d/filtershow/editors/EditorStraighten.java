@@ -18,7 +18,10 @@ package com.android.gallery3d.filtershow.editors;
 
 import android.content.Context;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.imageshow.GeometryMetadata;
@@ -78,5 +81,18 @@ public class EditorStraighten extends Editor implements EditorInfo {
     @Override
     public boolean showsPopupIndicator() {
         return false;
+    }
+
+    @Override
+    public void openUtilityPanel(final LinearLayout accessoryViewList) {
+        final Button button = (Button) accessoryViewList.findViewById(R.id.applyEffect);
+        button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                mImageStraighten.straighten();
+                button.setText(mContext.getString(getTextId()) + " " + mImageStraighten.getLocalValue());
+                mImageStraighten.saveAndSetPreset();
+            }
+        });
     }
 }
