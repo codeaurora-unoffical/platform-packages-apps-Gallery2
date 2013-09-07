@@ -96,7 +96,7 @@ public class ImageStraighten extends ImageGeometry {
     }
 
     @Override
-    protected int getLocalValue() {
+    public int getLocalValue() {
         return (int) getLocalStraighten();
     }
 
@@ -135,4 +135,11 @@ public class ImageStraighten extends ImageGeometry {
         mEditorStraighten = editorStraighten;
     }
 
+    public void straighten() {
+        mAngle += 5;
+        if (mAngle > 45) {
+            mAngle = -45;
+        }
+        setLocalStraighten(GeometryMath.clamp(mAngle, MIN_STRAIGHTEN_ANGLE, MAX_STRAIGHTEN_ANGLE));
+    }
 }
