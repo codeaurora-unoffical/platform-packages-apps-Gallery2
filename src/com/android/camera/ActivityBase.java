@@ -402,7 +402,11 @@ public abstract class ActivityBase extends AbstractGalleryActivity
             if (mSecureCamera) {
                 path = "/secure/all/" + sSecureAlbumId;
             } else {
-                path = "/local/all/" + MediaSetUtils.CAMERA_BUCKET_ID;
+                if (Storage.isSaveSDCard() && SDCard.instance().isWriteable()) {
+                    path = "/local/all/" + MediaSetUtils.CAMERA_SDCARD_BUCKET_ID;
+                } else {
+                    path = "/local/all/" + MediaSetUtils.CAMERA_BUCKET_ID;
+                }
             }
         } else {
             path = "/local/all/0"; // Use 0 so gallery does not show anything.
@@ -418,6 +422,28 @@ public abstract class ActivityBase extends AbstractGalleryActivity
         data.putParcelable(PhotoPage.KEY_APP_BRIDGE, mAppBridge);
         if (getStateManager().getStateCount() == 0) {
             getStateManager().startState(FilmstripPage.class, data);
+        }
+        mCameraScreenNail = mAppBridge.getCameraScreenNail();
+        return mCameraScreenNail;
+    }
+
+    protected ScreenNail keepCameraScreenNail() {
+        Bundle data = new Bundle();
+        String path;
+        if (Storage.isSaveSDCard() && SDCard.instance().isWriteable()) {
+            path = "/local/all/" + MediaSetUtils.CAMERA_SDCARD_BUCKET_ID;
+        } else {
+            path = "/local/all/" + MediaSetUtils.CAMERA_BUCKET_ID;
+        }
+        data.putString(PhotoPage.KEY_MEDIA_SET_PATH, path);
+        data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, path);
+        mAppBridge = new MyAppBridge(mCameraScreenNail);
+        data.putParcelable(PhotoPage.KEY_APP_BRIDGE, mAppBridge);
+        if (getStateManager().getStateCount() == 0) {
+            getStateManager().startState(FilmstripPage.class, data);
+        } else {
+            getStateManager().switchState(getStateManager().getTopState(),
+                    FilmstripPage.class, data);
         }
         mCameraScreenNail = mAppBridge.getCameraScreenNail();
         return mCameraScreenNail;
@@ -559,6 +585,12 @@ public abstract class ActivityBase extends AbstractGalleryActivity
         @SuppressWarnings("hiding")
         private ScreenNail mCameraScreenNail;
         private Server mServer;
+
+        public MyAppBridge() {}
+
+        public MyAppBridge(ScreenNail screen) {
+            mCameraScreenNail = screen;
+        }
 
         @Override
         public ScreenNail attachScreenNail() {
