@@ -148,10 +148,6 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
     public boolean removeTopLevelPopup() {
         if (mPopup != null) {
             dismissPopup(true);
-            if (Storage.getSavePlaceChanged()) {
-                Storage.setSavePlaceChanged(false);
-                mActivity.keepCameraScreenNail();
-            }
             return true;
         }
         return false;
@@ -495,10 +491,6 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
     }
 
     public boolean dispatchTouchEvent(MotionEvent m) {
-        if (Storage.getSavePlaceChanged()) {
-            Storage.setSavePlaceChanged(false);
-            mActivity.keepCameraScreenNail();
-        }
         if (mGestures != null && mRenderOverlay != null) {
             return mGestures.dispatchTouch(m);
         }
