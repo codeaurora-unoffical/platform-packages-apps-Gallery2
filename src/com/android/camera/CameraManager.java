@@ -75,6 +75,7 @@ public class CameraManager {
     private static final int REFRESH_PARAMETERS = 24;
     private static final int SET_HISTOGRAM_MODE = 25;
     private static final int SEND_HISTOGRAM_DATA = 26;
+    private static final int SET_LONGSHOT = 27;
 
 
     private Handler mCameraHandler;
@@ -264,6 +265,11 @@ public class CameraManager {
                     case SEND_HISTOGRAM_DATA:
                         mCamera.sendHistogramData();
                         break;
+
+                    case SET_LONGSHOT:
+                        mCamera.setLongshot(msg.arg1 == 1);
+                        break;
+
                     default:
                         throw new RuntimeException("Invalid CameraProxy message=" + msg.what);
                 }
@@ -464,6 +470,11 @@ public class CameraManager {
         public void enableShutterSound(boolean enable) {
             mCameraHandler.obtainMessage(
                     ENABLE_SHUTTER_SOUND, (enable ? 1 : 0), 0).sendToTarget();
+        }
+
+        public void setLongshot(boolean enable) {
+            mCameraHandler.obtainMessage(SET_LONGSHOT,
+                    (enable ? 1 : 0), 0).sendToTarget();
         }
 
         public void setHistogramMode(CameraDataCallback cb) {
