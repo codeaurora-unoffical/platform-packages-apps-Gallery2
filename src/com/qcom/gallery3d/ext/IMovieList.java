@@ -1,4 +1,4 @@
-package org.codeaurora.gallery3d.ext;
+package com.qcom.gallery3d.ext;
 /**
  * Movie list extension interface
  */

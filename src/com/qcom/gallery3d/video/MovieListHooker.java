@@ -1,16 +1,16 @@
-package org.codeaurora.gallery3d.video;
+package com.qcom.gallery3d.video;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.android.gallery3d.R;
-import org.codeaurora.gallery3d.ext.IMovieItem;
-import org.codeaurora.gallery3d.ext.IMovieList;
-import org.codeaurora.gallery3d.ext.IMovieListLoader;
-import org.codeaurora.gallery3d.ext.IMovieListLoader.LoaderListener;
-import org.codeaurora.gallery3d.ext.MovieListLoader;
+import com.qcom.gallery3d.ext.IMovieItem;
+import com.qcom.gallery3d.ext.IMovieList;
+import com.qcom.gallery3d.ext.IMovieListLoader;
+import com.qcom.gallery3d.ext.IMovieListLoader.LoaderListener;
+import com.qcom.gallery3d.ext.MovieListLoader;
+import com.qcom.gallery3d.ext.QcomLog;
 
 public class MovieListHooker extends MovieHooker implements LoaderListener {
     private static final String TAG = "MovieListHooker";
@@ -82,7 +82,7 @@ public class MovieListHooker extends MovieHooker implements LoaderListener {
     
     private void updatePrevNext() {
         if (LOG) {
-            Log.v(TAG, "updatePrevNext()");
+            QcomLog.v(TAG, "updatePrevNext()");
         }
         if (mMovieList != null && mMenuPrevious != null && mMenuNext != null) {
             if (mMovieList.isFirst(getMovieItem()) && mMovieList.isLast(getMovieItem())) { //only one movie
@@ -110,7 +110,7 @@ public class MovieListHooker extends MovieHooker implements LoaderListener {
         mMovieList = movieList;
         getContext().invalidateOptionsMenu();
         if (LOG) {
-            Log.v(TAG, "onListLoaded() " + (mMovieList != null ? mMovieList.size() : "null"));
+            QcomLog.v(TAG, "onListLoaded() " + (mMovieList != null ? mMovieList.size() : "null"));
         }
     }
 }

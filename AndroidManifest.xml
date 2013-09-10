@@ -448,9 +448,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name="org.codeaurora.gallery3d.video.VideoSettingsActivity"
-                android:label="@string/movie_view_label"
-                android:configChanges="orientation|keyboardHidden|screenSize|mnc|mcc">
-        </activity>
+
     </application>
 </manifest>

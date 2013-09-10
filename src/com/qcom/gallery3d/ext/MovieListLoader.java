@@ -1,4 +1,4 @@
-package org.codeaurora.gallery3d.ext;
+package com.qcom.gallery3d.ext;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -10,8 +10,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.util.Log;
-
 /**
  * Movie list loader class. It will load videos from MediaProvider database.
  * If MoviePlayer starting activity doesn't set any thing, default OrderBy will be used.
@@ -38,7 +36,7 @@ public class MovieListLoader implements IMovieListLoader {
         mListTask = new MovieListFetcherTask(context, fetechAll, l, orderBy);
         mListTask.execute(item);
         if (LOG) {
-            Log.v(TAG, "fillVideoList() fetechAll=" + fetechAll + ", orderBy=" + orderBy);
+            QcomLog.v(TAG, "fillVideoList() fetechAll=" + fetechAll + ", orderBy=" + orderBy);
         }
     }
     
@@ -49,7 +47,7 @@ public class MovieListLoader implements IMovieListLoader {
             enable = intent.getBooleanExtra(EXTRA_ENABLE_VIDEO_LIST, true);
         }
         if (LOG) {
-            Log.v(TAG, "isEnabledVideoList() return " + enable);
+            QcomLog.v(TAG, "isEnabledVideoList() return " + enable);
         }
         return enable;
     }
@@ -80,14 +78,14 @@ public class MovieListLoader implements IMovieListLoader {
             mFetechAll = fetechAll;
             mOrderBy = orderBy;
             if (LOG) {
-                Log.v(TAG, "MovieListFetcherTask() fetechAll=" + fetechAll + ", orderBy=" + orderBy);
+                QcomLog.v(TAG, "MovieListFetcherTask() fetechAll=" + fetechAll + ", orderBy=" + orderBy);
             }
         }
         
         @Override
         protected void onPostExecute(IMovieList params) {
             if (LOG) {
-                Log.v(TAG, "onPostExecute() isCancelled()=" + isCancelled());
+                QcomLog.v(TAG, "onPostExecute() isCancelled()=" + isCancelled());
             }
             if (isCancelled()) {
                 return;
@@ -100,7 +98,7 @@ public class MovieListLoader implements IMovieListLoader {
         @Override
         protected IMovieList doInBackground(IMovieItem... params) {
             if (LOG) {
-                Log.v(TAG, "doInBackground() begin");
+                QcomLog.v(TAG, "doInBackground() begin");
             }
             if (params[0] == null) {
                 return null;
@@ -156,7 +154,7 @@ public class MovieListLoader implements IMovieListLoader {
                 }
             }
             if (LOG) {
-                Log.v(TAG, "doInBackground() done return " + movieList);
+                QcomLog.v(TAG, "doInBackground() done return " + movieList);
             }
             return movieList;
         }
@@ -195,7 +193,7 @@ public class MovieListLoader implements IMovieListLoader {
                 }
             }
             if (LOG) {
-                Log.v(TAG, "fillUriList() cursor=" + cursor + ", return " + movieList);
+                QcomLog.v(TAG, "fillUriList() cursor=" + cursor + ", return " + movieList);
             }
             return movieList;
         }

@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnBufferingUpdateListener;
-import android.media.MediaPlayer.OnVideoSizeChangedListener;
 import android.media.Metadata;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
@@ -28,8 +26,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.MediaController;
 import android.widget.MediaController.MediaPlayerControl;
 
-import org.codeaurora.gallery3d.video.ScreenModeManager.ScreenModeListener;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -40,7 +36,7 @@ import java.util.Map;
  * it can be used in any layout manager, and provides various display options
  * such as scaling and tinting.
  */
-public class CodeauroraVideoView extends SurfaceView implements MediaPlayerControl, ScreenModeListener{
+public class CodeauroraVideoView extends SurfaceView implements MediaPlayerControl {
     private static final boolean LOG = true;
     private String TAG = "CodeauroraVideoView";
     // settable by the client
@@ -81,7 +77,6 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
     private MediaPlayer.OnBufferingUpdateListener mOnBufferingUpdateListener;
     private MediaPlayer.OnVideoSizeChangedListener mVideoSizeListener;
     private MediaPlayer.OnPreparedListener mPreparedListener;
-    private ScreenModeManager mScreenManager;
     private int         mCurrentBufferPercentage;
     private OnErrorListener mOnErrorListener;
     private OnInfoListener  mOnInfoListener;
@@ -135,47 +130,57 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int width = 0;
-        int height = 0;
-        int screenMode = ScreenModeManager.SCREENMODE_BIGSCREEN;
-        if (mScreenManager != null) {
-            screenMode = mScreenManager.getScreenMode();
-        }
-        switch (screenMode) {
-            case ScreenModeManager.SCREENMODE_BIGSCREEN:
-                width = getDefaultSize(mVideoWidth, widthMeasureSpec);
-                height = getDefaultSize(mVideoHeight, heightMeasureSpec);
-                if (mVideoWidth > 0 && mVideoHeight > 0) {
-                    if (mVideoWidth * height > width * mVideoHeight) {
-                        height = width * mVideoHeight / mVideoWidth;
-                    } else if (mVideoWidth * height < width * mVideoHeight) {
-                        width = height * mVideoWidth / mVideoHeight;
-                    }
+        int width = getDefaultSize(mVideoWidth, widthMeasureSpec);
+        int height = getDefaultSize(mVideoHeight, heightMeasureSpec);
+        if (mVideoWidth > 0 && mVideoHeight > 0) {
+
+            int widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
+            int widthSpecSize = MeasureSpec.getSize(widthMeasureSpec);
+            int heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
+            int heightSpecSize = MeasureSpec.getSize(heightMeasureSpec);
+
+            if (widthSpecMode == MeasureSpec.EXACTLY && heightSpecMode == MeasureSpec.EXACTLY) {
+                // the size is fixed
+                width = widthSpecSize;
+                height = heightSpecSize;
+
+                // for compatibility, we adjust size based on aspect ratio
+                if ( mVideoWidth * height  < width * mVideoHeight ) {
+                    width = height * mVideoWidth / mVideoHeight;
+                } else if ( mVideoWidth * height  > width * mVideoHeight ) {
+                    height = width * mVideoHeight / mVideoWidth;
                 }
-                break;
-            case ScreenModeManager.SCREENMODE_FULLSCREEN:
-                width = getDefaultSize(mVideoWidth, widthMeasureSpec);
-                height = getDefaultSize(mVideoHeight, heightMeasureSpec);
-                break;
-            case ScreenModeManager.SCREENMODE_CROPSCREEN:
-                width = getDefaultSize(mVideoWidth, widthMeasureSpec);
-                height = getDefaultSize(mVideoHeight, heightMeasureSpec);
-                if (mVideoWidth > 0 && mVideoHeight > 0) {
-                    if (mVideoWidth * height > width * mVideoHeight) {
-                        width = height * mVideoWidth / mVideoHeight;
-                    } else if (mVideoWidth * height < width * mVideoHeight) {
-                        height = width * mVideoHeight / mVideoWidth;
-                    }
+            } else if (widthSpecMode == MeasureSpec.EXACTLY) {
+                // only the width is fixed, adjust the height to match aspect ratio if possible
+                width = widthSpecSize;
+                height = width * mVideoHeight / mVideoWidth;
+                if (heightSpecMode == MeasureSpec.AT_MOST && height > heightSpecSize) {
+                    // couldn't match aspect ratio within the constraints
+                    height = heightSpecSize;
                 }
-                break;
-            default:
-                Log.w(TAG, "wrong screen mode : " + screenMode);
-                break;
-        }
-        if (LOG) {
-            Log.v(TAG, "onMeasure() set size: " + width + 'x' + height);
-            Log.v(TAG, "onMeasure() video size: " + mVideoWidth + 'x' + mVideoHeight);
-            Log.v(TAG, "onMeasure() mNeedWaitLayout=" + mNeedWaitLayout);
+            } else if (heightSpecMode == MeasureSpec.EXACTLY) {
+                // only the height is fixed, adjust the width to match aspect ratio if possible
+                height = heightSpecSize;
+                width = height * mVideoWidth / mVideoHeight;
+                if (widthSpecMode == MeasureSpec.AT_MOST && width > widthSpecSize) {
+                    // couldn't match aspect ratio within the constraints
+                    width = widthSpecSize;
+                }
+            } else {
+                // neither the width nor the height are fixed, try to use actual video size
+                width = mVideoWidth;
+                height = mVideoHeight;
+                if (heightSpecMode == MeasureSpec.AT_MOST && height > heightSpecSize) {
+                    height = heightSpecSize;
+                    width = height * mVideoWidth / mVideoHeight;
+                }
+                if (widthSpecMode == MeasureSpec.AT_MOST && width > widthSpecSize) {
+                    width = widthSpecSize;
+                    height = width * mVideoHeight / mVideoWidth;
+                }
+            }
+        } else {
+            // no size yet, just adopt the given spec sizes
         }
         setMeasuredDimension(width, height);
         if (mNeedWaitLayout) { // when OnMeasure ok, start video.
@@ -1009,34 +1014,5 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
             Log.v(TAG, "isTargetPlaying() mTargetState=" + mTargetState);
         }
         return mTargetState == STATE_PLAYING;
-    }
-
-    public void setScreenModeManager(final ScreenModeManager manager) {
-        mScreenManager = manager;
-        if (mScreenManager != null) {
-            mScreenManager.addListener(this);
-        }
-        if (LOG) {
-            Log.v(TAG, "setScreenModeManager(" + manager + ")");
-        }
-    }
-
-    @Override
-    public void onScreenModeChanged(final int newMode) {
-        this.requestLayout();
-    }
-
-    public void setOnVideoSizeChangedListener(final OnVideoSizeChangedListener l) {
-        mVideoSizeListener = l;
-        if (LOG) {
-            Log.i(TAG, "setOnVideoSizeChangedListener(" + l + ")");
-        }
-    }
-
-    public void setOnBufferingUpdateListener(final OnBufferingUpdateListener l) {
-        mOnBufferingUpdateListener = l;
-        if (LOG) {
-            Log.v(TAG, "setOnBufferingUpdateListener(" + l + ")");
-        }
     }
 }
