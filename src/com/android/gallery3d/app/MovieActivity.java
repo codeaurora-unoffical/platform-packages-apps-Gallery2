@@ -16,6 +16,10 @@
 
 package com.android.gallery3d.app;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -297,16 +301,18 @@ public class MovieActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.movie, menu);
+        if (isSharable() && checkIsAvailableUriFor3GPP(mMovieItem.getOriginalUri())) {
+            getMenuInflater().inflate(R.menu.movie, menu);
 
-        mShareMenu = menu.findItem(R.id.action_share);
-        ShareActionProvider provider = (ShareActionProvider) mShareMenu.getActionProvider();
-        mShareProvider = provider;
-        if (mShareProvider != null) {
-            // share provider is singleton, we should refresh our history file.
-            mShareProvider.setShareHistoryFileName(SHARE_HISTORY_FILE);
+            mShareMenu = menu.findItem(R.id.action_share);
+            ShareActionProvider provider = (ShareActionProvider) mShareMenu.getActionProvider();
+            mShareProvider = provider;
+            if (mShareProvider != null) {
+                // share provider is singleton, we should refresh our history file.
+                mShareProvider.setShareHistoryFileName(SHARE_HISTORY_FILE);
+            }
+            refreshShareProvider(mMovieItem);
         }
-        refreshShareProvider(mMovieItem);
 
         final MenuItem mi = menu.add(R.string.audio_effects);
         mi.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
@@ -766,5 +772,28 @@ public class MovieActivity extends Activity {
         if (title != null) {
             actionBar.setTitle(title);
         }
+    }
+
+    private boolean checkIsAvailableUriFor3GPP(Uri uri) {
+        boolean isAvailable = true;
+        InputStream input = null;
+
+        if ((uri != null) && (mMovieItem.getMimeType().equals("video/3gpp"))) {
+            try {
+                input = getContentResolver().openInputStream(uri);
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "IOException caught while opening or reading stream", e);
+                isAvailable = false;
+            } finally {
+                if (null != input) {
+                    try {
+                        input.close();
+                    } catch (IOException e) {
+                        Log.e(TAG, "IOException caught while closing stream", e);
+                    }
+                }
+            }
+        }
+        return isAvailable;
     }
 }
