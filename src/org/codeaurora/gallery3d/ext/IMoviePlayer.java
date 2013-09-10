@@ -1,12 +1,6 @@
 package org.codeaurora.gallery3d.ext;
 
 public interface IMoviePlayer {
-
-    /**
-     * add new bookmark Uri.
-     */
-    void addBookmark();
-
     /**
      * Loop current video.
      *
@@ -20,16 +14,4 @@ public interface IMoviePlayer {
      * @return
      */
     boolean getLoop();
-
-    /**
-     * Can stop current video or not.
-     *
-     * @return
-     */
-    boolean canStop();
-
-    /**
-     * Stop current video.
-     */
-    void stopVideo();
 }

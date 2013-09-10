@@ -20,7 +20,6 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.KeyguardManager;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.AsyncQueryHandler;
@@ -42,7 +41,6 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Virtualizer;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -68,7 +66,6 @@ import org.codeaurora.gallery3d.ext.IActivityHooker;
 import org.codeaurora.gallery3d.ext.MovieItem;
 import org.codeaurora.gallery3d.ext.IMovieItem;
 import org.codeaurora.gallery3d.video.ExtensionHelper;
-import org.codeaurora.gallery3d.video.MovieTitleHelper;
 
 /**
  * This activity plays a video from a specified URI.
@@ -80,13 +77,8 @@ import org.codeaurora.gallery3d.video.MovieTitleHelper;
 public class MovieActivity extends Activity {
     @SuppressWarnings("unused")
     private static final String TAG = "MovieActivity";
-    private static final boolean LOG = true;
     public static final String KEY_LOGO_BITMAP = "logo-bitmap";
     public static final String KEY_TREAT_UP_AS_BACK = "treat-up-as-back";
-    private static final String VIDEO_SDP_MIME_TYPE = "application/sdp";
-    private static final String VIDEO_SDP_TITLE = "rtsp://";
-    private static final String VIDEO_FILE_SCHEMA = "file";
-    private static final String VIDEO_MIME_TYPE = "video/*";
 
     private MoviePlayer mPlayer;
     private boolean mFinishOnCompletion;
@@ -113,9 +105,6 @@ public class MovieActivity extends Activity {
 
     private IMovieItem mMovieItem;
     private IActivityHooker mMovieHooker;
-    private KeyguardManager mKeyguardManager;
-    private boolean mResumed = false;
-    private boolean mControlResumed = false;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -225,7 +214,6 @@ public class MovieActivity extends Activity {
         mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                mPlayer.onPrepared(mp);
                 initEffects(mp.getAudioSessionId());
             }
         });
@@ -474,7 +462,7 @@ public class MovieActivity extends Activity {
     private Intent createShareIntent() {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("video/*");
-        intent.putExtra(Intent.EXTRA_STREAM, mMovieItem.getUri());
+        intent.putExtra(Intent.EXTRA_STREAM, mUri);
         return intent;
     }
 
@@ -507,7 +495,6 @@ public class MovieActivity extends Activity {
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         super.onStart();
         mMovieHooker.onStart();
-        registerScreenOff();
     }
 
     @Override
@@ -515,12 +502,7 @@ public class MovieActivity extends Activity {
         ((AudioManager) getSystemService(AUDIO_SERVICE))
                 .abandonAudioFocus(null);
         super.onStop();
-        if (mControlResumed && mPlayer != null) {
-            mPlayer.onStop();
-            mControlResumed = false;
-        }
         mMovieHooker.onStop();
-        unregisterScreenOff();
     }
 
     @Override
@@ -528,14 +510,11 @@ public class MovieActivity extends Activity {
         // Audio track will be deallocated for local video playback,
         // thus recycle effect here.
         releaseEffects();
+        mPlayer.onPause();
         try {
             unregisterReceiver(mReceiver);
         } catch (IllegalArgumentException e) {
             // Do nothing
-        }
-        mResumed = false;
-        if (mControlResumed && mPlayer != null) {
-            mControlResumed = !mPlayer.onPause();
         }
         super.onPause();
         mMovieHooker.onPause();
@@ -544,6 +523,7 @@ public class MovieActivity extends Activity {
     @Override
     public void onResume() {
         invalidateOptionsMenu();
+        mPlayer.onResume();
         if ((mVirtualizerSupported) || (mBassBoostSupported)) {
             final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
             intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -553,12 +533,6 @@ public class MovieActivity extends Activity {
         }
 
         initEffects(mPlayer.getAudioSessionId());
-        mResumed = true;
-        if (!isKeyguardLocked() && !mControlResumed && mPlayer != null) {
-            mPlayer.onResume();
-            mControlResumed = true;
-        }
-        enhanceActionBar();
         super.onResume();
         mMovieHooker.onResume();
     }
@@ -575,20 +549,6 @@ public class MovieActivity extends Activity {
         mPlayer.onDestroy();
         super.onDestroy();
         mMovieHooker.onDestroy();
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (LOG) {
-            Log.v(TAG, "onWindowFocusChanged(" + hasFocus + ") isKeyguardLocked="
-                    + isKeyguardLocked()
-                    + ", mResumed=" + mResumed + ", mControlResumed=" + mControlResumed);
-        }
-        if (hasFocus && !isKeyguardLocked() && mResumed && !mControlResumed && mPlayer != null) {
-            mPlayer.onResume();
-            mControlResumed = true;
-        }
     }
 
     @Override
@@ -612,109 +572,7 @@ public class MovieActivity extends Activity {
     private void initMovieInfo(Intent intent) {
         Uri original = intent.getData();
         String mimeType = intent.getType();
-        if (VIDEO_SDP_MIME_TYPE.equalsIgnoreCase(mimeType)
-                && VIDEO_FILE_SCHEMA.equalsIgnoreCase(original.getScheme())) {
-            mMovieItem = new MovieItem(VIDEO_SDP_TITLE + original, mimeType, null);
-        } else {
-            mMovieItem = new MovieItem(original, mimeType, null);
-        }
+        mMovieItem = new MovieItem(original, mimeType, null);
         mMovieItem.setOriginalUri(original);
-    }
-
-    // we do not stop live streaming when other dialog overlays it.
-    private BroadcastReceiver mScreenOffReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (LOG) {
-                Log.v(TAG, "onReceive(" + intent.getAction() + ") mControlResumed="
-                        + mControlResumed);
-            }
-            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
-                // Only stop video.
-                if (mControlResumed) {
-                    mPlayer.onStop();
-                    mControlResumed = false;
-                }
-            }
-        }
-
-    };
-
-    private void registerScreenOff() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(mScreenOffReceiver, filter);
-    }
-
-    private void unregisterScreenOff() {
-        unregisterReceiver(mScreenOffReceiver);
-    }
-
-    private boolean isKeyguardLocked() {
-        if (mKeyguardManager == null) {
-            mKeyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
-        }
-        // isKeyguardSecure excludes the slide lock case.
-        boolean locked = (mKeyguardManager != null)
-                && mKeyguardManager.inKeyguardRestrictedInputMode();
-        if (LOG) {
-            Log.v(TAG, "isKeyguardLocked() locked=" + locked + ", mKeyguardManager="
-                    + mKeyguardManager);
-        }
-        return locked;
-    }
-
-    private void enhanceActionBar() {
-        final IMovieItem movieItem = mMovieItem;// remember original item
-        final Uri uri = mMovieItem.getUri();
-        final String scheme = mMovieItem.getUri().getScheme();
-        final String authority = mMovieItem.getUri().getAuthority();
-        new AsyncTask<Void, Void, String>() {
-            @Override
-            protected String doInBackground(Void... params) {
-                String title = null;
-                if (ContentResolver.SCHEME_FILE.equals(scheme)) {
-                    title = MovieTitleHelper.getTitleFromMediaData(MovieActivity.this, uri);
-                } else if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
-                    title = MovieTitleHelper.getTitleFromDisplayName(MovieActivity.this, uri);
-                    if (title == null) {
-                        title = MovieTitleHelper.getTitleFromData(MovieActivity.this, uri);
-                    }
-                }
-                if (title == null) {
-                    title = MovieTitleHelper.getTitleFromUri(uri);
-                }
-                if (LOG) {
-                    Log.v(TAG, "enhanceActionBar() task return " + title);
-                }
-                return title;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                if (LOG) {
-                    Log.v(TAG, "onPostExecute(" + result + ") movieItem=" + movieItem
-                            + ", mMovieItem=" + mMovieItem);
-                }
-                movieItem.setTitle(result);
-                if (movieItem == mMovieItem) {
-                    setActionBarTitle(result);
-                }
-            };
-        }.execute();
-        if (LOG) {
-            Log.v(TAG, "enhanceActionBar() " + mMovieItem);
-        }
-    }
-
-    public void setActionBarTitle(String title) {
-        if (LOG) {
-            Log.v(TAG, "setActionBarTitle(" + title + ")");
-        }
-        ActionBar actionBar = getActionBar();
-        if (title != null) {
-            actionBar.setTitle(title);
-        }
     }
 }
