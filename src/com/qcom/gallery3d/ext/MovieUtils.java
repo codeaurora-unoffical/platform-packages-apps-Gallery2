@@ -1,7 +1,6 @@
-package org.codeaurora.gallery3d.ext;
+package com.qcom.gallery3d.ext;
 
 import android.net.Uri;
-import android.util.Log;
 
 import java.util.Locale;
 
@@ -11,13 +10,10 @@ import java.util.Locale;
 public class MovieUtils {
     private static final String TAG = "MovieUtils";
     private static final boolean LOG = true;
-
-    private MovieUtils() {
-    }
-
+    
+    private MovieUtils() {}
     /**
-     * Whether current video(Uri) is RTSP streaming or not.
-     *
+     * Whether current video(Uri) is RTSP streaming or not. 
      * @param uri
      * @param mimeType
      * @return
@@ -28,16 +24,14 @@ public class MovieUtils {
             if ("rtsp".equalsIgnoreCase(uri.getScheme())) {
                 rtsp = true;
             }
-        }
+        } 
         if (LOG) {
-            Log.v(TAG, "isRtspStreaming(" + uri + ", " + mimeType + ") return " + rtsp);
+            QcomLog.v(TAG, "isRtspStreaming(" + uri + ", " + mimeType + ") return " + rtsp);
         }
         return rtsp;
     }
-
     /**
      * Whether current video(Uri) is HTTP streaming or not.
-     *
      * @param uri
      * @param mimeType
      * @return
@@ -52,14 +46,12 @@ public class MovieUtils {
             }
         }
         if (LOG) {
-            Log.v(TAG, "isHttpStreaming(" + uri + ", " + mimeType + ") return " + http);
+            QcomLog.v(TAG, "isHttpStreaming(" + uri + ", " + mimeType + ") return " + http);
         }
         return http;
     }
-
     /**
      * Whether current video(Uri) is live streaming or not.
-     *
      * @param uri
      * @param mimeType
      * @return
@@ -74,14 +66,13 @@ public class MovieUtils {
             }
         }
         if (LOG) {
-            Log.v(TAG, "isSdpStreaming(" + uri + ", " + mimeType + ") return " + sdp);
+            QcomLog.v(TAG, "isSdpStreaming(" + uri + ", " + mimeType + ") return " + sdp);
         }
         return sdp;
     }
-
+    
     /**
      * Whether current video(Uri) is local file or not.
-     *
      * @param uri
      * @param mimeType
      * @return
@@ -91,7 +82,7 @@ public class MovieUtils {
                 && !isRtspStreaming(uri, mimeType)
                 && !isHttpStreaming(uri, mimeType));
         if (LOG) {
-            Log.v(TAG, "isLocalFile(" + uri + ", " + mimeType + ") return " + local);
+            QcomLog.v(TAG, "isLocalFile(" + uri + ", " + mimeType + ") return " + local);
         }
         return local;
     }

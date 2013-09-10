@@ -37,7 +37,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.VideoView;
@@ -47,9 +46,6 @@ import com.android.gallery3d.common.ApiHelper;
 import com.android.gallery3d.common.BlobCache;
 import com.android.gallery3d.util.CacheManager;
 import com.android.gallery3d.util.GalleryUtils;
-import org.codeaurora.gallery3d.ext.IMoviePlayer;
-import org.codeaurora.gallery3d.ext.IMovieItem;
-import org.codeaurora.gallery3d.video.ExtensionHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -81,9 +77,6 @@ public class MoviePlayer implements
     // Otherwise, we pause the player.
     private static final long RESUMEABLE_TIMEOUT = 3 * 60 * 1000; // 3 mins
 
-    public static final int STREAMING_LOCAL = 0;
-    private int mStreamingType = STREAMING_LOCAL;
-
     private Context mContext;
     private final VideoView mVideoView;
     private final View mRootView;
@@ -108,24 +101,6 @@ public class MoviePlayer implements
     private boolean mShowing;
 
     private Virtualizer mVirtualizer;
-
-    private MoviePlayerExtension mPlayerExt = new MoviePlayerExtension();
-    private boolean mCanReplay;
-    private TState mTState = TState.PLAYING;
-    private IMovieItem mMovieItem;
-
-    private enum TState {
-        PLAYING,
-        PAUSED,
-        STOPED,
-        COMPELTED,
-        RETRY_ERROR
-    }
-
-    interface Restorable {
-        void onRestoreInstanceState(Bundle icicle);
-        void onSaveInstanceState(Bundle outState);
-    }
 
     private final Runnable mPlayingChecker = new Runnable() {
         @Override
@@ -164,19 +139,17 @@ public class MoviePlayer implements
     };
 
     public MoviePlayer(View rootView, final MovieActivity movieActivity,
-            IMovieItem info, Bundle savedInstance, boolean canReplay) {
+            Uri videoUri, Bundle savedInstance, boolean canReplay) {
         mContext = movieActivity.getApplicationContext();
         mRootView = rootView;
         mVideoView = (VideoView) rootView.findViewById(R.id.surface_view);
         mBookmarker = new Bookmarker(movieActivity);
+        mUri = videoUri;
 
         mController = new MovieControllerOverlay(mContext);
         ((ViewGroup)rootView).addView(mController.getView());
         mController.setListener(this);
         mController.setCanReplay(canReplay);
-
-        init(info, canReplay);
-        mUri = mMovieItem.getUri();
 
         mVideoView.setOnErrorListener(this);
         mVideoView.setOnCompletionListener(this);
@@ -249,7 +222,6 @@ public class MoviePlayer implements
             mResumeableTime = savedInstance.getLong(KEY_RESUMEABLE_TIME, Long.MAX_VALUE);
             mVideoView.start();
             mVideoView.suspend();
-            onRestoreInstanceState(savedInstance);
             mHasPaused = true;
         } else {
             final Integer bookmark = mBookmarker.getBookmark(mUri);
@@ -301,7 +273,6 @@ public class MoviePlayer implements
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(KEY_VIDEO_POSITION, mVideoPosition);
         outState.putLong(KEY_RESUMEABLE_TIME, mResumeableTime);
-        onSaveInstanceStateMore(outState);
     }
 
     private void showResumeDialog(Context context, final int bookmark) {
@@ -408,11 +379,6 @@ public class MoviePlayer implements
         }
 
         mVideoView.start();
-        //we may start video from stopVideo,
-        //this case, we should reset canReplay flag according canReplay and loop
-        boolean loop = mPlayerExt.getLoop();
-        boolean canReplay = loop ? loop : mCanReplay;
-        mController.setCanReplay(canReplay);
         setProgress();
     }
 
@@ -442,15 +408,8 @@ public class MoviePlayer implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (mPlayerExt.getLoop()) {
-            onReplay();
-        } else { //original logic
-            mTState = TState.COMPELTED;
-            if (mCanReplay) {
-                mController.showEnded();
-            }
-            onCompletion();
-        }
+        mController.showEnded();
+        onCompletion();
     }
 
     public void onCompletion() {
@@ -554,11 +513,6 @@ public class MoviePlayer implements
                 || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE;
     }
 
-    private void init(IMovieItem info, boolean canReplay) {
-        mCanReplay = canReplay;
-        mMovieItem = info;
-    }
-
     // We want to pause when the headset is unplugged.
     private class AudioBecomingNoisyReceiver extends BroadcastReceiver {
 
@@ -584,64 +538,6 @@ public class MoviePlayer implements
     public void setOnPreparedListener(MediaPlayer.OnPreparedListener listener) {
         mVideoView.setOnPreparedListener(listener);
     }
-
-    public boolean isLocalFile() {
-        if (mStreamingType == STREAMING_LOCAL) {
-            return true;
-        }
-        return false;
-    }
-
-    public IMoviePlayer getMoviePlayerExt() {
-        return mPlayerExt;
-    }
-
-    public SurfaceView getVideoSurface() {
-        return mVideoView;
-    }
-
-    private void onSaveInstanceStateMore(Bundle outState) {
-
-        mPlayerExt.onSaveInstanceState(outState);
-    }
-
-    private void onRestoreInstanceState(Bundle icicle) {
-
-        mPlayerExt.onRestoreInstanceState(icicle);
-    }
-
-    private class MoviePlayerExtension implements IMoviePlayer, Restorable {
-
-        private static final String KEY_VIDEO_IS_LOOP = "video_is_loop";
-
-        private boolean mIsLoop;
-
-        @Override
-        public boolean getLoop() {
-            return mIsLoop;
-        }
-
-        @Override
-        public void setLoop(boolean loop) {
-            if (isLocalFile()) {
-                mIsLoop = loop;
-                mController.setCanReplay(loop);
-            }
-        }
-
-        @Override
-        public void onRestoreInstanceState(Bundle icicle) {
-            mIsLoop = icicle.getBoolean(KEY_VIDEO_IS_LOOP, false);
-            if (mIsLoop) {
-                mController.setCanReplay(true);
-            } // else  will get can replay from intent.
-        }
-
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            outState.putBoolean(KEY_VIDEO_IS_LOOP, mIsLoop);
-        }
-    };
 }
 
 class Bookmarker {
