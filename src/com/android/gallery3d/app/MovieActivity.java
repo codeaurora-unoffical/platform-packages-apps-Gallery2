@@ -25,7 +25,6 @@ import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.AsyncQueryHandler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -143,14 +142,6 @@ public class MovieActivity extends Activity {
                 }
             } else if (action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
                 mIsHeadsetOn = audioManager.isBluetoothA2dpOn() || audioManager.isWiredHeadsetOn();
-            } else if (action.equals(MovieHookIntentReceiver.ACTION_MEDIA_BUTTON)) {
-                KeyEvent keyEvent = intent.getParcelableExtra(MovieHookIntentReceiver.KEYEVENT);
-                int keyCode = keyEvent.getKeyCode();
-                if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                    onKeyDown(keyCode, keyEvent);
-                } else if (keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                    onKeyUp(keyCode, keyEvent);
-                }
             }
             if (mEffectDialog != null) {
                 if (!mIsHeadsetOn && mEffectDialog.isShowing()) {
@@ -544,26 +535,12 @@ public class MovieActivity extends Activity {
         } catch (IllegalArgumentException e) {
             // Do nothing
         }
-
-        registerMediaButton(false);
-
         mResumed = false;
         if (mControlResumed && mPlayer != null) {
             mControlResumed = !mPlayer.onPause();
         }
         super.onPause();
         mMovieHooker.onPause();
-    }
-
-    private void registerMediaButton(boolean register) {
-        AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        ComponentName componentName = new ComponentName(getPackageName(),
-                MovieHookIntentReceiver.class.getName());
-        if (register) {
-            mAudioManager.registerMediaButtonEventReceiver(componentName);
-        } else {
-            mAudioManager.unregisterMediaButtonEventReceiver(componentName);
-        }
     }
 
     @Override
@@ -574,11 +551,8 @@ public class MovieActivity extends Activity {
             intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
             intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
             intentFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-            intentFilter.addAction(MovieHookIntentReceiver.ACTION_MEDIA_BUTTON);
             registerReceiver(mReceiver, intentFilter);
         }
-
-        registerMediaButton(true);
 
         initEffects(mPlayer.getAudioSessionId());
         mResumed = true;
