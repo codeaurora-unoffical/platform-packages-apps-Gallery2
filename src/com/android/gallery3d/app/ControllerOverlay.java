@@ -55,10 +55,4 @@ public interface ControllerOverlay {
 
   void setTimes(int currentTime, int totalTime,
           int trimStartTime, int trimEndTime);
-
-  //set view enabled (play/pause asynchronous processing)
-  void setViewEnabled(boolean isEnabled);
-
-  //view from disable to resume (play/pause asynchronous processing)
-  void setPlayPauseReplayResume();
 }

@@ -1,4 +1,4 @@
-package org.codeaurora.gallery3d.video;
+package com.qcom.gallery3d.video;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

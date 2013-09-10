@@ -29,12 +29,6 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <!-- Strings for step option settins -->
-    <string name="setp_option_name">步長</string>
-    <string name="step_option_desc">定制快進/快退步長</string>
-    <string name="setp_option_three_second">3秒</string>
-    <string name="setp_option_six_second">>6秒</string>
-
     <string name="loop">"循環"</string>
     <string name="single">"單次"</string>
     <string name="stereo">"立體聲"</string>
@@ -42,8 +36,6 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="media_detail">"媒體詳情"</string>
     <string name="input_url">"輸入 URL"</string>
     <string name="streaming_settings">"串流設定"</string>
-    <string name="next">"下一個"</string>
-    <string name="previous">"上一個"</string>
 
     <string name="rtp_rtcp">RTP/RTCP</string>
     <string name="min_port">最小端口:</string>
@@ -60,10 +52,6 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <string name="server_timeout_title">"伺服器逾時"</string>
     <string name="server_timeout_message">"是否重新連線伺服器並播放視訊？"</string>
-    <string name="videoview_error_text_cannot_connect_retry">"連線失敗，正在嘗試重新連線 %1$d..."</string>
-    <string name="media_controller_live">直播</string>
-    <string name="media_controller_playing">正在播放</string>
-    <string name="media_controller_connecting">正在連線...</string>
 
     <string name="bookmark_add">"添加書簽"</string>
     <string name="bookmark_display">"顯示書簽"</string>

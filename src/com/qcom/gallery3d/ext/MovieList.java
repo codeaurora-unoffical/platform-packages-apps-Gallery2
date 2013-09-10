@@ -1,6 +1,4 @@
-package org.codeaurora.gallery3d.ext;
-
-import android.util.Log;
+package com.qcom.gallery3d.ext;
 
 import java.util.ArrayList;
 
@@ -14,7 +12,7 @@ public class MovieList implements IMovieList {
     @Override
     public void add(IMovieItem item) {
         if (LOG) {
-            Log.v(TAG, "add(" + item + ")");
+            QcomLog.v(TAG, "add(" + item + ")");
         }
         mItems.add(item);
     }
@@ -30,7 +28,7 @@ public class MovieList implements IMovieList {
             }
         }
         if (LOG) {
-            Log.v(TAG, "index(" + item + ") return " + find);
+            QcomLog.v(TAG, "index(" + item + ") return " + find);
         }
         return find;
     }
