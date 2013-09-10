@@ -37,15 +37,20 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="input_url">"输入 URL"</string>
     <string name="streaming_settings">"流媒体设置"</string>
 
-    <string name="rtp_rtcp">RTP/RTCP</string>
+    <string name="rtp">RTP</string>
+    <string name="rtcp">RTCP</string>
     <string name="min_port">最小端口:</string>
     <string name="max_port">最大端口:</string>
     <string name="buffer_size">缓存大小</string>
     <string name="apn">优先接入点</string>
     <string name="rtp_min_port">RTP最小端口</string>
     <string name="rtp_max_port">RTP最大端口</string>
+    <string name="rtcp_min_port">RTCP最小端口</string>
+    <string name="rtcp_max_port">RTCP最大端口</string>
     <string name="set_rtp_min_port">设置RTP最小端口</string>
     <string name="set_rtp_max_port">设置RTP最大端口</string>
+    <string name="set_rtcp_min_port">设置RTCP最小端口</string>
+    <string name="set_rtcp_max_port">设置RTCP最大端口</string>
     <string name="set_buffer_size">设置缓冲大小</string>
     <string name="set_apn">选择接入优先点</string>
     <string name="setting">设置</string>
