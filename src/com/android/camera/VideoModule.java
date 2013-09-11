@@ -730,6 +730,9 @@ public class VideoModule implements CameraModule,
         mUI.setShutterPressed(pressed);
     }
 
+    @Override
+    public void onShutterButtonLongClick() {}
+
     private void qcomReadVideoPreferences() {
         String videoEncoder = mPreferences.getString(
                CameraSettings.KEY_VIDEO_ENCODER,
@@ -2585,6 +2588,7 @@ public class VideoModule implements CameraModule,
     }
 
     private void storeImage(final byte[] data, Location loc) {
+        mParameters = mActivity.mCameraDevice.getParameters();
         long dateTaken = System.currentTimeMillis();
         String title = Util.createJpegName(dateTaken);
         ExifInterface exif = Exif.getExif(data);
