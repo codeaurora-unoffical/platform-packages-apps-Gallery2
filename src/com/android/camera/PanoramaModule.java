@@ -749,6 +749,10 @@ public class PanoramaModule implements CameraModule,
     public void onShutterButtonFocus(boolean pressed) {
     }
 
+    @Override
+    public void onShutterButtonLongClick() {
+    }
+
     public void reportProgress() {
         mSavingProgressBar.reset();
         mSavingProgressBar.setRightIncreasing(true);
