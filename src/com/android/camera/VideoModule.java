@@ -2141,6 +2141,8 @@ public class VideoModule implements CameraModule,
 
         // Set zoom.
         if (mParameters.isZoomSupported()) {
+            Parameters p = mActivity.mCameraDevice.getParameters();
+            mZoomValue = p.getZoom();
             mParameters.setZoom(mZoomValue);
         }
 
