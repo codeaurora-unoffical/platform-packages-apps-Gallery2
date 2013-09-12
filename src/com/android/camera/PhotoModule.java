@@ -198,6 +198,7 @@ public class PhotoModule
     private static final String KEY_PICTURE_FORMAT = "picture-format";
     private static final String KEY_QC_RAW_PICUTRE_SIZE = "raw-size";
     private static final String PIXEL_FORMAT_JPEG = "jpeg";
+    private static final String PIXEL_FORMAT_RAW = "raw";
 
     private static final int MIN_SCE_FACTOR = -10;
     private static final int MAX_SCE_FACTOR = +10;
@@ -977,8 +978,25 @@ public class PhotoModule
 
                 // Calculate the width and the height of the jpeg.
                 Size s = mParameters.getPictureSize();
-                ExifInterface exif = Exif.getExif(jpegData);
-                int orientation = Exif.getOrientation(exif);
+                int orientation = 0;
+                ExifInterface exif = null;
+                String pictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
+                String aeBracketing = mPreferences.getString(
+                        CameraSettings.KEY_AE_BRACKET_HDR,mActivity.getString(
+                        R.string.pref_camera_ae_bracket_hdr_entry_off));
+                boolean isAeBracketingOff =
+                      aeBracketing.equalsIgnoreCase(mActivity.getString(
+                      R.string.pref_camera_ae_bracket_hdr_entry_off));
+                boolean isPictureFormatJPEG = false;
+                if( (pictureFormat != null) &&
+                    pictureFormat.equalsIgnoreCase(PIXEL_FORMAT_JPEG)) {
+                    isPictureFormatJPEG = true;
+                }
+                if ( isAeBracketingOff &&
+                   ((pictureFormat == null) || isPictureFormatJPEG) ) {
+                    exif = Exif.getExif(jpegData);
+                    orientation = Exif.getOrientation(exif);
+                }
                 int width, height;
                 if ((mJpegRotation + orientation) % 180 == 0) {
                     width = s.width;
@@ -988,8 +1006,7 @@ public class PhotoModule
                     height = s.width;
                 }
 
-                String pictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
-                if (pictureFormat != null && !pictureFormat.equalsIgnoreCase(PIXEL_FORMAT_JPEG)) {
+                if (!isAeBracketingOff || !isPictureFormatJPEG ) {
                     // overwrite width and height if raw picture
                     String pair = mParameters.get(KEY_QC_RAW_PICUTRE_SIZE);
                     if (pair != null) {
@@ -1007,7 +1024,7 @@ public class PhotoModule
                     Log.e(TAG, "Unbalanced name/data pair");
                 } else {
                     if (date == -1) date = mCaptureStartTime;
-                    if (mHeading >= 0) {
+                    if ((mHeading >= 0) && (null != exif)) {
                         // heading direction has been updated by the sensor.
                         ExifTag directionRefTag = exif.buildTag(
                                 ExifInterface.TAG_GPS_IMG_DIRECTION_REF,
@@ -1019,6 +1036,12 @@ public class PhotoModule
                         exif.setTag(directionTag);
                     }
                     String mPictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
+                    if (!isAeBracketingOff){
+                        // overwrite picture format to null so image will be
+                        // saved to raw directory
+                        mPictureFormat = PIXEL_FORMAT_RAW;
+                    }
+
                     mActivity.getMediaSaveService().addImage(
                             jpegData, title, date, mLocation, width, height,
                             orientation, exif, mOnMediaSavedListener, mContentResolver, mPictureFormat);
