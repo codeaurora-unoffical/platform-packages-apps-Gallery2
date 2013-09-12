@@ -81,6 +81,7 @@
                 <data android:mimeType="application/sdp" />
                 <data android:mimeType="video/x-msvideo"/>
                 <data android:mimeType="video/divx" />
+                <data android:mimeType="application/dash+xml" />
              </intent-filter>
              <intent-filter>
                 !-- HTTP live support -->
