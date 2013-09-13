@@ -62,7 +62,8 @@ public class MuteVideo {
                     VideoUtils.startMute(mFilePath, mDstFileInfo);
                     SaveVideoFileUtils.insertContent(
                             mDstFileInfo, mActivity.getContentResolver(), mUri);
-                } catch (IOException e) {
+                } catch (Exception e) {
+                    e.printStackTrace();
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
