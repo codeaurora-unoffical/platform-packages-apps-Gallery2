@@ -28,6 +28,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -222,6 +223,11 @@ public abstract class ActivityBase extends AbstractGalleryActivity
             updateStorageSpace();
             mHandler.sendEmptyMessageDelayed(UPDATE_STORAGE_HINT, 200);
         }
+        // if the led flash light is open, turn it off
+        Log.d("LED Flashlight", "send the turn off the broadcast");
+        Intent intent = new Intent("qualcomm.android.LEDFlashlight.appWidgetUpdate");
+        intent.putExtra("camera_led", true);
+        sendBroadcast(intent);
     }
 
     @Override
