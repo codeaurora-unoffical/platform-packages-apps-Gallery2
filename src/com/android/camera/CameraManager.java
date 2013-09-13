@@ -167,7 +167,8 @@ public class CameraManager {
                         return;
 
                     case SET_PREVIEW_TEXTURE_ASYNC:
-                        setPreviewTexture(msg.obj);
+                        if (null != mCamera)
+                            setPreviewTexture(msg.obj);
                         return;
 
                     case SET_PREVIEW_DISPLAY_ASYNC:
@@ -208,7 +209,8 @@ public class CameraManager {
                         return;
 
                     case SET_DISPLAY_ORIENTATION:
-                        mCamera.setDisplayOrientation(msg.arg1);
+                        if (null != mCamera)
+                            mCamera.setDisplayOrientation(msg.arg1);
                         return;
 
                     case SET_ZOOM_CHANGE_LISTENER:
@@ -229,16 +231,21 @@ public class CameraManager {
                         return;
 
                     case SET_ERROR_CALLBACK:
-                        mCamera.setErrorCallback((ErrorCallback) msg.obj);
+                        if (null != mCamera)
+                            mCamera.setErrorCallback((ErrorCallback) msg.obj);
                         return;
 
                     case SET_PARAMETERS:
+                        if (null == mCamera)
+                            return;
                         mParametersIsDirty = true;
                         mParamsToSet.unflatten((String) msg.obj);
                         mCamera.setParameters(mParamsToSet);
                         return;
 
                     case GET_PARAMETERS:
+                        if (null == mCamera)
+                            return;
                         if (mParametersIsDirty) {
                             mParameters = mCamera.getParameters();
                             mParametersIsDirty = false;
