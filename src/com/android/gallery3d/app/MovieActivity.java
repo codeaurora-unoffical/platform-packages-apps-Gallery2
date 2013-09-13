@@ -75,6 +75,8 @@ import org.codeaurora.gallery3d.ext.MovieItem;
 import org.codeaurora.gallery3d.ext.MovieUtils;
 import org.codeaurora.gallery3d.video.ExtensionHelper;
 import org.codeaurora.gallery3d.video.MovieTitleHelper;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothProfile;
 
 /**
  * This activity plays a video from a specified URI.
@@ -146,7 +148,7 @@ public class MovieActivity extends Activity {
                             || audioManager.isWiredHeadsetOn();
                 }
             } else if (action.equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
-                mIsHeadsetOn = audioManager.isBluetoothA2dpOn() || audioManager.isWiredHeadsetOn();
+                mIsHeadsetOn = false;
             } else if (action.equals(MovieHookIntentReceiver.ACTION_MEDIA_BUTTON)) {
                 KeyEvent keyEvent = intent.getParcelableExtra(MovieHookIntentReceiver.KEYEVENT);
                 int keyCode = keyEvent.getKeyCode();
@@ -157,7 +159,7 @@ public class MovieActivity extends Activity {
                 }
             }
             if (mEffectDialog != null) {
-                if (!mIsHeadsetOn && mEffectDialog.isShowing()) {
+                if (!mIsHeadsetOn && !isBtHeadsetConnected() && mEffectDialog.isShowing()) {
                     mEffectDialog.dismiss();
                     showHeadsetPlugToast();
                 }
@@ -334,7 +336,7 @@ public class MovieActivity extends Activity {
     }
 
     private void onAudioEffectsMenuItemClick() {
-        if (!mIsHeadsetOn) {
+        if (!mIsHeadsetOn && !isBtHeadsetConnected()) {
             showHeadsetPlugToast();
         } else {
             LayoutInflater factory = LayoutInflater.from(this);
@@ -595,6 +597,15 @@ public class MovieActivity extends Activity {
         enhanceActionBar();
         super.onResume();
         mMovieHooker.onResume();
+    }
+
+    private boolean isBtHeadsetConnected() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (BluetoothProfile.STATE_CONNECTED
+                == adapter.getProfileConnectionState(BluetoothProfile.HEADSET)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
