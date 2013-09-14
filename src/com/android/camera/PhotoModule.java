@@ -1040,6 +1040,14 @@ public class PhotoModule
             mRawPictureCallbackTime = System.currentTimeMillis();
             Log.v(TAG, "mShutterToRawCallbackTime = "
                     + (mRawPictureCallbackTime - mShutterCallbackTime) + "ms");
+            if (ApiHelper.HAS_SURFACE_TEXTURE && !mIsImageCaptureIntent
+                    && mActivity.mShowCameraAppView) {
+                // Finish capture animation
+                mHandler.removeMessages(CAPTURE_ANIMATION_DONE);
+                ((CameraScreenNail) mActivity.mCameraScreenNail).animateSlide();
+                mHandler.sendEmptyMessageDelayed(CAPTURE_ANIMATION_DONE,
+                        CaptureAnimManager.getAnimationDuration());
+            }
         }
     }
 
@@ -1146,14 +1154,6 @@ public class PhotoModule
             // Only animate when in full screen capture mode
             // i.e. If monkey/a user swipes to the gallery during picture taking,
             // don't show animation
-            if (ApiHelper.HAS_SURFACE_TEXTURE && !mIsImageCaptureIntent
-                    && mActivity.mShowCameraAppView) {
-                // Finish capture animation
-                mHandler.removeMessages(CAPTURE_ANIMATION_DONE);
-                ((CameraScreenNail) mActivity.mCameraScreenNail).animateSlide();
-                mHandler.sendEmptyMessageDelayed(CAPTURE_ANIMATION_DONE,
-                        CaptureAnimManager.getAnimationDuration());
-            }
             mFocusManager.updateFocusUI(); // Ensure focus indicator is hidden.
 
             boolean needRestartPreview = !mIsImageCaptureIntent
