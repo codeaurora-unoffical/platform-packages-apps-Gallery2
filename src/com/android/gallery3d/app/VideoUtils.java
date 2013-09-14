@@ -217,8 +217,19 @@ public class VideoUtils {
             }
         }
 
-        muxer.stop();
-        muxer.release();
+        try {
+            muxer.stop();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            Log.e(LOGTAG, "Failed to stop MediaMuxer");
+            File f = new File(dstPath);
+            if (f.exists()) {
+                f.delete();
+            }
+            throw e;
+        } finally {
+            muxer.release();
+        }
         return;
     }
 
