@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
@@ -606,6 +607,15 @@ public class MovieActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ||
+            this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            mPlayer.setDefaultScreenMode();
+        }
     }
 
     @Override
