@@ -626,5 +626,24 @@
     <string name="time_lapse_error">Invalid video-size for time-lapse recording.</string>
 
     <string name="pref_camera_videosnapsize_default" translatable="false">1920x1080</string>
+
+    <!-- Default burst shot number setting. Do not translate.  -->
+    <string name="pref_camera_burst_num_default" translatable="false">20</string>
+
+    <!-- setting title text for burst shot-->
+    <string name="pref_camera_burst_num_title">Burst Number</string>
+
+    <!-- Settings screen, ZSL location dialog choices -->
+    <string name="pref_camera_burst_num_entry_10">10</string>
+    <string name="pref_camera_burst_num_entry_20">20</string>
+    <string name="pref_camera_burst_num_entry_40">40</string>
+    <string name="pref_camera_burst_num_entry_99">99</string>
+    <string name="pref_camera_burst_num_entry_on">on</string>
+
+    <string name="pref_camera_burst_num_value_10">10</string>
+    <string name="pref_camera_burst_num_value_20">20</string>
+    <string name="pref_camera_burst_num_value_40">40</string>
+    <string name="pref_camera_burst_num_value_99">99</string>
+    <string name="pref_camera_burst_num_value_on">on</string>
 </resources>
 

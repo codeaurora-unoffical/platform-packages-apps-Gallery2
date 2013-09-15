@@ -99,6 +99,7 @@ public class CameraSettings {
 
     public static final String KEY_FACE_RECOGNITION = "pref_camera_facerc_key";
     public static final String KEY_DIS = "pref_camera_dis_key";
+    public static final String KEY_BURST_NUM = "pref_camera_burst_num_key";
 
     private static final String KEY_QC_SUPPORTED_AE_BRACKETING_MODES = "ae-bracket-hdr-values";
     private static final String KEY_QC_SUPPORTED_FACE_RECOGNITION_MODES = "face-recognition-values";
@@ -133,6 +134,7 @@ public class CameraSettings {
     private static final int MMS_VIDEO_DURATION = (CamcorderProfile.get(CamcorderProfile.QUALITY_LOW) != null) ?
           CamcorderProfile.get(CamcorderProfile.QUALITY_LOW).duration :30;
     private static final int YOUTUBE_VIDEO_DURATION = 15 * 60; // 15 mins
+    public static final int DEFAULT_LONGSHOT_NUM = 20;
 
     private static final String TAG = "CameraSettings";
 
@@ -295,6 +297,7 @@ public class CameraSettings {
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
         ListPreference videoHdr = group.findPreference(KEY_VIDEO_HDR);
         ListPreference pictureFormat = group.findPreference(KEY_PICTURE_FORMAT);
+        ListPreference burstNum = group.findPreference(KEY_BURST_NUM);
 
         if (touchAfAec != null) {
             filterUnsupportedOptions(group,
