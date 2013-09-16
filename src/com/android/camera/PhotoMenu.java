@@ -55,12 +55,23 @@ public class PhotoMenu extends PieController
     private AbstractSettingPopup mPopup;
     private CameraActivity mActivity;
     private int popupNum = 0;
+    private boolean mPopupSecondLevelMenu = false;
+    private OnFirstLevelMenuDismiss mOnFirstLevelMenuDismissHandler = null;
+
+    public interface OnFirstLevelMenuDismiss {
+        public void doAfterFirstLevelMenuDismiss();
+    }
+
+    public void setOnFirstLevelMenuDismissHandler(OnFirstLevelMenuDismiss handler) {
+        mOnFirstLevelMenuDismissHandler = handler;
+    }
 
     public PhotoMenu(CameraActivity activity, PhotoUI ui, PieRenderer pie) {
         super(activity, pie);
         mUI = ui;
         mSettingOff = activity.getString(R.string.setting_off_value);
         mActivity = activity;
+        setOnFirstLevelMenuDismissHandler(activity);
     }
 
     public void initialize(PreferenceGroup group) {
@@ -90,7 +101,8 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_FOCUS_MODE,
                 CameraSettings.KEY_PICTURE_FORMAT,
                 CameraSettings.KEY_JPEG_QUALITY,
-                CameraSettings.KEY_ZSL
+                CameraSettings.KEY_ZSL,
+                CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
         mOtherKeys2 = new String[] {
@@ -245,7 +257,13 @@ public class PhotoMenu extends PieController
                 if(mPopup1 != null) mPopup1 = null;
                 if(mPopup2 != null) mPopup2 = null;
                 if(mPopup3 != null) mPopup3 = null;
+            mPopupSecondLevelMenu = false;
         } else {
+            if (!mPopupSecondLevelMenu) {
+                if (mOnFirstLevelMenuDismissHandler != null) {
+                    mOnFirstLevelMenuDismissHandler.doAfterFirstLevelMenuDismiss();
+                }
+            }
             initializePopup();
         }
 
@@ -263,6 +281,7 @@ public class PhotoMenu extends PieController
                 R.layout.list_pref_setting_popup, null, false);
         basic.initialize(pref);
         basic.setSettingChangedListener(this);
+        mPopupSecondLevelMenu = true;
         mUI.dismissPopup();
         mPopup = basic;
         mUI.showPopup(mPopup);
