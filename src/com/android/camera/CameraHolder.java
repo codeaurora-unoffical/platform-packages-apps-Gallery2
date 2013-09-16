@@ -218,7 +218,7 @@ public class CameraHolder {
                 Log.e(TAG, "fail to connect Camera", e);
                 throw new CameraHardwareException(e);
             }
-            mParameters = mCameraDevice.getParameters();
+            mParameters = mCameraDevice.getCamera().getParameters();
         } else {
             try {
                 mCameraDevice.reconnect();
