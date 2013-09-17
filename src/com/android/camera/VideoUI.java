@@ -38,14 +38,15 @@ import com.android.camera.ui.PreviewSurfaceView;
 import com.android.camera.ui.RenderOverlay;
 import com.android.camera.ui.RotateLayout;
 import com.android.camera.ui.ZoomRenderer;
+import com.android.camera.PauseButton.OnPauseButtonListener;
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.ApiHelper;
 
 import java.util.List;
 
 public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
-        PreviewGestures.SingleTapListener,
-        PreviewGestures.SwipeListener {
+                     PreviewGestures.SingleTapListener, PreviewGestures.SwipeListener,
+                     PauseButton.OnPauseButtonListener {
     private final static String TAG = "CAM_VideoUI";
     // module fields
     private CameraActivity mActivity;
@@ -60,6 +61,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
     private View mReviewDoneButton;
     private View mReviewPlayButton;
     private ShutterButton mShutterButton;
+    private PauseButton mPauseButton;
     private TextView mRecordingTimeView;
     private LinearLayout mLabelsLinearLayout;
     private View mTimeLapseLabel;
@@ -88,6 +90,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
         initializeMiscControls();
         initializeControlByIntent();
         initializeOverlay();
+        initializePauseButton();
     }
 
     private void initializeControlByIntent() {
@@ -260,6 +263,12 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
         mLabelsLinearLayout = (LinearLayout) mRootView.findViewById(R.id.labels);
     }
 
+    private void initializePauseButton() {
+        mPauseButton = (PauseButton) mRootView.findViewById(R.id.video_pause);
+        mGestures.addUnclickableArea(mPauseButton);
+        mPauseButton.setOnPauseButtonListener(this);
+    }
+
     public void updateOnScreenIndicators(Parameters param, ComboPreferences prefs) {
       mOnScreenIndicators.updateFlashOnScreenIndicator(param.getFlashMode());
       boolean location = RecordLocationPreference.get(
@@ -397,6 +406,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mActivity.hideSwitcher();
             mRecordingTimeView.setText("");
             mRecordingTimeView.setVisibility(View.VISIBLE);
+            mPauseButton.setVisibility(View.VISIBLE);
             // The camera is not allowed to be accessed in older api levels during
             // recording. It is therefore necessary to hide the zoom UI on older
             // platforms.
@@ -409,6 +419,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mShutterButton.setImageResource(R.drawable.btn_new_shutter_video);
             mActivity.showSwitcher();
             mRecordingTimeView.setVisibility(View.GONE);
+            mPauseButton.setVisibility(View.GONE);
             if (!ApiHelper.HAS_ZOOM_WHEN_RECORDING && zoomSupported) {
                 // TODO: enable zoom UI here.
             }
@@ -541,5 +552,25 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mGestures.removeTouchReceiver(mPreviewThumb);
             mPreviewThumb.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onButtonPause() {
+        mRecordingTimeView.setCompoundDrawablesWithIntrinsicBounds(
+            R.drawable.ic_pausing_indicator, 0, 0, 0);
+        mController.onButtonPause();
+    }
+
+    @Override
+    public void onButtonContinue() {
+        mRecordingTimeView.setCompoundDrawablesWithIntrinsicBounds(
+            R.drawable.ic_recording_indicator, 0, 0, 0);
+        mController.onButtonContinue();
+    }
+
+    public void resetPauseButton() {
+        mRecordingTimeView.setCompoundDrawablesWithIntrinsicBounds(
+            R.drawable.ic_recording_indicator, 0, 0, 0);
+        mPauseButton.setPaused(false);
     }
 }

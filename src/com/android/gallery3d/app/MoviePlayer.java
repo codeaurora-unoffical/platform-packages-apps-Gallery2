@@ -409,6 +409,10 @@ public class MoviePlayer implements
         dialog.show();
     }
 
+    public void setDefaultScreenMode() {
+        mController.setDefaultScreenMode();
+    }
+
     public boolean onPause() {
         if (LOG) {
             Log.v(TAG, "onPause() isLiveStreaming()=" + isLiveStreaming());
