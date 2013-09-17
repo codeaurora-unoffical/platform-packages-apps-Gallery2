@@ -268,7 +268,7 @@ public class PreviewGestures
                     // moved too far and no timeout yet, no focus or pie
                     cancelPie();
                     int dir = getSwipeDirection(m);
-                    if (dir == DIR_LEFT) {
+                    if ((dir == DIR_LEFT) || (dir == DIR_RIGHT)) {
                         mMode = MODE_MODULE;
                         return mActivity.superDispatchTouchEvent(m);
                     } else {
