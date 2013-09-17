@@ -1288,7 +1288,7 @@ public class PanoramaModule implements CameraModule,
 
     @Override
     public boolean updateStorageHintOnResume() {
-        return false;
+        return true;
     }
 
     @Override
@@ -1311,6 +1311,11 @@ public class PanoramaModule implements CameraModule,
 
     @Override
     public void onMediaSaveServiceConnected(MediaSaveService s) {
+        // do nothing.
+    }
+
+    @Override
+    public void onFirstLevelMenuDismiss() {
         // do nothing.
     }
 }
