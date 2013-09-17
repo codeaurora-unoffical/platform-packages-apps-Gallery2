@@ -73,6 +73,8 @@ import com.android.gallery3d.exif.Rational;
 import com.android.gallery3d.filtershow.FilterShowActivity;
 import com.android.gallery3d.filtershow.crop.CropExtras;
 import com.android.gallery3d.util.UsageStatistics;
+import com.android.internal.util.MemInfoReader;
+import android.app.ActivityManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -134,6 +136,7 @@ public class PhotoModule
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
     private static final int SET_PHOTO_UI_PARAMS = 15;
+    private static final int CONTINUE_LONGSHOT = 17;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -144,6 +147,15 @@ public class PhotoModule
     // This is the timeout to keep the camera in onPause for the first time
     // after screen on if the activity is started from secure lock screen.
     private static final int KEEP_CAMERA_TIMEOUT = 1000; // ms
+
+    // Used for check memory status for longshot mode
+    private static final int LONGSHOT_SLOWDOWN_THRESHOLD = 40;
+    private static final int LONGSHOT_CANCEL_THRESHOLD = 20;
+    private static final int LONGSHOT_SLOWDOWN_DELAY = 500; //ms
+    private MemInfoReader mMemInfoReader = new MemInfoReader();
+    private ActivityManager mAm;
+    private long SECONDARY_SERVER_MEM;
+    private long mMB = 1024 * 1024;
 
     // copied from Camera hierarchy
     private CameraActivity mActivity;
@@ -493,6 +505,12 @@ public class PhotoModule
                         mPreferences);
                     break;
                }
+               case CONTINUE_LONGSHOT: {
+                    if(mCameraState == LONGSHOT &&
+                        mLongshotActive ){
+                        continueLongshot();
+                    }
+               }
             }
         }
     }
@@ -507,6 +525,8 @@ public class PhotoModule
         mCameraId = getPreferredCameraId(mPreferences);
 
         mContentResolver = mActivity.getContentResolver();
+
+        mAm = (ActivityManager)(mActivity.getSystemService(Context.ACTIVITY_SERVICE));
 
         // To reduce startup time, open the camera and start the preview in
         // another thread.
@@ -550,6 +570,10 @@ public class PhotoModule
         RightValue = (TextView)mRootView.findViewById(R.id.skintoneright);
         LeftValue = (TextView)mRootView.findViewById(R.id.skintoneleft);
         Storage.init(mPreferences);
+
+        ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+        mAm.getMemoryInfo(memInfo);
+        SECONDARY_SERVER_MEM = memInfo.secondaryServerThreshold;
 
     }
 
@@ -853,6 +877,59 @@ public class PhotoModule
         return mUI.dispatchTouchEvent(m);
     }
 
+    private boolean isLongshotSlowDownNeeded(){
+
+        long totalMemory = Runtime.getRuntime().totalMemory() / mMB;
+        long freeMemory = Runtime.getRuntime().freeMemory() / mMB;
+        long maxMemory = Runtime.getRuntime().maxMemory() / mMB;
+
+        long remainMemory = maxMemory - totalMemory;
+
+        mMemInfoReader.readMemInfo();
+        long availMem = mMemInfoReader.getFreeSize() + mMemInfoReader.getCachedSize()
+            - SECONDARY_SERVER_MEM;
+        availMem = availMem/ mMB;
+
+        Log.d(TAG, "Longshot memory status. remain memory is "+remainMemory+"MB, available memroy is "+availMem+"MB");
+
+        if( availMem > 0 ){
+            if( remainMemory <= LONGSHOT_SLOWDOWN_THRESHOLD &&
+                remainMemory > LONGSHOT_CANCEL_THRESHOLD ){
+                Log.d(TAG, "memory limited, need slow down snapshot frame rate.");
+                return true;
+            }else if(remainMemory <= LONGSHOT_CANCEL_THRESHOLD){
+                Log.d(TAG, "memory used up, need cancel longshot.");
+                mLongshotActive = false;
+                Toast.makeText(mActivity,R.string.msg_cancel_longshot_for_limited_memory,
+                    Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }else{
+            Log.d(TAG, "system available memory is limited, cancel longshot.");
+            mLongshotActive = false;
+            Toast.makeText(mActivity,R.string.msg_cancel_longshot_for_limited_memory,
+                Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void continueLongshot(){
+        Log.d(TAG, "continueLongshot");
+        if ( mLongshotSave ) {
+            mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                    mRawPictureCallback, mPostViewPictureCallback,
+                    new LongshotPictureCallback(null), mCameraState,
+                    mFocusManager.getFocusState());
+        } else {
+            mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                    mRawPictureCallback, mPostViewPictureCallback,
+                    new JpegPictureCallback(null), mCameraState,
+                    mFocusManager.getFocusState());
+        }
+    }
+
     private final class LongshotShutterCallback
             implements android.hardware.Camera.ShutterCallback {
 
@@ -890,17 +967,16 @@ public class PhotoModule
                     return;
                 }
 
-                if ( mLongshotSave ) {
-                    mCameraDevice.takePicture2(new LongshotShutterCallback(),
-                            mRawPictureCallback, mPostViewPictureCallback,
-                            new LongshotPictureCallback(null), mCameraState,
-                            mFocusManager.getFocusState());
-                } else {
-                    mCameraDevice.takePicture2(new LongshotShutterCallback(),
-                            mRawPictureCallback, mPostViewPictureCallback,
-                            new JpegPictureCallback(null), mCameraState,
-                            mFocusManager.getFocusState());
+                if( isLongshotSlowDownNeeded() ){
+                    if(mLongshotActive){
+                        Log.d(TAG, "slow down snapshot. Take picture later.");
+                        mHandler.sendEmptyMessageDelayed(CONTINUE_LONGSHOT, LONGSHOT_SLOWDOWN_DELAY);
+                    }
+                    return;
                 }
+
+                continueLongshot();
+
             }
         }
     }
@@ -1722,8 +1798,11 @@ public class PhotoModule
     public void onShutterButtonLongClick() {
         if (mFocusManager.isZslEnabled()
                 && (null != mCameraDevice) && (mCameraState == IDLE)) {
-            int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
-            boolean enable = ( prop == 1 );
+            // Enable Longshot by default
+            //int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
+            //boolean enable = ( prop == 1 );
+            int prop;
+            boolean enable = true;
             if ( enable ) {
                 prop = SystemProperties.getInt(PERSIST_LONG_SAVE, 0);
                 mLongshotSave = ( prop == 1 );
