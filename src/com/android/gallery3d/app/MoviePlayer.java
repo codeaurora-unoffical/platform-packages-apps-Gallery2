@@ -452,8 +452,7 @@ public class MoviePlayer implements
         mVideoLastDuration = duration > 0 ? duration : mVideoLastDuration;
         mBookmarker.setBookmark(mMovieItem.getUri(), mVideoPosition, mVideoLastDuration);
         long end1 = System.currentTimeMillis();
-        // change suspend to release for sync paused and killed case
-        mVideoView.stopPlayback();
+        mVideoView.suspend();
         mResumeableTime = System.currentTimeMillis() + RESUMEABLE_TIMEOUT;
         mVideoView.setResumed(false);// avoid start after surface created
         // Workaround for last-seek frame difference
@@ -503,7 +502,8 @@ public class MoviePlayer implements
                     pauseVideo();
                     break;
                 default:
-                    doStartVideo(true, mVideoPosition, mVideoLastDuration);
+                    mVideoView.seekTo(mVideoPosition);
+                    mVideoView.resume();
                     pauseVideoMoreThanThreeMinutes();
                     break;
             }
