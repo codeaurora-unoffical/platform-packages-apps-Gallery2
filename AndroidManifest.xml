@@ -275,7 +275,7 @@
 
         <activity android:name="com.android.gallery3d.util.ViewGifImage"
                 android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-                android:configChanges="orientation|keyboardHidden|keyboard|navigation">
+                android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation">
             <intent-filter>
                 <action android:name="com.android.gallery3d.VIEW_GIF" />
                 <data android:mimeType="image/gif" />
