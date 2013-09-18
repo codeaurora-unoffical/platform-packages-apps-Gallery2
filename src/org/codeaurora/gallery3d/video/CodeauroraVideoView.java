@@ -367,6 +367,22 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
                 if (LOG) {
                     Log.v(TAG, "surfaceCreated(" + holder + ")");
                 }
+                if (mCurrentState == STATE_SUSPENDED) {
+                    mSurfaceHolder = holder;
+                    mMediaPlayer.setDisplay(mSurfaceHolder);
+                    if (mMediaPlayer.resume()) {
+                        mCurrentState = STATE_PREPARED;
+                        if (mSeekWhenPrepared != 0) {
+                            seekTo(mSeekWhenPrepared);
+                        }
+                        if (mTargetState == STATE_PLAYING) {
+                            start();
+                        }
+                        return;
+                    } else {
+                        release(false);
+                    }
+                }
                 mSurfaceHolder = holder;
                 openVideo();
             }
@@ -379,6 +395,10 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
                 mSurfaceHolder = null;
                 if (mMediaController != null) {
                     mMediaController.hide();
+                }
+                if (isHTTPStreaming(mUri) && mCurrentState == STATE_SUSPENDED) {
+                    // Don't call release() while run suspend operation
+                    return;
                 }
                 release(true);
             }
@@ -807,7 +827,28 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
     }
 
     public void resume() {
-        setResumed(true);
+        // HTTP streaming (with suspended status) will call mMediaPlayer->resume(), others will call openVideo()
+        if (mCurrentState == STATE_SUSPENDED) {
+            if (mSurfaceHolder != null) {
+                // The surface hasn't been destroyed
+                if (mMediaPlayer.resume()) {
+                    mCurrentState = STATE_PREPARED;
+                    if (mSeekWhenPrepared !=0) {
+                        seekTo(mSeekWhenPrepared);
+                    }
+                    if (mTargetState == STATE_PLAYING) {
+                        start();
+                    }
+                    return;
+                } else {
+                     // resume failed, so call release() before openVideo()
+                     release(false);
+                }
+            } else {
+                // The surface has been destroyed, resume operation will be done after surface created
+                return;
+            }
+        }
         openVideo();
     }
 
