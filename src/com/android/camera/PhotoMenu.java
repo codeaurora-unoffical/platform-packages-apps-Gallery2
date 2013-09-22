@@ -92,7 +92,6 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_JPEG_QUALITY,
                 CameraSettings.KEY_ZSL,
                 CameraSettings.KEY_BURST_NUM,
-                CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
         mOtherKeys2 = new String[] {
@@ -188,7 +187,6 @@ public class PhotoMenu extends PieController
             mRenderer.addItem(item);
         }
   }
-
     @Override
     // Hit when an item in a popup gets selected
     public void onListPrefChanged(ListPreference pref) {

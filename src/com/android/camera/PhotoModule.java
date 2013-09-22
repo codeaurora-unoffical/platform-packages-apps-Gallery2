@@ -569,7 +569,6 @@ public class PhotoModule
         Title = (TextView)mRootView.findViewById(R.id.skintonetitle);
         RightValue = (TextView)mRootView.findViewById(R.id.skintoneright);
         LeftValue = (TextView)mRootView.findViewById(R.id.skintoneleft);
-        Storage.init(mPreferences);
 
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
         mAm.getMemoryInfo(memInfo);
@@ -2956,8 +2955,6 @@ public class PhotoModule
                 disableSkinToneSeekBar();
             }
         }
-        Storage.updateSavePath();
-        mActivity.updateStorageSpaceAndHint();
     }
 
     @Override
