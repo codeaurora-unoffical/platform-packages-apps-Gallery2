@@ -75,7 +75,6 @@ import java.util.HashMap;
 
 public class VideoModule implements CameraModule,
     VideoController,
-    FocusOverlayManager.Listener,
     CameraPreference.OnPreferenceChangedListener,
     ShutterButton.OnShutterButtonListener,
     MediaRecorder.OnErrorListener,
@@ -182,15 +181,10 @@ public class VideoModule implements CameraModule,
 
     private LocationManager mLocationManager;
 
-    private final AutoFocusCallback mAutoFocusCallback =
-            new AutoFocusCallback();
-
     private int mPendingSwitchCameraId;
 
     private static final String KEY_PREVIEW_FORMAT = "preview-format";
     private static final String QC_FORMAT_NV12_VENUS = "nv12-venus";
-    // This handles everything about focus.
-    private FocusOverlayManager mFocusManager;
 
     private final Handler mHandler = new MainHandler();
     private VideoUI mUI;
@@ -232,7 +226,6 @@ public class VideoModule implements CameraModule,
         @Override
         public void run() {
             openCamera();
-            if (mFocusManager == null) initializeFocusManager();
         }
     }
 
@@ -260,10 +253,6 @@ public class VideoModule implements CameraModule,
         } catch (CameraDisabledException e) {
             mActivity.mCameraDisabled = true;
         }
-    }
-
-    public void onScreenSizeChanged(int width, int height, int previewWidth, int previewHeight) {
-        if (mFocusManager != null) mFocusManager.setPreviewSize(width, height);
     }
 
     //QCOM data Members Starts here
@@ -541,48 +530,10 @@ public class VideoModule implements CameraModule,
         Storage.init(mPreferences);
     }
 
-    @Override
-    public void autoFocus() {
-        Log.e(TAG, "start autoFocus.");
-        mActivity.mCameraDevice.autoFocus(mAutoFocusCallback);
-    }
-
-    @Override
-    public void cancelAutoFocus() {
-        mActivity.mCameraDevice.cancelAutoFocus();
-		mParameters.setFocusAreas(mFocusManager.getFocusAreas());
-		mParameters.setMeteringAreas(mFocusManager.getMeteringAreas());
-		mActivity.mCameraDevice.setParameters(mParameters);
-    }
-
-    @Override
-    public boolean capture() {
-       return true;
-    }
-
-    @Override
-    public void startFaceDetection() {
-    }
-
-    @Override
-    public void stopFaceDetection() {
-    }
-
-    @Override
-    public void setFocusParameters() {
-        mParameters.setFocusAreas(mFocusManager.getFocusAreas());
-		mParameters.setMeteringAreas(mFocusManager.getMeteringAreas());
-		mActivity.mCameraDevice.setParameters(mParameters);
-    }
-
     // SingleTapListener
     // Preview area is touched. Take a picture.
     @Override
     public void onSingleTapUp(View view, int x, int y) {
-        // Do not trigger touch focus if popup window is opened.
-        if (mUI.removeTopLevelPopup()) return;
-
-        mFocusManager.onSingleTapUp(x, y);
         if (mMediaRecorderRecording && effectsActive()) {
             new RotateTextToast(mActivity, R.string.disable_video_snapshot_hint,
                     mOrientation).show();
@@ -608,6 +559,11 @@ public class VideoModule implements CameraModule,
         mActivity.mCameraDevice.setParameters(mParameters);
 
         Log.v(TAG, "Video snapshot start");
+        mActivity.mCameraDevice.takePicture(null, null, null, new JpegPictureCallback(loc));
+        showVideoSnapshotUI(true);
+        mSnapshotInProgress = true;
+        UsageStatistics.onEvent(UsageStatistics.COMPONENT_CAMERA,
+                UsageStatistics.ACTION_CAPTURE_DONE, "VideoSnapshot");
     }
 
     @Override
@@ -773,19 +729,6 @@ public class VideoModule implements CameraModule,
     @Override
     public void onShutterButtonFocus(boolean pressed) {
         mUI.setShutterPressed(pressed);
-    }
-
-    private final class AutoFocusCallback
-            implements android.hardware.Camera.AutoFocusCallback {
-        @Override
-        public void onAutoFocus(
-                boolean focused, android.hardware.Camera camera) {
-            Log.e(TAG, "AutoFocusCallback, mPaused=" + mPaused);
-            if (mPaused) return;
-
-            //setCameraState(IDLE);
-            mFocusManager.onAutoFocus(focused, false);
-        }
     }
 
     private void qcomReadVideoPreferences() {
@@ -1029,10 +972,6 @@ public class VideoModule implements CameraModule,
             // We need to consider display rotation ourselves.
             mCameraDisplayOrientation = Util.getDisplayOrientation(mDisplayRotation, mCameraId);
         }
-        if (mFocusManager != null) {
-            int mDisplayOrientation = Util.getDisplayOrientation(mDisplayRotation, mCameraId);
-            mFocusManager.setDisplayOrientation(mDisplayOrientation);
-        }
         // GLRoot also uses the DisplayRotation, and needs to be told to layout to update
         mActivity.getGLRoot().requestLayoutContentPane();
     }
@@ -1068,7 +1007,6 @@ public class VideoModule implements CameraModule,
 
         try {
             if (!effectsActive()) {
-                mFocusManager.setAeAwbLock(false); // Unlock AE and AWB.
                 if (ApiHelper.HAS_SURFACE_TEXTURE) {
                     SurfaceTexture surfaceTexture = ((CameraScreenNail) mActivity.mCameraScreenNail)
                             .getSurfaceTexture();
@@ -1103,7 +1041,6 @@ public class VideoModule implements CameraModule,
                 }
             });
         }
-        mFocusManager.onPreviewStarted();
 
     }
 
@@ -1116,7 +1053,6 @@ public class VideoModule implements CameraModule,
     public void stopPreview() {
         mActivity.mCameraDevice.stopPreview();
         mPreviewing = false;
-        if (mFocusManager != null) mFocusManager.onPreviewStopped();
     }
 
     // Closing the effects out. Will shut down the effects graph.
@@ -1183,7 +1119,6 @@ public class VideoModule implements CameraModule,
         mActivity.mCameraDevice = null;
         mPreviewing = false;
         mSnapshotInProgress = false;
-        mFocusManager.onCameraReleased();
     }
 
     private void releasePreviewResources() {
@@ -1246,28 +1181,6 @@ public class VideoModule implements CameraModule,
 
     @Override
     public void onPauseAfterSuper() {
-        if (mFocusManager != null) mFocusManager.removeMessages();
-    }
-
-    /**
-     * The focus manager is the first UI related element to get initialized,
-     * and it requires the RenderOverlay, so initialize it here
-     */
-    private void initializeFocusManager() {
-        // Create FocusManager object. startPreview needs it.
-        // if mFocusManager not null, reuse it
-        // otherwise create a new instance
-        if (mFocusManager != null) {
-            mFocusManager.removeMessages();
-        } else {
-            CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
-            boolean mirror = (info.facing == CameraInfo.CAMERA_FACING_FRONT);
-            String[] defaultFocusModes = mActivity.getResources().getStringArray(
-                    R.array.pref_camera_focusmode_default_array);
-            mFocusManager = new FocusOverlayManager(mPreferences, defaultFocusModes,
-                    mParameters, this, mirror,
-                    mActivity.getMainLooper(), mUI);
-        }
     }
 
     @Override
@@ -1360,7 +1273,6 @@ public class VideoModule implements CameraModule,
     }
 
     private void setupMediaRecorderPreviewDisplay() {
-        mFocusManager.resetTouchFocus();
         // Nothing to do here if using SurfaceTexture.
         if (!ApiHelper.HAS_SURFACE_TEXTURE) {
             mMediaRecorder.setPreviewDisplay(mUI.getSurfaceHolder().getSurface());
@@ -2293,8 +2205,8 @@ public class VideoModule implements CameraModule,
 
         // Set continuous autofocus.
         List<String> supportedFocus = mParameters.getSupportedFocusModes();
-        if (isSupported(Parameters.FOCUS_MODE_AUTO, supportedFocus)) {
-            mParameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
+        if (isSupported(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO, supportedFocus)) {
+            mParameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
 
         mParameters.set(Util.RECORDING_HINT, Util.TRUE);
@@ -2333,11 +2245,6 @@ public class VideoModule implements CameraModule,
         mParameters = mActivity.mCameraDevice.getParameters();
 
         updateCameraScreenNailSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
-
-        CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        int width = screenNail.getWidth();
-        int height = screenNail.getHeight();
-        mFocusManager.setPreviewSize(width, height);
     }
 
     private void updateCameraScreenNailSize(int width, int height) {
@@ -2362,8 +2269,6 @@ public class VideoModule implements CameraModule,
         if (mStartPreviewThread == null && screenNail.getSurfaceTexture() == null) {
             screenNail.acquireSurfaceTexture();
         }
-
-        mFocusManager.setPreviewSize(width, height);
     }
 
     @Override
@@ -2522,7 +2427,6 @@ public class VideoModule implements CameraModule,
 
         closeCamera();
         mUI.collapseCameraControls();
-        if (mFocusManager != null) mFocusManager.removeMessages();
         // Restart the camera and initialize the UI. From onCreate.
         mPreferences.setLocalId(mActivity, mCameraId);
         CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
@@ -2532,11 +2436,6 @@ public class VideoModule implements CameraModule,
         initializeVideoSnapshot();
         resizeForPreviewAspectRatio();
         initializeVideoControl();
-
-        CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
-        boolean mirror = (info.facing == CameraInfo.CAMERA_FACING_FRONT);
-        mFocusManager.setMirror(mirror);
-        mFocusManager.setParameters(mParameters);
 
         // From onResume
         mUI.initializeZoom(mParameters);
