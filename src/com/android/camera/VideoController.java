@@ -33,6 +33,4 @@ public interface VideoController extends OnShutterButtonListener {
     public void onSingleTapUp(View view, int x, int y);
 
     public void stopPreview();
-
-    public void onScreenSizeChanged(int width, int height, int previewWidth, int previewHeight);
 }
