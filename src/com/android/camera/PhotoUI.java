@@ -333,10 +333,6 @@ public class PhotoUI implements PieListener,
     }
 
     public boolean dispatchTouchEvent(MotionEvent m) {
-        if (Storage.getSavePlaceChanged()) {
-            Storage.setSavePlaceChanged(false);
-            mActivity.keepCameraScreenNail();
-        }
         if (mGestures != null && mRenderOverlay != null) {
             return mGestures.dispatchTouch(m);
         }
@@ -403,10 +399,6 @@ public class PhotoUI implements PieListener,
         // Remove the top level popup or dialog box and return true if there's any
         if (mPopup != null) {
             dismissPopup();
-            if (Storage.getSavePlaceChanged()) {
-                Storage.setSavePlaceChanged(false);
-                mActivity.keepCameraScreenNail();
-            }
             return true;
         }
         return false;

@@ -71,8 +71,7 @@ public class VideoMenu extends PieController
                 CameraSettings.KEY_VIDEO_ENCODER,
                 CameraSettings.KEY_AUDIO_ENCODER,
                 CameraSettings.KEY_VIDEO_DURATION,
-                CameraSettings.KEY_RECORD_LOCATION,
-                CameraSettings.KEY_CAMERA_SAVEPATH
+                CameraSettings.KEY_RECORD_LOCATION
         };
 
        //settings popup
@@ -254,7 +253,4 @@ public class VideoMenu extends PieController
         mPopupStatus = POPUP_SECOND_LEVEL;
     }
 
-    public void afterMenuDismiss() {
-        mActivity.keepCameraScreenNail();
-    }
 }
