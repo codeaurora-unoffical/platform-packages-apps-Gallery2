@@ -561,5 +561,23 @@
         <item>@string/pref_camera_video_hdr_value_off</item>
         <item>@string/pref_camera_video_hdr_value_on</item>
     </string-array>
+
+     <!-- Burst shot dialog box entries -->
+    <string-array name="pref_camera_burst_num_entries" translatable="false">
+    <item>@string/pref_camera_burst_num_entry_10</item>
+    <item>@string/pref_camera_burst_num_entry_20</item>
+    <item>@string/pref_camera_burst_num_entry_40</item>
+    <item>@string/pref_camera_burst_num_entry_99</item>
+    <item>@string/pref_camera_burst_num_entry_on</item>
+    </string-array>
+
+    <string-array name="pref_camera_burst_num_entryvalues" translatable="false">
+    <item>@string/pref_camera_burst_num_value_10</item>
+    <item>@string/pref_camera_burst_num_value_20</item>
+    <item>@string/pref_camera_burst_num_value_40</item>
+    <item>@string/pref_camera_burst_num_value_99</item>
+    <item>@string/pref_camera_burst_num_value_on</item>
+    </string-array>
+
 </resources>
 

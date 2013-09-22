@@ -269,6 +269,7 @@ public class CameraManager {
                         break;
 
                     case SET_LONGSHOT:
+                        Log.d(TAG, "SET_LONGSHOT: arg1="+msg.arg1);
                         mCamera.setLongshot(msg.arg1 == 1);
                         break;
 

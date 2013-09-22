@@ -180,6 +180,10 @@ public class PhotoModule
     private boolean mContinousFocusSupported;
     private boolean mTouchAfAecFlag;
     private boolean mLongshotSave = false;
+    private int mLongshotSetNum = CameraSettings.DEFAULT_LONGSHOT_NUM;
+    private int mLongshotReceiveCount = 0;
+    private boolean mLongshotActive = false;
+    private boolean mLongshotAlwaysOn = false;
 
     // The degrees of the device rotated clockwise from its natural orientation.
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
@@ -836,6 +840,13 @@ public class PhotoModule
         }
     }
 
+    public void cancelLongShot() {
+        Log.d(TAG, "cancel longshot mode");
+        mCameraDevice.setLongshot(false);
+        setCameraState(IDLE);
+        mFocusManager.resetTouchFocus();
+    }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent m) {
         if (mCameraState == SWITCHING_CAMERA) return true;
@@ -853,6 +864,29 @@ public class PhotoModule
             synchronized(mCameraDevice) {
 
                 if ( mCameraState != LONGSHOT ) {
+                    return;
+                }
+
+                mCameraDevice.refreshParameters();
+                //need check whether we get all pictures
+                mParameters = mCameraDevice.getParameters();
+                String str = mParameters.get("longshot-count");
+                if(str != null){
+                    mLongshotReceiveCount = Integer.parseInt(str);
+                }else{
+                    mLongshotReceiveCount++;
+                }
+                Log.d(TAG, "mLongshotReceiveCount="+mLongshotReceiveCount+", mLongshotSetNum="+mLongshotSetNum);
+
+                if(!mLongshotActive){
+                    Log.d(TAG, "longshot mode is canceled");
+                    return;
+                }
+                if(!mLongshotAlwaysOn &&
+                    mLongshotReceiveCount >= mLongshotSetNum){
+                    //we can finish longshot mode now.
+                    Log.d(TAG, "Longshot - received expected number of shutter.");
+                    mLongshotActive = false;
                     return;
                 }
 
@@ -1063,6 +1097,14 @@ public class PhotoModule
                         && (mCameraState != LONGSHOT)){
                 mFocusManager.resetTouchFocus();
                 setCameraState(IDLE);
+            }
+
+            //in longshot mode, when we received all images, disable it.
+            if(mCameraState == LONGSHOT &&
+                !mLongshotActive &&
+                mReceivedSnapNum >= mLongshotReceiveCount){
+                Log.d(TAG, "All images are received in longshot.");
+                cancelLongShot();
             }
 
             if (!mIsImageCaptureIntent) {
@@ -1594,10 +1636,13 @@ public class PhotoModule
                 || (mCameraState == PREVIEW_STOPPED)) return;
 
         synchronized(mCameraDevice) {
-           if (mCameraState == LONGSHOT) {
-               mCameraDevice.setLongshot(false);
-               setCameraState(IDLE);
-               mFocusManager.resetTouchFocus();
+           if (mCameraState == LONGSHOT &&
+                pressed == false) {
+               Log.d(TAG, "receive Button Up message.");
+               //longshot should not be active any more
+               //but we need wait all jpeg images arrived before
+               //cancel longshot.
+               mLongshotActive = false;
            }
         }
 
@@ -1682,6 +1727,21 @@ public class PhotoModule
             if ( enable ) {
                 prop = SystemProperties.getInt(PERSIST_LONG_SAVE, 0);
                 mLongshotSave = ( prop == 1 );
+                // Set longshot number
+                String longshot_num = mPreferences.getString(
+                    CameraSettings.KEY_BURST_NUM,
+                    mActivity.getString(R.string.pref_camera_burst_num_default));
+                if(longshot_num.equals("on")){
+                    //longshot will be active until release button
+                    mLongshotAlwaysOn = true;
+                }else{
+                    mLongshotSetNum  = Integer.parseInt(longshot_num);
+                    mLongshotAlwaysOn = false;
+                }
+                Log.v(TAG, "Longshot mLongshotAlwaysOn=" + mLongshotAlwaysOn +
+                    ", number =" + mLongshotSetNum);
+                mLongshotReceiveCount = 0;
+                mLongshotActive = true;
                 mCameraDevice.setLongshot(true);
                 setCameraState(PhotoController.LONGSHOT);
                 mFocusManager.doSnap();

@@ -91,6 +91,7 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_PICTURE_FORMAT,
                 CameraSettings.KEY_JPEG_QUALITY,
                 CameraSettings.KEY_ZSL,
+                CameraSettings.KEY_BURST_NUM,
                 CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
