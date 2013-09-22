@@ -108,6 +108,12 @@ public class Storage {
     public static Uri addImage(ContentResolver resolver, String title,
             long date, Location location, int orientation, ExifInterface exif,
             byte[] jpeg, int width, int height, String pictureFormat) {
+        int jpegLength = 0;
+
+        if ( jpeg != null ) {
+            jpegLength = jpeg.length;
+        }
+
         // Save the image.
         String path = generateFilepath(title, pictureFormat);
         if (exif != null && (pictureFormat == null ||
@@ -117,7 +123,7 @@ public class Storage {
             } catch (Exception e) {
                 Log.e(TAG, "Failed to write data", e);
             }
-        } else {
+        } else if (jpeg != null) {
             if (!(pictureFormat.equalsIgnoreCase("jpeg") || pictureFormat == null)) {
                  File dir = new File(RAW_DIRECTORY);
                  dir.mkdirs();
@@ -125,7 +131,7 @@ public class Storage {
             writeFile(path, jpeg);
         }
         return addImage(resolver, title, date, location, orientation,
-                jpeg.length, path, width, height, pictureFormat);
+                jpegLength, path, width, height, pictureFormat);
     }
 
     // Add the image to media store.
