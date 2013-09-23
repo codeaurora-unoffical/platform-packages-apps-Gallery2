@@ -134,6 +134,7 @@ public class PhotoModule
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
     private static final int SET_PHOTO_UI_PARAMS = 15;
+    private static final int CONFIGURE_SKIN_TONE_FACTOR = 16;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -484,6 +485,14 @@ public class PhotoModule
                         mPreferences);
                     break;
                }
+               case CONFIGURE_SKIN_TONE_FACTOR: {
+                    if (isCameraIdle()) {
+                        mParameters = mCameraDevice.getParameters();
+                        mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
+                        mCameraDevice.setParameters(mParameters);
+                    }
+                    break;
+               }
             }
         }
     }
@@ -640,6 +649,7 @@ public class PhotoModule
         closeCamera();
         mUI.collapseCameraControls();
         mUI.clearFaces();
+        disableSkinToneSeekBar();
         if (mFocusManager != null) mFocusManager.removeMessages();
 
         // Restart the camera and initialize the UI. From onCreate.
@@ -1111,9 +1121,8 @@ public class PhotoModule
             }
             if(value != mskinToneValue && mCameraDevice != null) {
                 mskinToneValue = value;
-                mParameters = mCameraDevice.getParameters();
-                mParameters.set("skinToneEnhancement", String.valueOf(mskinToneValue));
-                mCameraDevice.setParameters(mParameters);
+                Message msg = mHandler.obtainMessage(CONFIGURE_SKIN_TONE_FACTOR, mskinToneValue, 0);
+                mHandler.sendMessage(msg);
             }
         }
 
@@ -2307,10 +2316,16 @@ public class PhotoModule
                 mFaceDetectionEnabled = false;
             }
         }
-        //Set Skin Tone Correction factor
-        Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
-        if(mSeekBarInitialized == true)
-             mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
+        // skin tone ie enabled only for auto,party and portrait BSM
+        // when color effects are not enabled
+        if((Parameters.SCENE_MODE_PARTY.equals(mSceneMode) ||
+            Parameters.SCENE_MODE_PORTRAIT.equals(mSceneMode)) &&
+            (Parameters.EFFECT_NONE.equals(colorEffect))) {
+             //Set Skin Tone Correction factor
+             Log.v(TAG, "set tone bar: mSceneMode = " + mSceneMode);
+             if(mSeekBarInitialized == true)
+                 mHandler.sendEmptyMessage(SET_SKIN_TONE_FACTOR);
+        }
 
         //Set Histogram
         String histogram = mPreferences.getString(
