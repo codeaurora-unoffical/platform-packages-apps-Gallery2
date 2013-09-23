@@ -48,11 +48,21 @@ public class VideoMenu extends PieController
     private int mPopupStatus;
     private int popupNum;
     private CameraActivity mActivity;
+    private boolean mPopupSecondLevelMenu = false;
+    private OnFirstLevelMenuDismiss mOnFirstLevelMenuDismissHandler = null;
 
+    public interface OnFirstLevelMenuDismiss {
+        public void doAfterFirstLevelMenuDismiss();
+    }
+
+    public void setOnFirstLevelMenuDismissHandler(OnFirstLevelMenuDismiss handler) {
+        mOnFirstLevelMenuDismissHandler = handler;
+    }
     public VideoMenu(CameraActivity activity, VideoUI ui, PieRenderer pie) {
         super(activity, pie);
         mUI = ui;
         mActivity = activity;
+        setOnFirstLevelMenuDismissHandler(activity);
     }
 
     public void initialize(PreferenceGroup group) {
@@ -71,7 +81,8 @@ public class VideoMenu extends PieController
                 CameraSettings.KEY_VIDEO_ENCODER,
                 CameraSettings.KEY_AUDIO_ENCODER,
                 CameraSettings.KEY_VIDEO_DURATION,
-                CameraSettings.KEY_RECORD_LOCATION
+                CameraSettings.KEY_RECORD_LOCATION,
+                CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
        //settings popup
@@ -220,7 +231,13 @@ public class VideoMenu extends PieController
                 if(popupNum == 1) mUI.showPopup(mPopup1);
                 else if(popupNum == 2) mUI.showPopup(mPopup2);
             }
+            mPopupSecondLevelMenu = false;
         } else {
+            if (!mPopupSecondLevelMenu) {
+                if (mOnFirstLevelMenuDismissHandler != null) {
+                    mOnFirstLevelMenuDismissHandler.doAfterFirstLevelMenuDismiss();
+                }
+            }
             initializePopup();
         }
     }
@@ -234,6 +251,7 @@ public class VideoMenu extends PieController
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
 
+        mPopupSecondLevelMenu = true;
         if (CameraSettings.KEY_VIDEO_TIME_LAPSE_FRAME_INTERVAL.equals(pref.getKey())) {
             TimeIntervalPopup timeInterval = (TimeIntervalPopup) inflater.inflate(
                     R.layout.time_interval_popup, null, false);

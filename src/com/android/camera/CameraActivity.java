@@ -45,7 +45,8 @@ import com.android.gallery3d.common.ApiHelper;
 import com.android.gallery3d.util.LightCycleHelper;
 
 public class CameraActivity extends ActivityBase
-        implements CameraSwitcher.CameraSwitchListener {
+        implements CameraSwitcher.CameraSwitchListener,
+    PhotoMenu.OnFirstLevelMenuDismiss, VideoMenu.OnFirstLevelMenuDismiss {
     public static final int PHOTO_MODULE_INDEX = 0;
     public static final int VIDEO_MODULE_INDEX = 1;
     public static final int PANORAMA_MODULE_INDEX = 2;
@@ -562,5 +563,10 @@ public class CameraActivity extends ActivityBase
 
     public MediaSaveService getMediaSaveService() {
         return mMediaSaveService;
+    }
+
+    @Override
+    public void doAfterFirstLevelMenuDismiss() {
+        mCurrentModule.onFirstLevelMenuDismiss();
     }
 }
