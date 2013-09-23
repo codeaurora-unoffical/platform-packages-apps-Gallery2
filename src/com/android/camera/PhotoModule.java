@@ -1337,7 +1337,6 @@ public class PhotoModule
                 CameraSettings.KEY_WHITE_BALANCE, whiteBalance,
                 CameraSettings.KEY_FOCUS_MODE, focusMode,
                 CameraSettings.KEY_EXPOSURE, exposureMode,
-                CameraSettings.KEY_TOUCH_AF_AEC, touchMode,
                 CameraSettings.KEY_AUTOEXPOSURE, autoExposure,
                 CameraSettings.KEY_SATURATION, saturation,
                 CameraSettings.KEY_CONTRAST, contrast);
@@ -2086,19 +2085,15 @@ public class PhotoModule
         //Set Brightness.
         mParameters.set("luma-adaptation", String.valueOf(mbrightness));
 
-        if (Parameters.SCENE_MODE_AUTO.equals(mSceneMode)) {
-            // Set Touch AF/AEC parameter.
-            String touchAfAec = mPreferences.getString(
-                 CameraSettings.KEY_TOUCH_AF_AEC,
-                 mActivity.getString(R.string.pref_camera_touchafaec_default));
-            if (Util.isSupported(touchAfAec, mParameters.getSupportedTouchAfAec())) {
-                mCurrTouchAfAec = touchAfAec;
-                mParameters.setTouchAfAec(touchAfAec);
-            }
-        } else {
-            mParameters.setTouchAfAec(mParameters.TOUCH_AF_AEC_OFF);
-            mFocusManager.resetTouchFocus();
+        // Set Touch AF/AEC parameter.
+        String touchAfAec = mPreferences.getString(
+            CameraSettings.KEY_TOUCH_AF_AEC,
+            mActivity.getString(R.string.pref_camera_touchafaec_default));
+        if (Util.isSupported(touchAfAec, mParameters.getSupportedTouchAfAec())) {
+            mCurrTouchAfAec = touchAfAec;
+            mParameters.setTouchAfAec(touchAfAec);
         }
+
         try {
             if(mParameters.getTouchAfAec().equals(mParameters.TOUCH_AF_AEC_ON))
                 this.mTouchAfAecFlag = true;
