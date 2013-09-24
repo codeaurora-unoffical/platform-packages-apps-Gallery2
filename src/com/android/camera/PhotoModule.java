@@ -967,6 +967,13 @@ public class PhotoModule
                     return;
                 }
 
+                //check storage status
+                if( mActivity.getStorageSpace() <= Storage.LOW_STORAGE_THRESHOLD ){
+                    Log.d(TAG, "Storage limited, need cancel longshot.");
+                    mLongshotActive = false;
+                    return;
+                }
+
                 if( isLongshotSlowDownNeeded() ){
                     if(mLongshotActive){
                         Log.d(TAG, "slow down snapshot. Take picture later.");
@@ -1796,6 +1803,12 @@ public class PhotoModule
 
     @Override
     public void onShutterButtonLongClick() {
+        // Do not enable longshot if there is not enough storage.
+        if (mActivity.getStorageSpace() <= Storage.LOW_STORAGE_THRESHOLD) {
+            Log.i(TAG, "Not enough space or storage not ready. remaining="
+                    + mActivity.getStorageSpace());
+            return;
+        }
         if (mFocusManager.isZslEnabled()
                 && (null != mCameraDevice) && (mCameraState == IDLE)) {
             // Enable Longshot by default
