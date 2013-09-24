@@ -1130,7 +1130,6 @@ public class MoviePlayer implements
             mVideoView.stopPlayback();
             mVideoView.setResumed(false);
             mVideoView.setVisibility(View.INVISIBLE);
-            mVideoView.setVisibility(View.VISIBLE);
             clearVideoInfo();
             mFirstBePlayed = false;
             mController.setCanReplay(true);
