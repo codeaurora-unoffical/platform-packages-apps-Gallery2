@@ -214,7 +214,8 @@ public class MoviePlayer implements
                 mKeyguardLocked = false;
                 mCanResumed = false;
             } else if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
-                onDestroy();
+                Log.v(TAG, "Intent.ACTION_SHUTDOWN received");
+                mActivityContext.finish();
             }
         }
     };
