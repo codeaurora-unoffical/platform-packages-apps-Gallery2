@@ -410,7 +410,9 @@ public class MoviePlayer implements
     }
 
     public void setDefaultScreenMode() {
+        addBackground();
         mController.setDefaultScreenMode();
+        removeBackground();
     }
 
     public boolean onPause() {
