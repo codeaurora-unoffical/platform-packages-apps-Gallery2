@@ -492,7 +492,7 @@ public class PhotoModule
                     break;
                }
                case CONFIGURE_SKIN_TONE_FACTOR: {
-                    if (isCameraIdle()) {
+                    if ((mCameraDevice != null) && isCameraIdle()) {
                         mParameters = mCameraDevice.getParameters();
                         mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
                         mCameraDevice.setParameters(mParameters);
