@@ -525,6 +525,9 @@
     <!-- Toast if the trimmed video is too short to trim. [CHAR LIMIT=80] -->
     <string name="trim_too_short">Can not trim : target video is too short</string>
 
+    <!-- Toast if the muted video is not supported. [CHAR LIMIT=80] -->
+    <string name="mute_nosupport">Can not mute : not supported video</string>
+
     <!-- Text to show with progress bar while stitching in Gallery -->
     <string name="pano_progress_text">Rendering panorama</string>
 
@@ -633,6 +636,12 @@
     <!-- Text followed by a checkbox to turn on/off sound effects during the countdown. [CHAR LIMIT = 16]-->
     <string name="pref_camera_timer_sound_title">Beep during countdown</string>
 
+    <!-- Entry of camera save path -->
+    <string name="pref_camera_savepath_title">Storage Position</string>
+    <string name="pref_camera_savepath_default">0</string>
+    <string name="pref_camera_savepath_entry_0">Phone</string>
+    <string name="pref_camera_savepath_entry_1">SD Card</string>
+
     <!-- Entry of a on/off setting. The setting is turned off. [CHAR LIMIT=15] -->
     <string name="setting_off">Off</string>
     <!-- Entry of a on/off setting. The setting is turned on. [CHAR LIMIT=15] -->
@@ -647,6 +656,10 @@
     <string name="pref_video_quality_title">Video quality</string>
     <!-- The default quality value is 3 (CIF) -->
     <string name="pref_video_quality_default" translatable="false">3</string>
+    <!-- Video quality setting entry. Videos will be recorded in 4k DCI quality. [CHAR LIMIT=24] -->
+    <string name="pref_video_quality_entry_4kdci" translatable="false">4k DCI</string>
+    <!-- Video quality setting entry. Videos will be recorded in 4k UHD quality. [CHAR LIMIT=24] -->
+    <string name="pref_video_quality_entry_4kuhd" translatable="false">4k UHD</string>
     <!-- Video quality setting entry. Videos will be recorded in 1080p quality. [CHAR LIMIT=24] -->
     <string name="pref_video_quality_entry_1080p" translatable="false">HD 1080p</string>
     <!-- Video quality setting entry. Videos will be recorded in 720p quality. [CHAR LIMIT=24] -->

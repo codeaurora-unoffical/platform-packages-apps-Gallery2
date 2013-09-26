@@ -73,6 +73,7 @@ public class CameraSettings {
     public static final String KEY_POWER_MODE = "pref_camera_powermode_key";
     public static final String KEY_PICTURE_FORMAT = "pref_camera_pictureformat_key";
     public static final String KEY_ZSL = "pref_camera_zsl_key";
+    public static final String KEY_CAMERA_SAVEPATH = "pref_camera_savepath_key";
     public static final String KEY_COLOR_EFFECT = "pref_camera_coloreffect_key";
     public static final String KEY_FACE_DETECTION = "pref_camera_facedetection_key";
     public static final String KEY_TOUCH_AF_AEC = "pref_camera_touchafaec_key";
@@ -799,6 +800,16 @@ public class CameraSettings {
 
     @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
     private void getFineResolutionQuality(ArrayList<String> supported) {
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_4kDCI)) {
+           if (checkSupportedVideoQuality(4096,2160)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_4kDCI));
+           }
+        }
+        if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_4kUHD)) {
+           if (checkSupportedVideoQuality(3840,2160)){
+              supported.add(Integer.toString(CamcorderProfile.QUALITY_4kUHD));
+           }
+        }
         if (CamcorderProfile.hasProfile(mCameraId, CamcorderProfile.QUALITY_1080P)) {
            if (checkSupportedVideoQuality(1920,1080)){
               supported.add(Integer.toString(CamcorderProfile.QUALITY_1080P));

@@ -18,6 +18,8 @@
 <resources>
     <!-- Camera Preferences Video Quality entries -->
     <string-array name="pref_video_quality_entries" translatable="false">
+        <item>@string/pref_video_quality_entry_4kdci</item>
+        <item>@string/pref_video_quality_entry_4kuhd</item>
         <item>@string/pref_video_quality_entry_1080p</item>
         <item>@string/pref_video_quality_entry_720p</item>
         <item>@string/pref_video_quality_entry_480p</item>
@@ -31,6 +33,10 @@
    </string-array>
 
     <string-array name="pref_video_quality_entryvalues" translatable="false">
+        <!-- The integer value of CamcorderProfile.QUALITY_4kDCI -->
+        <item>13</item>
+        <!-- The integer value of CamcorderProfile.QUALITY_4kUHD -->
+        <item>12</item>
         <!-- The integer value of CamcorderProfile.QUALITY_1080P -->
         <item>6</item>
         <!-- The integer value of CamcorderProfile.QUALITY_720P -->
@@ -51,6 +57,17 @@
         <item>7</item>
         <!-- The integer value of CamcorderProfile.QUALITY_QCIF -->
         <item>2</item>
+    </string-array>
+
+    <!-- Camera Preference save path entries -->
+    <string-array name="pref_camera_savepath_entries" translatable="false">
+        <item>@string/pref_camera_savepath_entry_0</item>
+        <item>@string/pref_camera_savepath_entry_1</item>
+    </string-array>
+
+    <string-array name="pref_camera_savepath_entryvalues" translatable="false">
+        <item>0</item>
+        <item>1</item>
     </string-array>
 
     <!-- These values correspond to the time interval between frame capture in millseconds
@@ -170,6 +187,7 @@
     <!-- Camera Preferences Picture size dialog box entries -->
     <string-array name="pref_camera_picturesize_entries" translatable="false">
         <item>@string/pref_camera_picturesize_entry_13mp</item>
+        <item>@string/pref_camera_picturesize_entry_13mp</item>
         <item>@string/pref_camera_picturesize_entry_12mp</item>
         <item>@string/pref_camera_picturesize_entry_8mp</item>
         <item>@string/pref_camera_picturesize_entry_8mp</item>
@@ -196,6 +214,7 @@
          size to the first one in the list that is also supported by the
          driver -->
     <string-array name="pref_camera_picturesize_entryvalues" translatable="false">
+        <item>4208x3120</item>
         <item>4128x3096</item>
         <item>4000x3000</item>
         <item>3264x2448</item>

@@ -134,6 +134,7 @@ public class PhotoModule
     private static final int CAPTURE_ANIMATION_DONE = 13;
     private static final int SET_SKIN_TONE_FACTOR = 14;
     private static final int SET_PHOTO_UI_PARAMS = 15;
+    private static final int CONFIGURE_SKIN_TONE_FACTOR = 16;
 
     // The subset of parameters we need to update in setCameraParameters().
     private static final int UPDATE_PARAM_INITIALIZE = 1;
@@ -179,15 +180,21 @@ public class PhotoModule
     private boolean mAwbLockSupported;
     private boolean mContinousFocusSupported;
     private boolean mTouchAfAecFlag;
+    private boolean mLongshotSave = false;
 
     // The degrees of the device rotated clockwise from its natural orientation.
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     private ComboPreferences mPreferences;
+    private boolean mSaveToSDCard = false;
 
     private static final String sTempCropFilename = "crop-temp";
 
     private ContentProviderClient mMediaProviderClient;
+    private ShutterButton mShutterButton;
     private boolean mFaceDetectionStarted = false;
+
+    private static final String PERSIST_LONG_ENABLE = "persist.camera.longshot.enable";
+    private static final String PERSIST_LONG_SAVE = "persist.camera.longshot.save";
 
     private static final int MINIMUM_BRIGHTNESS = 0;
     private static final int MAXIMUM_BRIGHTNESS = 6;
@@ -299,6 +306,7 @@ public class PhotoModule
 
     private String mSceneMode;
     private String mCurrTouchAfAec = Parameters.TOUCH_AF_AEC_ON;
+    private String mCurrFlashMode = Parameters.FLASH_MODE_AUTO;
 
     private final Handler mHandler = new MainHandler();
     private PreferenceGroup mPreferenceGroup;
@@ -483,6 +491,14 @@ public class PhotoModule
                         mPreferences);
                     break;
                }
+               case CONFIGURE_SKIN_TONE_FACTOR: {
+                    if (isCameraIdle()) {
+                        mParameters = mCameraDevice.getParameters();
+                        mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
+                        mCameraDevice.setParameters(mParameters);
+                    }
+                    break;
+               }
             }
         }
     }
@@ -540,6 +556,9 @@ public class PhotoModule
         RightValue = (TextView)mRootView.findViewById(R.id.skintoneright);
         LeftValue = (TextView)mRootView.findViewById(R.id.skintoneleft);
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     private void initializeControlByIntent() {
@@ -726,6 +745,8 @@ public class PhotoModule
 
         keepMediaProviderInstance();
 
+        mShutterButton = mActivity.getShutterButton();
+
         mUI.initializeFirstTime();
         MediaSaveService s = mActivity.getMediaSaveService();
         // We set the listener only when both service and shutterbutton
@@ -833,6 +854,35 @@ public class PhotoModule
         return mUI.dispatchTouchEvent(m);
     }
 
+    private final class LongshotShutterCallback
+            implements android.hardware.Camera.ShutterCallback {
+
+        @Override
+        public void onShutter() {
+            mShutterCallbackTime = System.currentTimeMillis();
+            mShutterLag = mShutterCallbackTime - mCaptureStartTime;
+            Log.e(TAG, "[KPI Perf] PROFILE_SHUTTER_LAG mShutterLag = " + mShutterLag + "ms");
+            synchronized(mCameraDevice) {
+
+                if ( mCameraState != LONGSHOT ) {
+                    return;
+                }
+
+                if ( mLongshotSave ) {
+                    mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                            mRawPictureCallback, mPostViewPictureCallback,
+                            new LongshotPictureCallback(null), mCameraState,
+                            mFocusManager.getFocusState());
+                } else {
+                    mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                            mRawPictureCallback, mPostViewPictureCallback,
+                            new JpegPictureCallback(null), mCameraState,
+                            mFocusManager.getFocusState());
+                }
+            }
+        }
+    }
+
     private final class ShutterCallback
             implements android.hardware.Camera.ShutterCallback {
 
@@ -892,6 +942,62 @@ public class PhotoModule
             mRawPictureCallbackTime = System.currentTimeMillis();
             Log.v(TAG, "mShutterToRawCallbackTime = "
                     + (mRawPictureCallbackTime - mShutterCallbackTime) + "ms");
+        }
+    }
+
+    private final class LongshotPictureCallback implements PictureCallback {
+        Location mLocation;
+
+        public LongshotPictureCallback(Location loc) {
+            mLocation = loc;
+        }
+
+        @Override
+        public void onPictureTaken(
+                final byte [] jpegData, final android.hardware.Camera camera) {
+            if (mPaused) {
+                return;
+            }
+
+            mFocusManager.updateFocusUI(); // Ensure focus indicator is hidden.
+
+            String jpegFilePath = new String(jpegData);
+            mNamedImages.nameNewImage(mContentResolver, System.currentTimeMillis());
+            String title = mNamedImages.getTitle();
+            if (title == null) {
+                Log.e(TAG, "Unbalanced name/data pair");
+                return;
+            }
+
+            long date = mNamedImages.getDate();
+            if  (date == -1 ) {
+                Log.e(TAG, "Invalid filename date");
+                return;
+            }
+
+            String dstPath = Storage.DIRECTORY;
+            File sdCard = android.os.Environment.getExternalStorageDirectory();
+            File dstFile = new File(dstPath);
+            if (dstFile == null) {
+                Log.e(TAG, "Destination file path invalid");
+                return;
+            }
+
+            File srcFile = new File(jpegFilePath);
+            if (srcFile == null) {
+                Log.e(TAG, "Source file path invalid");
+                return;
+            }
+
+            if ( srcFile.renameTo(dstFile) ) {
+                Size s = mParameters.getPictureSize();
+                String pictureFormat = mParameters.get(KEY_PICTURE_FORMAT);
+                mActivity.getMediaSaveService().addImage(
+                       null, title, date, mLocation, s.width, s.height,
+                       0, null, mOnMediaSavedListener, mContentResolver, pictureFormat);
+            } else {
+                Log.e(TAG, "Failed to move jpeg file");
+            }
         }
     }
 
@@ -965,7 +1071,8 @@ public class PhotoModule
                     // time before starting the preview.
                     mHandler.sendEmptyMessageDelayed(SETUP_PREVIEW, 300);
                 }
-            } else if (mReceivedSnapNum == mBurstSnapNum){
+            } else if ((mReceivedSnapNum == mBurstSnapNum)
+                        && (mCameraState != LONGSHOT)){
                 mFocusManager.resetTouchFocus();
                 setCameraState(IDLE);
             }
@@ -978,6 +1085,7 @@ public class PhotoModule
                 // Calculate the width and the height of the jpeg.
                 Size s = mParameters.getPictureSize();
                 ExifInterface exif = Exif.getExif(jpegData);
+
                 int orientation = Exif.getOrientation(exif);
                 int width, height;
                 if ((mJpegRotation + orientation) % 180 == 0) {
@@ -1088,9 +1196,8 @@ public class PhotoModule
             }
             if(value != mskinToneValue && mCameraDevice != null) {
                 mskinToneValue = value;
-                mParameters = mCameraDevice.getParameters();
-                mParameters.set("skinToneEnhancement", String.valueOf(mskinToneValue));
-                mCameraDevice.setParameters(mParameters);
+                Message msg = mHandler.obtainMessage(CONFIGURE_SKIN_TONE_FACTOR, mskinToneValue, 0);
+                mHandler.sendMessage(msg);
             }
         }
 
@@ -1172,6 +1279,7 @@ public class PhotoModule
         case PhotoController.PREVIEW_STOPPED:
         case PhotoController.SNAPSHOT_IN_PROGRESS:
         case PhotoController.FOCUSING:
+        case PhotoController.LONGSHOT:
         case PhotoController.SWITCHING_CAMERA:
             mUI.enableGestures(false);
             break;
@@ -1252,15 +1360,27 @@ public class PhotoModule
         mBurstSnapNum = mParameters.getInt("num-snaps-per-shutter");
         mReceivedSnapNum = 0;
 
-        mCameraDevice.takePicture2(new ShutterCallback(!animateBefore),
-                mRawPictureCallback, mPostViewPictureCallback,
-                new JpegPictureCallback(loc), mCameraState,
-                mFocusManager.getFocusState());
+        if ( mCameraState == LONGSHOT && mLongshotSave ) {
+            mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                    mRawPictureCallback, mPostViewPictureCallback,
+                    new LongshotPictureCallback(loc), mCameraState,
+                    mFocusManager.getFocusState());
+        } else if ( mCameraState == LONGSHOT ) {
+            mCameraDevice.takePicture2(new LongshotShutterCallback(),
+                    mRawPictureCallback, mPostViewPictureCallback,
+                    new JpegPictureCallback(loc), mCameraState,
+                    mFocusManager.getFocusState());
+        } else {
+            mCameraDevice.takePicture2(new ShutterCallback(!animateBefore),
+                    mRawPictureCallback, mPostViewPictureCallback,
+                    new JpegPictureCallback(loc), mCameraState,
+                    mFocusManager.getFocusState());
+            setCameraState(SNAPSHOT_IN_PROGRESS);
+        }
 
         mNamedImages.nameNewImage(mContentResolver, mCaptureStartTime);
 
         mFaceDetectionStarted = false;
-        setCameraState(SNAPSHOT_IN_PROGRESS);
         UsageStatistics.onEvent(UsageStatistics.COMPONENT_CAMERA,
                 UsageStatistics.ACTION_CAPTURE_DONE, "Photo");
         return true;
@@ -1308,26 +1428,34 @@ public class PhotoModule
         // If scene mode is set, we cannot set flash mode, white balance, and
         // focus mode, instead, we read it from driver
         if (!Parameters.SCENE_MODE_AUTO.equals(mSceneMode)) {
-            overrideCameraSettings(mParameters.getFlashMode(),
+            overrideCameraSettings(mCurrFlashMode,
                     mParameters.getWhiteBalance(), mParameters.getFocusMode(),
                     Integer.toString(mParameters.getExposureCompensation()),
-                    mCurrTouchAfAec, mParameters.getAutoExposure());
+                    mCurrTouchAfAec, mParameters.getAutoExposure(),
+                    Integer.toString(mParameters.getSaturation()),
+                    Integer.toString(mParameters.getContrast()));
+        } else if (mFocusManager.isZslEnabled()) {
+            overrideCameraSettings(null, null, mParameters.getFocusMode(),
+                                   null, null, null, null, null);
         } else {
-            overrideCameraSettings(null, null, null, null, null, null);
+            overrideCameraSettings(null, null, null, null, null, null, null, null);
         }
     }
 
     private void overrideCameraSettings(final String flashMode,
             final String whiteBalance, final String focusMode,
             final String exposureMode, final String touchMode,
-            final String autoExposure) {
+            final String autoExposure, final String saturation,
+            final String contrast) {
         mUI.overrideSettings(
                 CameraSettings.KEY_FLASH_MODE, flashMode,
                 CameraSettings.KEY_WHITE_BALANCE, whiteBalance,
                 CameraSettings.KEY_FOCUS_MODE, focusMode,
                 CameraSettings.KEY_EXPOSURE, exposureMode,
                 CameraSettings.KEY_TOUCH_AF_AEC, touchMode,
-                CameraSettings.KEY_AUTOEXPOSURE, autoExposure);
+                CameraSettings.KEY_AUTOEXPOSURE, autoExposure,
+                CameraSettings.KEY_SATURATION, saturation,
+                CameraSettings.KEY_CONTRAST, contrast);
     }
 
     private void loadCameraPreferences() {
@@ -1476,6 +1604,14 @@ public class PhotoModule
                 || (mCameraState == SNAPSHOT_IN_PROGRESS)
                 || (mCameraState == PREVIEW_STOPPED)) return;
 
+        synchronized(mCameraDevice) {
+           if (mCameraState == LONGSHOT) {
+               mCameraDevice.setLongshot(false);
+               setCameraState(IDLE);
+               mFocusManager.resetTouchFocus();
+           }
+        }
+
         // Do not do focus if there is not enough storage.
         if (pressed && !canTakePicture()) return;
 
@@ -1548,6 +1684,22 @@ public class PhotoModule
         }
     }
 
+    @Override
+    public void onShutterButtonLongClick() {
+        if (mFocusManager.isZslEnabled()
+                && (null != mCameraDevice) && (mCameraState == IDLE)) {
+            int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
+            boolean enable = ( prop == 1 );
+            if ( enable ) {
+                prop = SystemProperties.getInt(PERSIST_LONG_SAVE, 0);
+                mLongshotSave = ( prop == 1 );
+                mCameraDevice.setLongshot(true);
+                setCameraState(PhotoController.LONGSHOT);
+                mFocusManager.doSnap();
+            }
+        }
+    }
+
     void setPreviewFrameLayoutCameraOrientation(){
        CameraInfo info = CameraHolder.instance().getCameraInfo()[mCameraId];
        //if camera mount angle is 0 or 180, we want to resize preview
@@ -1560,6 +1712,10 @@ public class PhotoModule
     }
 
     private void resizeForPreviewAspectRatio() {
+        if ( mCameraDevice == null || mParameters == null) {
+            Log.e(TAG, "Camera not yet initialized");
+            return;
+        }
         setPreviewFrameLayoutCameraOrientation();
         Size size = mParameters.getPictureSize();
         Log.e(TAG,"Width = "+ size.width+ "Height = "+size.height);
@@ -1814,9 +1970,22 @@ public class PhotoModule
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(true);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_VOLUME_DOWN:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(false);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized) {
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
+                  mShutterButton.getVisibility() == View.VISIBLE) {
                 if (event.getRepeatCount() == 0) {
                     onShutterButtonFocus(true);
                 }
@@ -1825,7 +1994,9 @@ public class PhotoModule
             return false;
         case KeyEvent.KEYCODE_CAMERA:
             if (mFirstTimeInitialized && event.getRepeatCount() == 0) {
-                onShutterButtonClick();
+                // Only capture when in full screen capture mode
+                if (mActivity.isInCameraApp() && mShutterButton.getVisibility() == View.VISIBLE)
+                    onShutterButtonClick();
             }
             return true;
         case KeyEvent.KEYCODE_DPAD_LEFT:
@@ -1879,11 +2050,7 @@ public class PhotoModule
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
         case KeyEvent.KEYCODE_VOLUME_DOWN:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized) {
-                onShutterButtonClick();
-                return true;
-            }
-            return false;
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
             if (mFirstTimeInitialized) {
                 onShutterButtonFocus(false);
@@ -2223,7 +2390,10 @@ public class PhotoModule
                                   mActivity.getString(R.string.pref_camera_zsl_default));
         String hdr = mPreferences.getString(CameraSettings.KEY_CAMERA_HDR,
                 mActivity.getString(R.string.pref_camera_hdr_default));
-        mParameters.setZSLMode(zsl);
+        if((!isImageCaptureIntent())) {
+            Log.v(TAG, "setZSLMode value = " + zsl);
+            mParameters.setZSLMode(zsl);
+        }
         if(zsl.equals("on")) {
             //Switch on ZSL Camera mode
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_ZSL;
@@ -2237,6 +2407,19 @@ public class PhotoModule
             //Raw picture format is not supported under ZSL mode
             editor.putString(CameraSettings.KEY_PICTURE_FORMAT, mActivity.getString(R.string.pref_camera_picture_format_value_jpeg));
             editor.apply();
+
+            //Try to set CAF for ZSL
+            if(Util.isSupported(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
+                    mParameters.getSupportedFocusModes()) && !mFocusManager.isTouch()) {
+                mFocusManager.overrideFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                mParameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            } else if (mFocusManager.isTouch()) {
+                mFocusManager.overrideFocusMode(null);
+                mParameters.setFocusMode(mFocusManager.getFocusMode());
+            } else {
+                // If not supported use the current mode
+                mFocusManager.overrideFocusMode(mFocusManager.getFocusMode());
+            }
 
             if(!pictureFormat.equals(PIXEL_FORMAT_JPEG)) {
                      mActivity.runOnUiThread(new Runnable() {
@@ -2259,6 +2442,8 @@ public class PhotoModule
             mSnapshotMode = CameraInfo.CAMERA_SUPPORT_MODE_NONZSL;
             mParameters.setCameraMode(0);
             mFocusManager.setZslEnable(false);
+            mFocusManager.overrideFocusMode(null);
+            mParameters.setFocusMode(mFocusManager.getFocusMode());
         }
         // Set face detetction parameter.
         String faceDetection = mPreferences.getString(
@@ -2484,6 +2669,7 @@ public class PhotoModule
             String flashMode = mPreferences.getString(
                     CameraSettings.KEY_FLASH_MODE,
                     mActivity.getString(R.string.pref_camera_flashmode_default));
+            mCurrFlashMode = flashMode;
             List<String> supportedFlash = mParameters.getSupportedFlashModes();
             if (Util.isSupported(flashMode, supportedFlash)) {
                 mParameters.setFlashMode(flashMode);
@@ -2514,6 +2700,7 @@ public class PhotoModule
             mParameters.setFocusMode(mFocusManager.getFocusMode());
         } else {
             mFocusManager.overrideFocusMode(mParameters.getFocusMode());
+            mParameters.setFlashMode(Parameters.FLASH_MODE_OFF);
         }
 
         if (mContinousFocusSupported && ApiHelper.HAS_AUTO_FOCUS_MOVE_CALLBACK) {
@@ -2646,6 +2833,17 @@ public class PhotoModule
                 disableSkinToneSeekBar();
             }
         }
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mActivity.updateStorageSpaceAndHint();
+    }
+
+    @Override
+    public void onFirstLevelMenuDismiss() {
+        if (mSaveToSDCard != Storage.isSaveSDCard()) {
+            mSaveToSDCard = Storage.isSaveSDCard();
+            mActivity.keepCameraScreenNail();
+        }
     }
 
     @Override
@@ -2663,6 +2861,10 @@ public class PhotoModule
         } else {
             switchCamera();
         }
+    }
+
+    @Override
+    public void onCameraPickerSuperClicked() {
     }
 
     // Preview texture has been copied. Now camera can be released and the
@@ -3020,5 +3222,10 @@ class GraphView extends View {
     }
     public void setPhotoModuleObject(PhotoModule photoModule) {
         mPhotoModule = photoModule;
+    }
+
+    public void onScaleChangeDraw(PhotoUI ui)
+    {
+        ui.onScaleChangeDraw(mCanvas);
     }
 }

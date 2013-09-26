@@ -36,6 +36,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.os.ConditionVariable;
 
 import com.android.gallery3d.common.ApiHelper;
 
@@ -44,6 +45,9 @@ import java.io.IOException;
 public class CameraManager {
     private static final String TAG = "CameraManager";
     private static CameraManager sCameraManager = new CameraManager();
+
+    // Thread progress signals
+    private ConditionVariable mSig = new ConditionVariable();
 
     private Parameters mParameters;
     private boolean mParametersIsDirty;
@@ -75,6 +79,7 @@ public class CameraManager {
     private static final int REFRESH_PARAMETERS = 24;
     private static final int SET_HISTOGRAM_MODE = 25;
     private static final int SEND_HISTOGRAM_DATA = 26;
+    private static final int SET_LONGSHOT = 27;
 
 
     private Handler mCameraHandler;
@@ -234,9 +239,9 @@ public class CameraManager {
 
                     case SET_PARAMETERS:
                         mParametersIsDirty = true;
-                        mParamsToSet.unflatten((String) msg.obj);
-                        mCamera.setParameters(mParamsToSet);
-                        return;
+                        mCamera.setParameters((Parameters) msg.obj);
+                        mSig.open();
+                        break;
 
                     case GET_PARAMETERS:
                         if (mParametersIsDirty) {
@@ -264,6 +269,11 @@ public class CameraManager {
                     case SEND_HISTOGRAM_DATA:
                         mCamera.sendHistogramData();
                         break;
+
+                    case SET_LONGSHOT:
+                        mCamera.setLongshot(msg.arg1 == 1);
+                        break;
+
                     default:
                         throw new RuntimeException("Invalid CameraProxy message=" + msg.what);
                 }
@@ -447,8 +457,10 @@ public class CameraManager {
                 Log.v(TAG, "null parameters in setParameters()");
                 return;
             }
-            mCameraHandler.obtainMessage(SET_PARAMETERS, params.flatten())
+            mSig.close();
+            mCameraHandler.obtainMessage(SET_PARAMETERS, params)
                     .sendToTarget();
+            mSig.block();
         }
 
         public Parameters getParameters() {
@@ -464,6 +476,11 @@ public class CameraManager {
         public void enableShutterSound(boolean enable) {
             mCameraHandler.obtainMessage(
                     ENABLE_SHUTTER_SOUND, (enable ? 1 : 0), 0).sendToTarget();
+        }
+
+        public void setLongshot(boolean enable) {
+            mCameraHandler.obtainMessage(SET_LONGSHOT,
+                    (enable ? 1 : 0), 0).sendToTarget();
         }
 
         public void setHistogramMode(CameraDataCallback cb) {
