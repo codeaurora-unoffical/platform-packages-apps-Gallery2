@@ -989,7 +989,7 @@ public class VideoModule implements CameraModule,
         showVideoSnapshotUI(false);
         mUI.enableShutter(false);
 
-        if (!mPreviewing && mStartPreviewThread == null) {
+        if (!mPreviewing) {
             resetEffect();
             openCamera();
             if (mActivity.mOpenCameraFail) {
