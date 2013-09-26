@@ -620,7 +620,7 @@ public class VideoModule implements CameraModule,
             }
 
             Log.v(TAG, "onOrientationChanged, update parameters");
-            if ( ( mParameters != null )  && mPreviewing ) {
+            if ( ( mParameters != null )  && mPreviewing && !mMediaRecorderRecording ) {
                 setCameraParameters();
             }
 
