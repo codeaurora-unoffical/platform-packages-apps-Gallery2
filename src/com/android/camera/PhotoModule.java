@@ -1055,6 +1055,7 @@ public class PhotoModule
             mFocusManager.updateFocusUI(); // Ensure focus indicator is hidden.
 
             boolean needRestartPreview = !mIsImageCaptureIntent
+                      && (mCameraState != LONGSHOT)
                       && (mSnapshotMode != CameraInfo.CAMERA_SUPPORT_MODE_ZSL)
                       && (mReceivedSnapNum == mBurstSnapNum);
 
@@ -1603,8 +1604,12 @@ public class PhotoModule
         synchronized(mCameraDevice) {
            if (mCameraState == LONGSHOT) {
                mCameraDevice.setLongshot(false);
-               setCameraState(IDLE);
-               mFocusManager.resetTouchFocus();
+               if (!mFocusManager.isZslEnabled()) {
+                   setupPreview();
+               } else {
+                   setCameraState(IDLE);
+                   mFocusManager.resetTouchFocus();
+               }
            }
         }
 
@@ -1682,8 +1687,7 @@ public class PhotoModule
 
     @Override
     public void onShutterButtonLongClick() {
-        if (mFocusManager.isZslEnabled()
-                && (null != mCameraDevice) && (mCameraState == IDLE)) {
+        if ((null != mCameraDevice) && (mCameraState == IDLE)) {
             int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
             boolean enable = ( prop == 1 );
             if ( enable ) {
