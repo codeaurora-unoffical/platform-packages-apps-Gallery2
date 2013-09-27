@@ -131,7 +131,7 @@ public class ZoomRenderer extends OverlayRenderer
         circle = Math.min(mMaxCircle, circle);
         if (mListener != null && (int) circle != mCircleSize) {
             mCircleSize = (int) circle;
-            int zoom = mMinZoom + (int) ((mCircleSize - mMinCircle) * (mMaxZoom - mMinZoom) / (mMaxCircle - mMinCircle));
+            int zoom = mMinZoom + (int) (((mCircleSize - mMinCircle) * (mMaxZoom - mMinZoom) / (mMaxCircle - mMinCircle)) + 0.5f);
             mListener.onZoomValueChanged(zoom);
         }
         return true;
