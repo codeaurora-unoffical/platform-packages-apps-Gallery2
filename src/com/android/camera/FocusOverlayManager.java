@@ -238,6 +238,9 @@ public class FocusOverlayManager {
     public void doSnap() {
         if (!mInitialized) return;
 
+        if (mState == STATE_FOCUSING && !needAutoFocusCall()) {
+            cancelAutoFocus();
+        }
         // If the user has half-pressed the shutter and focus is completed, we
         // can take the photo right away. If the focus mode is infinity, we can
         // also take the photo.
