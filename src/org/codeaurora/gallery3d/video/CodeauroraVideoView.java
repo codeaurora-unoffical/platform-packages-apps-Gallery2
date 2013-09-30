@@ -89,6 +89,7 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
     private boolean     mCanPause;
     private boolean     mCanSeekBack;
     private boolean     mCanSeekForward;
+    private boolean     mCanSeek;
     private boolean     mHasGotPreparedCallBack = false;
     private boolean mNeedWaitLayout = false;
     private boolean mHasGotMetaData = false;
@@ -229,10 +230,13 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
                             || data.getBoolean(Metadata.SEEK_BACKWARD_AVAILABLE);
                     mCanSeekForward = !data.has(Metadata.SEEK_FORWARD_AVAILABLE)
                             || data.getBoolean(Metadata.SEEK_FORWARD_AVAILABLE);
+                    mCanSeek = !data.has(Metadata.SEEK_AVAILABLE)
+                            || data.getBoolean(Metadata.SEEK_AVAILABLE);
                 } else {
                     mCanPause = true;
                     mCanSeekBack = true;
                     mCanSeekForward = true;
+                    mCanSeek = true;
                     Log.w(TAG, "Metadata is null!");
                 }
                 if (LOG) {
@@ -939,6 +943,10 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
     @Override
     public boolean canSeekForward() {
         return mCanSeekForward;
+    }
+
+    public boolean canSeek() {
+        return mCanSeek;
     }
 
     @Override
