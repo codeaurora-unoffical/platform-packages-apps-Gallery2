@@ -588,8 +588,7 @@ public class MoviePlayer implements
         boolean loop = mPlayerExt.getLoop();
         boolean canReplay = loop ? loop : mCanReplay;
         mController.setCanReplay(canReplay);
-        if (position > 0 && (mVideoCanSeek || mVideoView.canSeekBackward()
-                    || mVideoView.canSeekForward())) {
+        if (position > 0 && (mVideoCanSeek || mVideoView.canSeek())) {
             mVideoView.seekTo(position);
         }
         if (enableFasten) {
@@ -701,7 +700,7 @@ public class MoviePlayer implements
 
     @Override
     public void onSeekMove(int time) {
-        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+        if (mVideoView.canSeek()) {
             mVideoView.seekTo(time);
         }
     }
@@ -709,7 +708,7 @@ public class MoviePlayer implements
     @Override
     public void onSeekEnd(int time, int start, int end) {
         mDragging = false;
-        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+        if (mVideoView.canSeek()) {
             mVideoView.seekTo(time);
         }
     }
@@ -769,7 +768,7 @@ public class MoviePlayer implements
         }
         getVideoInfo(mp);
         boolean canPause = mVideoView.canPause();
-        boolean canSeek = mVideoView.canSeekBackward() && mVideoView.canSeekForward();
+        boolean canSeek = mVideoView.canSeek();
         mOverlayExt.setCanPause(canPause);
         mOverlayExt.setCanScrubbing(canSeek);
         mController.setPlayPauseReplayResume();
