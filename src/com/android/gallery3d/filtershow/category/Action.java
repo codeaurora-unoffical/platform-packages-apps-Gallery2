@@ -61,7 +61,11 @@ public class Action implements RenderingRequestCaller {
 
     public void setRepresentation(FilterRepresentation representation) {
         mRepresentation = representation;
-        mName = representation.getName();
+        if (representation.getTextId() != 0) {
+            mName = mContext.getResources().getString(representation.getTextId());
+        } else {
+            mName = representation.getName();
+        }
     }
 
     public String getName() {
