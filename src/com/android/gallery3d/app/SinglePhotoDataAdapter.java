@@ -242,6 +242,11 @@ public class SinglePhotoDataAdapter extends TileImageViewAdapter
     }
 
     @Override
+    public boolean isGif(int offset) {
+        return MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(mItem.getMimeType());
+    }
+
+    @Override
     public boolean isDeletable(int offset) {
         return false;
     }
