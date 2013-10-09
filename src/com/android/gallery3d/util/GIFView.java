@@ -25,6 +25,10 @@ public class GIFView extends ImageView implements GifAction {
 
     private static final String TAG = "GIFView";
 
+    // We try to scale up the image to fill the screen. But in order not to
+    // scale too much for small icons, we limit the max up-scaling factor here.
+    private static final float SCALE_LIMIT = 4;
+
     private static boolean isRun = false;
     private static boolean pause = true;
 
@@ -101,40 +105,33 @@ public class GIFView extends ImageView implements GifAction {
             setImageURI(mUri);
             return;
         }
+
         setImageURI(null);
         int saveCount = canvas.getSaveCount();
         canvas.save();
         canvas.translate(getPaddingLeft(), getPaddingTop());
         Rect sRect = null;
         Rect dRect = null;
-
         int imageHeight = currentImage.getHeight();
         int imageWidth = currentImage.getWidth();
-
-        int displayHeight = H;
-        int displayWidth = W;
-
-        if (displayWidth < imageWidth) {
-            if (displayHeight < imageHeight) {
-                if (imageHeight * W > imageWidth * H) {
-                    displayWidth = (imageWidth * displayHeight) / imageHeight;
-                } else {
-                    displayHeight = (imageHeight * displayWidth) / imageWidth;
-                }
+        int width, height;
+        if (imageWidth >= W || imageHeight >= H) {
+            // scale-down the image
+            if (imageWidth * H > W * imageHeight) {
+                width = W;
+                height = (imageHeight * width) / imageWidth;
             } else {
-                displayHeight = (imageHeight * displayWidth) / imageWidth;
+                height = H;
+                width = (imageWidth * height) / imageHeight;
             }
-            dRect = new Rect((W - displayWidth) / 2, (H - displayHeight) / 2,
-                    (W + displayWidth) / 2, (H + displayHeight) / 2);
-            canvas.drawBitmap(currentImage, sRect, dRect, null);
-        } else if (displayHeight < imageHeight) {
-            displayWidth = (imageWidth * displayHeight) / imageHeight;
-            dRect = new Rect((W - displayWidth) / 2, 0,
-                    (W + displayWidth) / 2, displayHeight);
-            canvas.drawBitmap(currentImage, sRect, dRect, null);
         } else {
-            canvas.drawBitmap(currentImage, (W - imageWidth) / 2, (H - imageHeight) / 2, null);
+            // scale-up the image
+            float scale = Math.min(SCALE_LIMIT, Math.min(W / (float) imageWidth, H / (float) imageHeight));
+            width = (int) (imageWidth * scale);
+            height = (int) (imageHeight * scale);
         }
+        dRect = new Rect((W - width) / 2, (H - height) / 2, (W + width) / 2, (H + height) / 2);
+        canvas.drawBitmap(currentImage, sRect, dRect, null);
         canvas.restoreToCount(saveCount);
     }
 
