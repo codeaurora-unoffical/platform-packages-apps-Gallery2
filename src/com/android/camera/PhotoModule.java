@@ -75,6 +75,8 @@ import com.android.gallery3d.filtershow.crop.CropExtras;
 import com.android.gallery3d.util.UsageStatistics;
 import com.android.internal.util.MemInfoReader;
 import android.app.ActivityManager;
+import android.media.SoundPool;
+import android.media.AudioManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -156,6 +158,14 @@ public class PhotoModule
     private ActivityManager mAm;
     private long SECONDARY_SERVER_MEM;
     private long mMB = 1024 * 1024;
+
+    //shutter sound
+    private SoundPool mSoundPool;
+    HashMap<Integer, Integer> mSoundHashMap;
+    private static final int LONGSHOT_SOUND_STATUS_OFF = 0;
+    private static final int LONGSHOT_SOUND_STATUS_ON  = 1;
+    private int mLongshotSoundStatus = LONGSHOT_SOUND_STATUS_OFF;
+    private int mSoundStreamID = -1;
 
     // copied from Camera hierarchy
     private CameraActivity mActivity;
@@ -575,6 +585,8 @@ public class PhotoModule
         mAm.getMemoryInfo(memInfo);
         SECONDARY_SERVER_MEM = memInfo.secondaryServerThreshold;
 
+        initSoundPool();
+
         Storage.setSaveSDCard(
             mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
         mSaveToSDCard = Storage.isSaveSDCard();
@@ -870,6 +882,7 @@ public class PhotoModule
     public void cancelLongShot() {
         Log.d(TAG, "cancel longshot mode");
         mCameraDevice.setLongshot(false);
+        mCameraDevice.enableShutterSound(true);
         setCameraState(IDLE);
         mFocusManager.resetTouchFocus();
     }
@@ -967,6 +980,7 @@ public class PhotoModule
                     //we can finish longshot mode now.
                     Log.d(TAG, "Longshot - received expected number of shutter.");
                     mLongshotActive = false;
+                    stopSoundPool();
                     return;
                 }
 
@@ -974,17 +988,22 @@ public class PhotoModule
                 if( mActivity.getStorageSpace() <= Storage.LOW_STORAGE_THRESHOLD ){
                     Log.d(TAG, "Storage limited, need cancel longshot.");
                     mLongshotActive = false;
+                    stopSoundPool();
                     return;
                 }
 
                 if( isLongshotSlowDownNeeded() ){
                     if(mLongshotActive){
                         Log.d(TAG, "slow down snapshot. Take picture later.");
+                        playSoundPool();
                         mHandler.sendEmptyMessageDelayed(CONTINUE_LONGSHOT, LONGSHOT_SLOWDOWN_DELAY);
+                    }else{
+                        stopSoundPool();
                     }
                     return;
                 }
 
+                playSoundPool();
                 continueLongshot();
 
             }
@@ -1728,6 +1747,7 @@ public class PhotoModule
                //but we need wait all jpeg images arrived before
                //cancel longshot.
                mLongshotActive = false;
+               stopSoundPool();
            }
         }
 
@@ -1838,6 +1858,7 @@ public class PhotoModule
                 mLongshotActive = true;
                 mCameraDevice.setLongshot(true);
                 setCameraState(PhotoController.LONGSHOT);
+                mCameraDevice.enableShutterSound(false);
                 mFocusManager.doSnap();
             }
         }
@@ -1947,6 +1968,13 @@ public class PhotoModule
         Sensor msensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (msensor != null) {
             mSensorManager.unregisterListener(this, msensor);
+        }
+
+        //cancel lognshot if it is in enalbed status
+        if(mCameraDevice != null && mCameraState == LONGSHOT){
+            mLongshotActive = false;
+            stopSoundPool();
+            cancelLongShot();
         }
     }
 
@@ -3138,6 +3166,31 @@ public class PhotoModule
         if (mHeading < 0) {
             mHeading += 360;
         }
+    }
+
+    private void initSoundPool() {
+        mSoundPool = new SoundPool(1, AudioManager.STREAM_NOTIFICATION, 0);
+        mSoundHashMap = new HashMap<Integer, Integer>();
+        mSoundHashMap.put(1, mSoundPool.load("/system/media/audio/ui/camera_click.ogg", 1) );
+        mLongshotSoundStatus = LONGSHOT_SOUND_STATUS_OFF;
+        mSoundStreamID = -1;
+    }
+
+    private void playSoundPool(){
+        if(mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_OFF){
+            //play shutter sound
+            mSoundStreamID = mSoundPool.play(mSoundHashMap.get(1), 1.0f, 1.0f, 1, -1, 2.0f);
+            mLongshotSoundStatus = LONGSHOT_SOUND_STATUS_ON;
+        }
+    }
+
+    private void stopSoundPool() {
+        if( (mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_ON) &&
+            (mSoundStreamID > 0) ){
+            mSoundPool.stop(mSoundStreamID);
+        }
+        mLongshotSoundStatus = LONGSHOT_SOUND_STATUS_OFF;
+        mSoundStreamID = -1;
     }
 
     private void setSkinToneFactor() {
