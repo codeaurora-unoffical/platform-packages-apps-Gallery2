@@ -1199,7 +1199,17 @@ public abstract class PhotoPage extends ActivityState implements
             // item is not ready or it is camera preview, ignore
             return;
         }
-        if (item.getMimeType().equals(MediaItem.MIME_TYPE_GIF)) {
+
+        boolean playGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(item.getMimeType());
+        if (playGif) {
+            // determine if the point is at center (1/6) of the photo view.
+            // (The position of the "play" icon is at center (1/6) of the photo)
+            int w = mPhotoView.getWidth();
+            int h = mPhotoView.getHeight();
+            playGif = (Math.abs(x - w / 2) * 12 <= w)
+                && (Math.abs(y - h / 2) * 12 <= h);
+        }
+        if (playGif) {
             viewAnimateGif((Activity) mActivity, item.getContentUri());
             return;
         }

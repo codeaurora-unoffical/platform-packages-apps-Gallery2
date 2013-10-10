@@ -93,6 +93,9 @@ public class PhotoView extends GLView {
         // Returns true if the item is a Video.
         public boolean isVideo(int offset);
 
+        // Returns true if the item is a Gif.
+        public boolean isGif(int offset);
+
         // Returns true if the item can be deleted.
         public boolean isDeletable(int offset);
 
@@ -607,14 +610,7 @@ public class PhotoView extends GLView {
             mIsCamera = mModel.isCamera(0);
             mIsPanorama = mModel.isPanorama(0);
             mIsStaticCamera = mModel.isStaticCamera(0);
-            boolean isGif = false;
-            try {
-                isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(
-                        mModel.getMediaItem(0).getMimeType());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            mIsVideoOrGif = mModel.isVideo(0) || isGif;
+            mIsVideoOrGif = mModel.isVideo(0) || mModel.isGif(0);
             mIsDeletable = mModel.isDeletable(0);
             mLoadingState = mModel.getLoadingState(0);
             setScreenNail(mModel.getScreenNail(0));
@@ -798,14 +794,7 @@ public class PhotoView extends GLView {
             mIsCamera = mModel.isCamera(mIndex);
             mIsPanorama = mModel.isPanorama(mIndex);
             mIsStaticCamera = mModel.isStaticCamera(mIndex);
-            boolean isGif = false;
-            try {
-                isGif = MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(
-                        mModel.getMediaItem(mIndex).getMimeType());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            mIsVideoOrGif = mModel.isVideo(mIndex) || isGif;
+            mIsVideoOrGif = mModel.isVideo(mIndex) || mModel.isGif(mIndex);
             mIsDeletable = mModel.isDeletable(mIndex);
             mLoadingState = mModel.getLoadingState(mIndex);
             setScreenNail(mModel.getScreenNail(mIndex));
