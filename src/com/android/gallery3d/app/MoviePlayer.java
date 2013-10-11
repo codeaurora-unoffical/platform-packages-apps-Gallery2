@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -99,6 +100,9 @@ public class MoviePlayer implements
 
     // If the time bar is visible.
     private boolean mShowing;
+
+    // If the resume dialog is visible
+    private boolean mResumeDialogVisible;
 
     private Virtualizer mVirtualizer;
 
@@ -287,6 +291,12 @@ public class MoviePlayer implements
                 onCompletion();
             }
         });
+        builder.setOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mResumeDialogVisible = false;
+            }
+        });
         builder.setPositiveButton(
                 R.string.resume_playing_resume, new OnClickListener() {
             @Override
@@ -305,19 +315,22 @@ public class MoviePlayer implements
             }
         });
         builder.show();
+        mResumeDialogVisible = true;
     }
 
     public void onPause() {
         mHasPaused = true;
         mHandler.removeCallbacksAndMessages(null);
-        mVideoPosition = mVideoView.getCurrentPosition();
-        mBookmarker.setBookmark(mUri, mVideoPosition, mVideoView.getDuration());
-        mVideoView.suspend();
-        mResumeableTime = System.currentTimeMillis() + RESUMEABLE_TIMEOUT;
+        if (!mResumeDialogVisible) {
+            mVideoPosition = mVideoView.getCurrentPosition();
+            mBookmarker.setBookmark(mUri, mVideoPosition, mVideoView.getDuration());
+            mVideoView.suspend();
+            mResumeableTime = System.currentTimeMillis() + RESUMEABLE_TIMEOUT;
+        }
     }
 
     public void onResume() {
-        if (mHasPaused) {
+        if (mHasPaused && !mResumeDialogVisible) {
             if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
                 mVideoView.seekTo(mVideoPosition);
             }
