@@ -93,6 +93,7 @@ public class MoviePlayer implements
     private boolean mCanResumed = false;
     private boolean mKeyguardLocked = false;
     private int mLastSystemUiVis = 0;
+    private MovieActivity mActivity;
 
     // If the time bar is being dragged.
     private boolean mDragging;
@@ -133,7 +134,8 @@ public class MoviePlayer implements
                 mKeyguardLocked = false;
                 mCanResumed = false;
             } else if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
-                onDestroy();
+                if(mActivity != null)
+                    mActivity.finish();
             }
         }
     };
@@ -141,6 +143,7 @@ public class MoviePlayer implements
     public MoviePlayer(View rootView, final MovieActivity movieActivity,
             Uri videoUri, Bundle savedInstance, boolean canReplay) {
         mContext = movieActivity.getApplicationContext();
+        mActivity = movieActivity;
         mRootView = rootView;
         mVideoView = (VideoView) rootView.findViewById(R.id.surface_view);
         mBookmarker = new Bookmarker(movieActivity);
