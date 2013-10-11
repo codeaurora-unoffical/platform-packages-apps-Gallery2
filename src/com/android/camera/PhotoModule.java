@@ -544,7 +544,12 @@ public class PhotoModule
         mCameraStartUpThread = new CameraStartUpThread();
         mCameraStartUpThread.start();
 
+        mPreferences.setLocalId(mActivity, mCameraId);
+        CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
         // Surface texture is from camera screen nail and startPreview needs it.
         // This must be done before startPreview.
         mIsImageCaptureIntent = isImageCaptureIntent();
@@ -554,8 +559,6 @@ public class PhotoModule
             mActivity.createCameraScreenNail(!mIsImageCaptureIntent);
         }
 
-        mPreferences.setLocalId(mActivity, mCameraId);
-        CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
         // we need to reset exposure for the preview
         resetExposureCompensation();
         // Starting the preview needs preferences, camera screen nail, and
@@ -585,9 +588,6 @@ public class PhotoModule
         mAm.getMemoryInfo(memInfo);
         SECONDARY_SERVER_MEM = memInfo.secondaryServerThreshold;
 
-        Storage.setSaveSDCard(
-            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
-        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     private void initializeControlByIntent() {

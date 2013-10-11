@@ -487,6 +487,9 @@ public class VideoModule implements CameraModule,
 
         mContentResolver = mActivity.getContentResolver();
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
         // Surface texture is from camera screen nail and startPreview needs it.
         // This must be done before startPreview.
         mIsVideoCaptureIntent = isVideoCaptureIntent();
@@ -543,9 +546,6 @@ public class VideoModule implements CameraModule,
         if (effectsActive()) {
             mUI.enableShutter(false);
         }
-        Storage.setSaveSDCard(
-            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
-        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     @Override
