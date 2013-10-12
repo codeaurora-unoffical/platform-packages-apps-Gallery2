@@ -245,9 +245,6 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
 
         mCategoryFiltersAdapter = new CategoryAdapter(this);
         for (FilterRepresentation representation : filtersRepresentations) {
-            if (representation.getTextId() != 0) {
-                representation.setName(getString(representation.getTextId()));
-            }
             mCategoryFiltersAdapter.add(new Action(this, representation));
         }
     }
