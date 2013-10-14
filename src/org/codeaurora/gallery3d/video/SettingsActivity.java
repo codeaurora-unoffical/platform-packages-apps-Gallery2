@@ -19,6 +19,7 @@ import android.preference.PreferenceCategory;
 import android.preference.RingtonePreference;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract;
+import android.provider.Settings.System;
 import android.provider.Telephony;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.TelephonyManager;
@@ -91,6 +92,7 @@ public class SettingsActivity extends PreferenceActivity {
                 mRtpMinPort.setSummary(summary);
                 mRtpMinPort.setText(summary);
                 Log.d("rtsp", "z66 summary = " + summary);
+                System.putString(getContentResolver(), "streaming_min_udp_port", summary);
                 enableRtpPortSetting();
                 return true;
             }
@@ -113,6 +115,7 @@ public class SettingsActivity extends PreferenceActivity {
                 mRtpMaxPort.setSummary(summary);
                 mRtpMaxPort.setText(summary);
                 Log.w("rtsp", "z82 summary = " + summary);
+                System.putString(getContentResolver(), "streaming_max_udp_port", summary);
                 enableRtpPortSetting();
                 return true;
             }
