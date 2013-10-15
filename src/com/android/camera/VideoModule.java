@@ -494,12 +494,10 @@ public class VideoModule implements CameraModule,
             // ignore
         }
 
-        CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        if (screenNail.getSurfaceTexture() == null) {
-            screenNail.acquireSurfaceTexture();
-        }
-
         readVideoPreferences();
+
+        updateCameraScreenNailSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
+
         mUI.setPrefChangedListener(this);
 
         mStartPreviewThread = new StartPreviewThread();
@@ -917,12 +915,12 @@ public class VideoModule implements CameraModule,
     public void onResumeAfterSuper() {
         if (mActivity.mOpenCameraFail || mActivity.mCameraDisabled)
             return;
-        mUI.enableShutter(false);
         mZoomValue = 0;
 
         showVideoSnapshotUI(false);
+        mUI.enableShutter(false);
 
-        if (!mPreviewing) {
+        if (!mPreviewing && mStartPreviewThread == null) {
             resetEffect();
             openCamera();
             if (mActivity.mOpenCameraFail) {
@@ -1051,7 +1049,7 @@ public class VideoModule implements CameraModule,
     }
 
     private void onPreviewStarted() {
-        mUI.enableShutter(true);
+        mHandler.sendEmptyMessage(ENABLE_SHUTTER_BUTTON);
         mHandler.sendEmptyMessage(START_PREVIEW_DONE);
     }
 
