@@ -167,7 +167,7 @@ public class GifDecoder extends Thread {
                 // use image before last
                 int n = frameCount - 2;
                 if (n > 0) {
-                    lastImage = getFrameImage(n - 1);
+                    lastImage = getPreUndisposedImage(n - 1);
                 } else {
                     lastImage = null;
                 }
@@ -265,6 +265,21 @@ public class GifDecoder extends Thread {
             i++;
         }
         return null;
+    }
+
+    private Bitmap getPreUndisposedImage(int n) {
+        Bitmap preUndisposedImage = null;
+        GifFrame frame = gifFrame;
+        int i = 0;
+        while (frame != null && i <= n) {
+            if (frame.dispose == 1) {
+                preUndisposedImage = frame.image;
+            } else {
+                frame = frame.nextFrame;
+            }
+            i++;
+        }
+        return preUndisposedImage;
     }
 
     public void reset() {
@@ -617,14 +632,14 @@ public class GifDecoder extends Thread {
             // createImage(width, height);
             setPixels(); // transfer pixel data to image
             if (gifFrame == null) {
-                gifFrame = new GifFrame(image, delay);
+                gifFrame = new GifFrame(image, delay, dispose);
                 currentFrame = gifFrame;
             } else {
                 GifFrame f = gifFrame;
                 while (f.nextFrame != null) {
                     f = f.nextFrame;
                 }
-                f.nextFrame = new GifFrame(image, delay);
+                f.nextFrame = new GifFrame(image, delay, dispose);
             }
             // frames.addElement(new GifFrame(image, delay)); // add image to
             // frame
