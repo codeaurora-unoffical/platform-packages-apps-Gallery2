@@ -91,7 +91,6 @@ public class VideoMenu extends PieController
                 CameraSettings.KEY_VIDEO_HDR,
                 CameraSettings.KEY_POWER_MODE,
                 CameraSettings.KEY_WHITE_BALANCE,
-                CameraSettings.KEY_VIDEO_HIGH_FRAME_RATE,
                 CameraSettings.KEY_VIDEOCAMERA_FLASH_MODE,
        };
 
