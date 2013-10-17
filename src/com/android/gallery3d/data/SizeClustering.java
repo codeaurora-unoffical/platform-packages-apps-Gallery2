@@ -57,6 +57,7 @@ public class SizeClustering extends Clustering {
         baseSet.enumerateTotalMediaItems(new MediaSet.ItemConsumer() {
             @Override
             public void consume(int index, MediaItem item) {
+                if (item == null) return;
                 // Find the cluster this item belongs to.
                 long size = item.getSize();
                 int i;

@@ -96,6 +96,7 @@ public class FaceClustering extends Clustering {
         baseSet.enumerateTotalMediaItems(new MediaSet.ItemConsumer() {
             @Override
             public void consume(int index, MediaItem item) {
+                if (item == null) return;
                 Face[] faces = item.getFaces();
                 if (faces == null || faces.length == 0) {
                     untagged.add(item, -1);
