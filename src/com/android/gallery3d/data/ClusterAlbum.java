@@ -129,7 +129,7 @@ public class ClusterAlbum extends MediaSet implements ContentListener {
         ItemConsumer consumer = new ItemConsumer() {
             @Override
             public void consume(int index, MediaItem item) {
-                if ((item.getSupportedOperations() & SUPPORT_DELETE) != 0) {
+                if (item != null && (item.getSupportedOperations() & SUPPORT_DELETE) != 0) {
                     item.delete();
                 }
             }
