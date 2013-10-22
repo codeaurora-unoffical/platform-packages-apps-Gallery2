@@ -76,7 +76,7 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
         notifyContentChanged();
     }
 
-    private void updateClusters() {
+    private synchronized void updateClusters() {
         /*
         for (ClusterAlbum entry : mAlbums) {
             entry.clear();
