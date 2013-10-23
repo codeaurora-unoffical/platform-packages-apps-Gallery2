@@ -585,8 +585,6 @@ public class PhotoModule
         mAm.getMemoryInfo(memInfo);
         SECONDARY_SERVER_MEM = memInfo.secondaryServerThreshold;
 
-        initSoundPool();
-
         Storage.setSaveSDCard(
             mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
         mSaveToSDCard = Storage.isSaveSDCard();
@@ -1901,6 +1899,7 @@ public class PhotoModule
     @Override
     public void onResumeBeforeSuper() {
         mPaused = false;
+        initSoundPool();
     }
 
     @Override
@@ -1979,6 +1978,7 @@ public class PhotoModule
             stopSoundPool();
             cancelLongShot();
         }
+        releaseSoundPool();
     }
 
     @Override
@@ -3179,8 +3179,16 @@ public class PhotoModule
         mSoundStreamID = -1;
     }
 
+    private void releaseSoundPool(){
+        if(mSoundPool != null){
+            mSoundPool.release();
+            mSoundPool = null;
+        }
+    }
+
     private void playSoundPool(){
-        if(mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_OFF){
+        if((mSoundPool != null) &&
+            (mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_OFF)){
             //play shutter sound
             mSoundStreamID = mSoundPool.play(mSoundHashMap.get(1), 1.0f, 1.0f, 1, -1, 2.0f);
             mLongshotSoundStatus = LONGSHOT_SOUND_STATUS_ON;
@@ -3188,7 +3196,8 @@ public class PhotoModule
     }
 
     private void stopSoundPool() {
-        if( (mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_ON) &&
+        if((mSoundPool != null) &&
+            (mLongshotSoundStatus == LONGSHOT_SOUND_STATUS_ON) &&
             (mSoundStreamID > 0) ){
             mSoundPool.stop(mSoundStreamID);
         }
