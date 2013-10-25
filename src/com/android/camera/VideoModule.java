@@ -126,6 +126,7 @@ public class VideoModule implements CameraModule,
 
     private ComboPreferences mPreferences;
     private PreferenceGroup mPreferenceGroup;
+    private boolean mSaveToSDCard = false;
 
     private CameraScreenNail.OnFrameDrawnListener mFrameDrawnListener;
 
@@ -497,12 +498,10 @@ public class VideoModule implements CameraModule,
             // ignore
         }
 
-        CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        if (screenNail.getSurfaceTexture() == null) {
-            screenNail.acquireSurfaceTexture();
-        }
-
         readVideoPreferences();
+
+        updateCameraScreenNailSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
+
         mUI.setPrefChangedListener(this);
 
         mStartPreviewThread = new StartPreviewThread();
@@ -531,6 +530,9 @@ public class VideoModule implements CameraModule,
         if (effectsActive()) {
             mUI.enableShutter(false);
         }
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     // SingleTapListener
@@ -622,7 +624,7 @@ public class VideoModule implements CameraModule,
             }
 
             Log.v(TAG, "onOrientationChanged, update parameters");
-            if ( ( mParameters != null )  && mPreviewing ) {
+            if ( ( mParameters != null )  && mPreviewing && !mMediaRecorderRecording ) {
                 setCameraParameters();
             }
 
@@ -926,12 +928,12 @@ public class VideoModule implements CameraModule,
     public void onResumeAfterSuper() {
         if (mActivity.mOpenCameraFail || mActivity.mCameraDisabled)
             return;
-        mUI.enableShutter(false);
         mZoomValue = 0;
 
         showVideoSnapshotUI(false);
+        mUI.enableShutter(false);
 
-        if (!mPreviewing) {
+        if (!mPreviewing && mStartPreviewThread == null) {
             resetEffect();
             openCamera();
             if (mActivity.mOpenCameraFail) {
@@ -1060,7 +1062,7 @@ public class VideoModule implements CameraModule,
     }
 
     private void onPreviewStarted() {
-        mUI.enableShutter(true);
+        mHandler.sendEmptyMessage(ENABLE_SHUTTER_BUTTON);
         mHandler.sendEmptyMessage(START_PREVIEW_DONE);
     }
 
@@ -1580,7 +1582,12 @@ public class VideoModule implements CameraModule,
         // Used when emailing.
         String filename = title + convertOutputFormatToFileExt(outputFileFormat);
         String mime = convertOutputFormatToMimeType(outputFileFormat);
-        String path = Storage.DIRECTORY + '/' + filename;
+        String path = null;
+        if (Storage.isSaveSDCard() && SDCard.instance().isWriteable()) {
+            path = SDCard.instance().getDirectory() + '/' + filename;
+        } else {
+            path = Storage.DIRECTORY + '/' + filename;
+        }
         String tmpPath = path + ".tmp";
         mCurrentVideoValues = new ContentValues(9);
         mCurrentVideoValues.put(Video.Media.TITLE, title);
@@ -2438,6 +2445,17 @@ public class VideoModule implements CameraModule,
                 setCameraParameters();
             }
             mUI.updateOnScreenIndicators(mParameters, mPreferences);
+            Storage.setSaveSDCard(
+                mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+            mActivity.updateStorageSpaceAndHint();
+        }
+    }
+
+    @Override
+    public void onFirstLevelMenuDismiss() {
+        if (mSaveToSDCard != Storage.isSaveSDCard()) {
+            mSaveToSDCard = Storage.isSaveSDCard();
+            mActivity.keepCameraScreenNail();
         }
     }
 

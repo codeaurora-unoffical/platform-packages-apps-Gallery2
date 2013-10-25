@@ -185,6 +185,7 @@ public class PhotoModule
     // The degrees of the device rotated clockwise from its natural orientation.
     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     private ComboPreferences mPreferences;
+    private boolean mSaveToSDCard = false;
 
     private static final String sTempCropFilename = "crop-temp";
 
@@ -491,7 +492,7 @@ public class PhotoModule
                     break;
                }
                case CONFIGURE_SKIN_TONE_FACTOR: {
-                    if (isCameraIdle()) {
+                    if ((mCameraDevice != null) && isCameraIdle()) {
                         mParameters = mCameraDevice.getParameters();
                         mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
                         mCameraDevice.setParameters(mParameters);
@@ -555,6 +556,9 @@ public class PhotoModule
         RightValue = (TextView)mRootView.findViewById(R.id.skintoneright);
         LeftValue = (TextView)mRootView.findViewById(R.id.skintoneleft);
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     private void initializeControlByIntent() {
@@ -1055,6 +1059,7 @@ public class PhotoModule
             mFocusManager.updateFocusUI(); // Ensure focus indicator is hidden.
 
             boolean needRestartPreview = !mIsImageCaptureIntent
+                      && (mCameraState != LONGSHOT)
                       && (mSnapshotMode != CameraInfo.CAMERA_SUPPORT_MODE_ZSL)
                       && (mReceivedSnapNum == mBurstSnapNum);
 
@@ -1603,8 +1608,12 @@ public class PhotoModule
         synchronized(mCameraDevice) {
            if (mCameraState == LONGSHOT) {
                mCameraDevice.setLongshot(false);
-               setCameraState(IDLE);
-               mFocusManager.resetTouchFocus();
+               if (!mFocusManager.isZslEnabled()) {
+                   setupPreview();
+               } else {
+                   setCameraState(IDLE);
+                   mFocusManager.resetTouchFocus();
+               }
            }
         }
 
@@ -1682,8 +1691,7 @@ public class PhotoModule
 
     @Override
     public void onShutterButtonLongClick() {
-        if (mFocusManager.isZslEnabled()
-                && (null != mCameraDevice) && (mCameraState == IDLE)) {
+        if ((null != mCameraDevice) && (mCameraState == IDLE)) {
             int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
             boolean enable = ( prop == 1 );
             if ( enable ) {
@@ -1708,6 +1716,10 @@ public class PhotoModule
     }
 
     private void resizeForPreviewAspectRatio() {
+        if ( mCameraDevice == null || mParameters == null) {
+            Log.e(TAG, "Camera not yet initialized");
+            return;
+        }
         setPreviewFrameLayoutCameraOrientation();
         Size size = mParameters.getPictureSize();
         Log.e(TAG,"Width = "+ size.width+ "Height = "+size.height);
@@ -1962,7 +1974,19 @@ public class PhotoModule
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(true);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_VOLUME_DOWN:
+            if (mActivity.isInCameraApp() && mFirstTimeInitialized
+                && (mUI.mMenuInitialized)) {
+                mUI.onScaleStepResize(false);
+                mGraphView.onScaleChangeDraw(mUI);
+            }
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
             if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
                   mShutterButton.getVisibility() == View.VISIBLE) {
@@ -2030,12 +2054,7 @@ public class PhotoModule
         switch (keyCode) {
         case KeyEvent.KEYCODE_VOLUME_UP:
         case KeyEvent.KEYCODE_VOLUME_DOWN:
-            if (mActivity.isInCameraApp() && mFirstTimeInitialized &&
-                  mShutterButton.getVisibility() == View.VISIBLE) {
-                onShutterButtonClick();
-                return true;
-            }
-            return false;
+            return true;
         case KeyEvent.KEYCODE_FOCUS:
             if (mFirstTimeInitialized) {
                 onShutterButtonFocus(false);
@@ -2818,6 +2837,17 @@ public class PhotoModule
                 disableSkinToneSeekBar();
             }
         }
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mActivity.updateStorageSpaceAndHint();
+    }
+
+    @Override
+    public void onFirstLevelMenuDismiss() {
+        if (mSaveToSDCard != Storage.isSaveSDCard()) {
+            mSaveToSDCard = Storage.isSaveSDCard();
+            mActivity.keepCameraScreenNail();
+        }
     }
 
     @Override
@@ -3196,5 +3226,10 @@ class GraphView extends View {
     }
     public void setPhotoModuleObject(PhotoModule photoModule) {
         mPhotoModule = photoModule;
+    }
+
+    public void onScaleChangeDraw(PhotoUI ui)
+    {
+        ui.onScaleChangeDraw(mCanvas);
     }
 }

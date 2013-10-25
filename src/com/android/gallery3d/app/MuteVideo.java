@@ -16,6 +16,8 @@
 
 package com.android.gallery3d.app;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -23,6 +25,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.widget.Toast;
+import android.media.MediaFile;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.data.MediaItem;
@@ -40,6 +43,14 @@ public class MuteVideo {
     private SaveVideoFileInfo mDstFileInfo = null;
     private Activity mActivity = null;
     private final Handler mHandler = new Handler();
+    private MediaFile.MediaFileType mediaFileType = null;
+    private String mMimeType;
+    ArrayList<String> mUnsupportedMuteFileTypes = new ArrayList<String>();
+    private final String FILE_TYPE_DIVX = "video/divx";
+    private final String FILE_TYPE_AVI = "video/avi";
+    private final String FILE_TYPE_WMV = "video/x-ms-wmv";
+    private final String FILE_TYPE_ASF = "video/x-ms-asf";
+    private final String FILE_TYPE_WEBM = "video/webm";
 
     final String TIME_STAMP_NAME = "'MUTE'_yyyyMMdd_HHmmss";
 
@@ -47,12 +58,31 @@ public class MuteVideo {
         mUri = uri;
         mFilePath = filePath;
         mActivity = activity;
+        if (mUnsupportedMuteFileTypes != null) {
+            mUnsupportedMuteFileTypes.add(FILE_TYPE_DIVX);
+            mUnsupportedMuteFileTypes.add(FILE_TYPE_AVI);
+            mUnsupportedMuteFileTypes.add(FILE_TYPE_WMV);
+            mUnsupportedMuteFileTypes.add(FILE_TYPE_ASF);
+            mUnsupportedMuteFileTypes.add(FILE_TYPE_WEBM);
+        }
     }
 
     public void muteInBackground() {
         mDstFileInfo = SaveVideoFileUtils.getDstMp4FileInfo(TIME_STAMP_NAME,
                 mActivity.getContentResolver(), mUri,
                 mActivity.getString(R.string.folder_download));
+
+        mediaFileType = MediaFile.getFileType(mFilePath);
+        if (mediaFileType != null) {
+             mMimeType = mediaFileType.mimeType;
+        }
+        if(!isValidFileForMute(mMimeType)) {
+            Toast.makeText(mActivity.getApplicationContext(),
+                           mActivity.getString(R.string.mute_nosupport),
+                           Toast.LENGTH_SHORT)
+                           .show();
+            return;
+        }
 
         showProgressDialog();
         new Thread(new Runnable() {
@@ -111,5 +141,17 @@ public class MuteVideo {
         mMuteProgress.setCancelable(false);
         mMuteProgress.setCanceledOnTouchOutside(false);
         mMuteProgress.show();
+    }
+    private boolean isValidFileForMute(String mimeType) {
+        if (mimeType != null) {
+            for (String fileType : mUnsupportedMuteFileTypes) {
+               if (mimeType.equals(fileType)) {
+                   return false;
+               }
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 }

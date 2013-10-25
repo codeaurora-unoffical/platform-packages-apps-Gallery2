@@ -45,6 +45,7 @@ public class TagClustering extends Clustering {
         baseSet.enumerateTotalMediaItems(new MediaSet.ItemConsumer() {
             @Override
             public void consume(int index, MediaItem item) {
+                if (item == null) return;
                 Path path = item.getPath();
 
                 String[] tags = item.getTags();

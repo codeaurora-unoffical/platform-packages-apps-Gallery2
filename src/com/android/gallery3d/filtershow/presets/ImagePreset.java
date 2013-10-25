@@ -194,7 +194,7 @@ public class ImagePreset {
         }
         for (int i = 0; i < mFilters.size(); i++) {
             FilterRepresentation filter = mFilters.elementAt(i);
-            if (filter.getName().equalsIgnoreCase("Autocolor")
+            if (filter.getName().equalsIgnoreCase("WBalance")
                     || filter.getName().equalsIgnoreCase("Negative")) {
                 return true;
             }

@@ -374,6 +374,7 @@ public class PhotoDataAdapter implements PhotoPage.Model {
             if (entry.fullImageTask != null) entry.fullImageTask.cancel();
             if (entry.screenNailTask != null) entry.screenNailTask.cancel();
             if (entry.screenNail != null) entry.screenNail.recycle();
+            if (entry.fullImage != null) entry.fullImage.recycle();
         }
         mImageCache.clear();
         mTileProvider.clear();
@@ -509,6 +510,14 @@ public class PhotoDataAdapter implements PhotoPage.Model {
         return (item == null)
                 ? false
                 : item.getMediaType() == MediaItem.MEDIA_TYPE_VIDEO;
+    }
+
+    @Override
+    public boolean isGif(int offset) {
+        MediaItem item = getItem(mCurrentIndex + offset);
+        return (item == null)
+                ? false
+                : MediaItem.MIME_TYPE_GIF.equalsIgnoreCase(item.getMimeType());
     }
 
     @Override

@@ -91,6 +91,7 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
         Log.v(TAG, "enableRewindAndForward is " + enableRewindAndForward);
         mControllerRewindAndForwardExt.init(context);
         mScreenModeExt.init(context, mTimeBar);
+        mBackground.setClickable(true);
         hide();
     }
 
