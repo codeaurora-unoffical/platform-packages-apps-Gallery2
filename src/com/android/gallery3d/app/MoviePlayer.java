@@ -214,7 +214,8 @@ public class MoviePlayer implements
                 mKeyguardLocked = false;
                 mCanResumed = false;
             } else if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
-                onDestroy();
+                Log.v(TAG, "Intent.ACTION_SHUTDOWN received");
+                mActivityContext.finish();
             }
         }
     };
@@ -410,7 +411,9 @@ public class MoviePlayer implements
     }
 
     public void setDefaultScreenMode() {
+        addBackground();
         mController.setDefaultScreenMode();
+        removeBackground();
     }
 
     public boolean onPause() {
@@ -452,8 +455,7 @@ public class MoviePlayer implements
         mVideoLastDuration = duration > 0 ? duration : mVideoLastDuration;
         mBookmarker.setBookmark(mMovieItem.getUri(), mVideoPosition, mVideoLastDuration);
         long end1 = System.currentTimeMillis();
-        // change suspend to release for sync paused and killed case
-        mVideoView.stopPlayback();
+        mVideoView.suspend();
         mResumeableTime = System.currentTimeMillis() + RESUMEABLE_TIMEOUT;
         mVideoView.setResumed(false);// avoid start after surface created
         // Workaround for last-seek frame difference
@@ -503,7 +505,8 @@ public class MoviePlayer implements
                     pauseVideo();
                     break;
                 default:
-                    doStartVideo(true, mVideoPosition, mVideoLastDuration);
+                    mVideoView.seekTo(mVideoPosition);
+                    mVideoView.resume();
                     pauseVideoMoreThanThreeMinutes();
                     break;
             }
@@ -579,14 +582,15 @@ public class MoviePlayer implements
         }
         if (start) {
             mVideoView.start();
+            mVideoView.setVisibility(View.VISIBLE);
+            mActivityContext.initEffects(mVideoView.getAudioSessionId());
         }
         //we may start video from stopVideo,
         //this case, we should reset canReplay flag according canReplay and loop
         boolean loop = mPlayerExt.getLoop();
         boolean canReplay = loop ? loop : mCanReplay;
         mController.setCanReplay(canReplay);
-        if (position > 0 && (mVideoCanSeek || mVideoView.canSeekBackward()
-                    || mVideoView.canSeekForward())) {
+        if (position > 0 && (mVideoCanSeek || mVideoView.canSeek())) {
             mVideoView.seekTo(position);
         }
         if (enableFasten) {
@@ -698,7 +702,7 @@ public class MoviePlayer implements
 
     @Override
     public void onSeekMove(int time) {
-        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+        if (mVideoView.canSeek()) {
             mVideoView.seekTo(time);
         }
     }
@@ -706,7 +710,7 @@ public class MoviePlayer implements
     @Override
     public void onSeekEnd(int time, int start, int end) {
         mDragging = false;
-        if (mVideoView.canSeekBackward() || mVideoView.canSeekForward()) {
+        if (mVideoView.canSeek()) {
             mVideoView.seekTo(time);
         }
     }
@@ -766,7 +770,7 @@ public class MoviePlayer implements
         }
         getVideoInfo(mp);
         boolean canPause = mVideoView.canPause();
-        boolean canSeek = mVideoView.canSeekBackward() && mVideoView.canSeekForward();
+        boolean canSeek = mVideoView.canSeek();
         mOverlayExt.setCanPause(canPause);
         mOverlayExt.setCanScrubbing(canSeek);
         mController.setPlayPauseReplayResume();
@@ -1096,6 +1100,7 @@ public class MoviePlayer implements
                 mVideoView.stopPlayback();
                 mVideoView.setVisibility(View.INVISIBLE);
                 clearVideoInfo();
+                mActivityContext.releaseEffects();
                 mMovieItem = next;
                 mActivityContext.refreshMovieInfo(mMovieItem);
                 doStartVideo(false, 0, 0);
@@ -1130,8 +1135,8 @@ public class MoviePlayer implements
             mVideoView.stopPlayback();
             mVideoView.setResumed(false);
             mVideoView.setVisibility(View.INVISIBLE);
-            mVideoView.setVisibility(View.VISIBLE);
             clearVideoInfo();
+            mActivityContext.releaseEffects();
             mFirstBePlayed = false;
             mController.setCanReplay(true);
             mController.showEnded();

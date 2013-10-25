@@ -142,6 +142,7 @@ public class VideoUtils {
         HashMap<Integer, Integer> indexMap = new HashMap<Integer,
                 Integer>(trackCount);
         int bufferSize = -1;
+        int videoTrackIndex = -1;
         for (int i = 0; i < trackCount; i++) {
             MediaFormat format = extractor.getTrackFormat(i);
             String mime = format.getString(MediaFormat.KEY_MIME);
@@ -152,6 +153,7 @@ public class VideoUtils {
                 selectCurrentTrack = true;
             } else if (mime.startsWith("video/") && useVideo) {
                 selectCurrentTrack = true;
+                videoTrackIndex = i;
             }
 
             if (selectCurrentTrack) {
@@ -181,10 +183,6 @@ public class VideoUtils {
             }
         }
 
-        if (startMs > 0) {
-            extractor.seekTo(startMs * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
-        }
-
         // Copy the samples from MediaExtractor to MediaMuxer. We will loop
         // for copying each sample and stop when we get to the end of the source
         // file or exceed the end time of the trimming.
@@ -193,35 +191,58 @@ public class VideoUtils {
         ByteBuffer dstBuf = ByteBuffer.allocate(bufferSize);
         BufferInfo bufferInfo = new BufferInfo();
 
-        muxer.start();
-        while (true) {
-            bufferInfo.offset = offset;
-            bufferInfo.size = extractor.readSampleData(dstBuf, offset);
-            if (bufferInfo.size < 0) {
-                Log.d(LOGTAG, "Saw input EOS.");
-                bufferInfo.size = 0;
-                break;
-            } else {
-                bufferInfo.presentationTimeUs = extractor.getSampleTime();
-                if (endMs > 0 && bufferInfo.presentationTimeUs > (endMs * 1000)) {
-                    Log.d(LOGTAG, "The current sample is over the trim end time.");
-                    break;
-                } else {
-                    bufferInfo.flags = extractor.getSampleFlags();
-                    trackIndex = extractor.getSampleTrackIndex();
-
-                    muxer.writeSampleData(indexMap.get(trackIndex), dstBuf,
-                            bufferInfo);
-                    extractor.advance();
+        if (startMs > 0) {
+            extractor.seekTo(startMs * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+            // find the closest sync frame and seek to it
+            if (videoTrackIndex >= 0) {
+                long syncUs = startMs * 1000;
+                while (true) {
+                    bufferInfo.offset = offset;
+                    bufferInfo.size = extractor.readSampleData(dstBuf, offset);
+                    if (bufferInfo.size < 0) {
+                        Log.d(LOGTAG, "Saw input EOS when finding sync frame.");
+                        bufferInfo.size = 0;
+                        break;
+                    } else {
+                        trackIndex = extractor.getSampleTrackIndex();
+                        if (trackIndex == videoTrackIndex) {
+                            syncUs = extractor.getSampleTime();
+                            break;
+                        }
+                        extractor.advance();
+                    }
                 }
+                extractor.seekTo(syncUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
             }
         }
 
+        muxer.start();
         try {
+            while (true) {
+                bufferInfo.offset = offset;
+                bufferInfo.size = extractor.readSampleData(dstBuf, offset);
+                if (bufferInfo.size < 0) {
+                    Log.d(LOGTAG, "Saw input EOS.");
+                    bufferInfo.size = 0;
+                    break;
+                } else {
+                    bufferInfo.presentationTimeUs = extractor.getSampleTime();
+                    if (endMs > 0 && bufferInfo.presentationTimeUs > (endMs * 1000)) {
+                        Log.d(LOGTAG, "The current sample is over the trim end time.");
+                        break;
+                    } else {
+                        bufferInfo.flags = extractor.getSampleFlags();
+                        trackIndex = extractor.getSampleTrackIndex();
+
+                        muxer.writeSampleData(indexMap.get(trackIndex), dstBuf,
+                                bufferInfo);
+                        extractor.advance();
+                    }
+                }
+            }
             muxer.stop();
-        } catch (IllegalStateException e) {
+        } catch  (IllegalStateException e) {
             e.printStackTrace();
-            Log.e(LOGTAG, "Failed to stop MediaMuxer");
             File f = new File(dstPath);
             if (f.exists()) {
                 f.delete();
@@ -230,6 +251,7 @@ public class VideoUtils {
         } finally {
             muxer.release();
         }
+
         return;
     }
 
