@@ -35,6 +35,7 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.location.Location;
+import android.media.AudioManager;
 import android.media.CamcorderProfile;
 import android.media.CameraProfile;
 import android.media.MediaRecorder;
@@ -1756,6 +1757,15 @@ public class VideoModule implements CameraModule,
                 mMediaRecorder.start(); // Recording is now started
             } catch (RuntimeException e) {
                 Log.e(TAG, "Could not start media recorder. ", e);
+                AudioManager audioMgr = (AudioManager)mActivity.getSystemService(Context.AUDIO_SERVICE);
+                boolean isInCall = ((audioMgr.getMode() == AudioManager.MODE_IN_CALL) ||
+                        (audioMgr.getMode() == AudioManager.MODE_IN_COMMUNICATION));
+                if (isInCall) {
+                    Toast.makeText(mActivity, R.string.in_call_video_error, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mActivity, R.string.internal_video_error, Toast.LENGTH_SHORT).show();
+                }
+
                 releaseMediaRecorder();
                 // If start fails, frameworks will not lock the camera for us.
                 mActivity.mCameraDevice.lock();
@@ -1792,7 +1802,7 @@ public class VideoModule implements CameraModule,
         }
         mRecordingTotalTime = 0L;
         mRecordingStartTime = SystemClock.uptimeMillis();
-        mUI.showRecordingUI(true, mParameters.isZoomSupported());
+        mUI.showRecordingUI(true, mParameters.isZoomSupported(), mCaptureTimeLapse);
 
         updateRecordingTime();
         keepScreenOn();
@@ -1900,7 +1910,7 @@ public class VideoModule implements CameraModule,
                 closeCamera(closeEffects);
             }
 
-            mUI.showRecordingUI(false, mParameters.isZoomSupported());
+            mUI.showRecordingUI(false, mParameters.isZoomSupported(), mCaptureTimeLapse);
             if (!mIsVideoCaptureIntent) {
                 mUI.enableCameraControls(true);
             }
