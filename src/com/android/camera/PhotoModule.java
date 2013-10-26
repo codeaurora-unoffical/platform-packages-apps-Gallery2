@@ -493,9 +493,11 @@ public class PhotoModule
                }
                case CONFIGURE_SKIN_TONE_FACTOR: {
                     if ((mCameraDevice != null) && isCameraIdle()) {
-                        mParameters = mCameraDevice.getParameters();
-                        mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
-                        mCameraDevice.setParameters(mParameters);
+                        synchronized (mCameraDevice) {
+                            mParameters = mCameraDevice.getParameters();
+                            mParameters.set("skinToneEnhancement", String.valueOf(msg.arg1));
+                            mCameraDevice.setParameters(mParameters);
+                        }
                     }
                     break;
                }
@@ -1434,12 +1436,13 @@ public class PhotoModule
                     Integer.toString(mParameters.getExposureCompensation()),
                     mCurrTouchAfAec, mParameters.getAutoExposure(),
                     Integer.toString(mParameters.getSaturation()),
-                    Integer.toString(mParameters.getContrast()));
+                    Integer.toString(mParameters.getContrast()),
+                    mParameters.getColorEffect());
         } else if (mFocusManager.isZslEnabled()) {
             overrideCameraSettings(null, null, mParameters.getFocusMode(),
-                                   null, null, null, null, null);
+                                   null, null, null, null, null,null);
         } else {
-            overrideCameraSettings(null, null, null, null, null, null, null, null);
+            overrideCameraSettings(null, null, null, null, null, null, null, null,null);
         }
     }
 
@@ -1447,7 +1450,7 @@ public class PhotoModule
             final String whiteBalance, final String focusMode,
             final String exposureMode, final String touchMode,
             final String autoExposure, final String saturation,
-            final String contrast) {
+            final String contrast,     final String coloreffect) {
         mUI.overrideSettings(
                 CameraSettings.KEY_FLASH_MODE, flashMode,
                 CameraSettings.KEY_WHITE_BALANCE, whiteBalance,
@@ -1456,7 +1459,8 @@ public class PhotoModule
                 CameraSettings.KEY_TOUCH_AF_AEC, touchMode,
                 CameraSettings.KEY_AUTOEXPOSURE, autoExposure,
                 CameraSettings.KEY_SATURATION, saturation,
-                CameraSettings.KEY_CONTRAST, contrast);
+                CameraSettings.KEY_CONTRAST, contrast,
+                CameraSettings.KEY_COLOR_EFFECT, coloreffect);
     }
 
     private void loadCameraPreferences() {
@@ -2009,10 +2013,12 @@ public class PhotoModule
                   (mFocusManager.getCurrentFocusState() != mFocusManager.STATE_FOCUSING_SNAP_ON_FINISH) ) {
                 if (mbrightness > MINIMUM_BRIGHTNESS) {
                     mbrightness-=mbrightness_step;
-                    /* Set the "luma-adaptation" parameter */
-                    mParameters = mCameraDevice.getParameters();
-                    mParameters.set("luma-adaptation", String.valueOf(mbrightness));
-                    mCameraDevice.setParameters(mParameters);
+                    synchronized (mCameraDevice) {
+                        /* Set the "luma-adaptation" parameter */
+                        mParameters = mCameraDevice.getParameters();
+                        mParameters.set("luma-adaptation", String.valueOf(mbrightness));
+                        mCameraDevice.setParameters(mParameters);
+                    }
                 }
                 brightnessProgressBar.setProgress(mbrightness);
                 brightnessProgressBar.setVisibility(View.VISIBLE);
@@ -2024,10 +2030,12 @@ public class PhotoModule
                   (mFocusManager.getCurrentFocusState() != mFocusManager.STATE_FOCUSING_SNAP_ON_FINISH) ) {
                 if (mbrightness < MAXIMUM_BRIGHTNESS) {
                     mbrightness+=mbrightness_step;
-                    /* Set the "luma-adaptation" parameter */
-                    mParameters = mCameraDevice.getParameters();
-                    mParameters.set("luma-adaptation", String.valueOf(mbrightness));
-                    mCameraDevice.setParameters(mParameters);
+                    synchronized (mCameraDevice) {
+                        /* Set the "luma-adaptation" parameter */
+                        mParameters = mCameraDevice.getParameters();
+                        mParameters.set("luma-adaptation", String.valueOf(mbrightness));
+                        mCameraDevice.setParameters(mParameters);
+                    }
                 }
                 brightnessProgressBar.setProgress(mbrightness);
                 brightnessProgressBar.setVisibility(View.VISIBLE);
@@ -2728,19 +2736,21 @@ public class PhotoModule
     // the subsets actually need updating. The PREFERENCE set needs extra
     // locking because the preference can be changed from GLThread as well.
     private void setCameraParameters(int updateSet) {
-        if ((updateSet & UPDATE_PARAM_INITIALIZE) != 0) {
-            updateCameraParametersInitialize();
-        }
+        synchronized (mCameraDevice) {
+            if ((updateSet & UPDATE_PARAM_INITIALIZE) != 0) {
+                updateCameraParametersInitialize();
+            }
 
-        if ((updateSet & UPDATE_PARAM_ZOOM) != 0) {
-            updateCameraParametersZoom();
-        }
+            if ((updateSet & UPDATE_PARAM_ZOOM) != 0) {
+                updateCameraParametersZoom();
+            }
 
-        if ((updateSet & UPDATE_PARAM_PREFERENCE) != 0) {
-            updateCameraParametersPreference();
-        }
+            if ((updateSet & UPDATE_PARAM_PREFERENCE) != 0) {
+                updateCameraParametersPreference();
+            }
 
-        mCameraDevice.setParameters(mParameters);
+            mCameraDevice.setParameters(mParameters);
+        }
     }
 
     // If the Camera is idle, update the parameters immediately, otherwise
