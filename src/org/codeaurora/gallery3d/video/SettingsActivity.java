@@ -43,7 +43,7 @@ public class SettingsActivity extends PreferenceActivity {
     public static final String PREFERENCE_BUFFER_SIZE = "buffer_size";
     public static final String PREFERENCE_APN = "apn";
 
-    private static final int DEFAULT_RTP_MINPORT = 15550;
+    private static final int DEFAULT_RTP_MINPORT = 8192;
     private static final int DEFAULT_RTP_MAXPORT = 65535;
     private static final int DEFAULT_CACHE_MIN_SIZE = 4 * 1024 * 1024;
     private static final int DEFAULT_CACHE_MAX_SIZE = 20 * 1024 * 1024;
