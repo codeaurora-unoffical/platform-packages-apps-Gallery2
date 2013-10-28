@@ -262,7 +262,7 @@ public class PanoramaModule implements CameraModule,
                         renderer.showPreviewFrame();
                     } else {
                         renderer.alignFrameSync();
-                        mMosaicFrameProcessor.processFrame();
+                        mMosaicFrameProcessor.processFrame(mActivity);
                     }
                 }
             }
