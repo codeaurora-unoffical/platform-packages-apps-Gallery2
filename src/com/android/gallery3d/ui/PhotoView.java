@@ -734,7 +734,12 @@ public class PhotoView extends GLView {
             int s = (int) (scale * Math.min(r.width(), r.height()) + 0.5f);
             if (mIsVideo) drawVideoPlayIcon(canvas, s);
             if (mLoadingState == Model.LOADING_FAIL) {
-                drawLoadingFailMessage(canvas);
+                // we shouldn't show the loading fail message when mFullScreenCamera is true.
+                if (!mFullScreenCamera) {
+                    drawLoadingFailMessage(canvas);
+                } else {
+                    Log.e(TAG, "Screen full with camera, don't show the thumbnail loading fail message.");
+                }
             }
 
             // Draw a debug indicator showing which picture has focus (index ==
