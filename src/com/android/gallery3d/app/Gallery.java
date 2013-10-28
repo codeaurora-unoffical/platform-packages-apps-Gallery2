@@ -160,6 +160,9 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
             getStateManager().startState(SlideshowPage.class, data);
         } else {
             Bundle data = new Bundle();
+            // Used for checking this bundle is from widget or not
+            data.putBoolean(PhotoPage.KEY_IS_FROM_WIDGET,
+                    intent.getBooleanExtra(PhotoPage.KEY_IS_FROM_WIDGET, false));
             DataManager dm = getDataManager();
             Uri uri = intent.getData();
             String contentType = getContentType(intent);

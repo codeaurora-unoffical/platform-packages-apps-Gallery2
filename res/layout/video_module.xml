@@ -19,6 +19,7 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent">
     <com.android.camera.PreviewFrameLayout android:id="@+id/frame"
+            android:layoutDirection="ltr"
             android:layout_height="match_parent"
             android:layout_width="match_parent"
             android:layout_gravity="center">

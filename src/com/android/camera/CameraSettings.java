@@ -30,6 +30,8 @@ import android.hardware.Camera.Size;
 import android.media.CamcorderProfile;
 import android.util.FloatMath;
 import android.util.Log;
+import android.text.TextUtils;
+import android.view.View;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.ApiHelper;
@@ -486,8 +488,20 @@ public class CameraSettings {
         for (int i = minValue; i <= maxValue; ++i) {
             entryValues[i - minValue] = Integer.toString(Math.round(i / step));
             StringBuilder builder = new StringBuilder();
-            if (i > 0) builder.append('+');
-            entries[i - minValue] = builder.append(i).toString();
+            if (View.LAYOUT_DIRECTION_RTL == TextUtils
+                    .getLayoutDirectionFromLocale(Locale.getDefault())) {
+                if (i == 0) {
+                    entries[i - minValue] = builder.append(i).toString();
+                } else {
+                    entries[i - minValue] = builder.append(Math.abs(i))
+                            .append(i > 0 ? "+" : "-").toString();
+                }
+            } else {
+                if (i > 0) {
+                    builder.append('+');
+                }
+                entries[i - minValue] = builder.append(i).toString();
+            }
             labels[i - minValue] = explabel + " " + builder.toString();
             icons[i - minValue] = iconIds.getResourceId(3 + i, 0);
         }
