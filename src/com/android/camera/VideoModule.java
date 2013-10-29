@@ -475,6 +475,9 @@ public class VideoModule implements CameraModule,
 
         mContentResolver = mActivity.getContentResolver();
 
+        Storage.setSaveSDCard(
+            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
+        mSaveToSDCard = Storage.isSaveSDCard();
         // Surface texture is from camera screen nail and startPreview needs it.
         // This must be done before startPreview.
         mIsVideoCaptureIntent = isVideoCaptureIntent();
@@ -531,9 +534,6 @@ public class VideoModule implements CameraModule,
         if (effectsActive()) {
             mUI.enableShutter(false);
         }
-        Storage.setSaveSDCard(
-            mPreferences.getString(CameraSettings.KEY_CAMERA_SAVEPATH, "0").equals("1"));
-        mSaveToSDCard = Storage.isSaveSDCard();
     }
 
     // SingleTapListener
@@ -2142,8 +2142,10 @@ public class VideoModule implements CameraModule,
         }
         if (isSupported(HighFrameRate,
                 mParameters.getSupportedVideoHighFrameRateModes()) &&
-                !mUnsupportedHFRVideoSize) {
+                !mUnsupportedHFRVideoSize && !("off".equals(HighFrameRate))) {
             mParameters.setVideoHighFrameRate(HighFrameRate);
+            int hfr_value = Integer.parseInt(HighFrameRate);
+            mParameters.setPreviewFpsRange(hfr_value*1000, hfr_value*1000);
         } else
             mParameters.setVideoHighFrameRate("off");
 
@@ -2204,7 +2206,7 @@ public class VideoModule implements CameraModule,
     private void setCameraParameters() {
         Log.d(TAG,"Preview dimension in App->"+mDesiredPreviewWidth+"X"+mDesiredPreviewHeight);
         mParameters.setPreviewSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
-        mParameters.setPreviewFrameRate(mProfile.videoFrameRate);
+        mParameters.setPreviewFpsRange(mProfile.videoFrameRate*1000, mProfile.videoFrameRate*1000);
 
         videoWidth = mProfile.videoFrameWidth;
         videoHeight = mProfile.videoFrameHeight;

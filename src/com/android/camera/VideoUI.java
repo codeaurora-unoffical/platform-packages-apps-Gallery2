@@ -400,6 +400,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
 
     public void showRecordingUI(boolean recording, boolean zoomSupported, boolean isTimeLapse) {
         mMenu.setVisibility(recording ? View.GONE : View.VISIBLE);
+        mMenu.setEnabled(recording ? false : true);
         mOnScreenIndicators.setVisibility(recording ? View.GONE : View.VISIBLE);
         if (recording) {
             mShutterButton.setImageResource(R.drawable.btn_shutter_video_recording);
