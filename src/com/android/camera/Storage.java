@@ -107,7 +107,13 @@ public class Storage {
             }
         } else if (jpeg != null) {
             if (!(pictureFormat.equalsIgnoreCase("jpeg") || pictureFormat == null)) {
-                 File dir = new File(RAW_DIRECTORY);
+                 String folder = null;
+                 if (isSaveSDCard() && SDCard.instance().isWriteable()) {
+                     folder = SDCard.instance().getRawDirectory();
+                 } else {
+                     folder = RAW_DIRECTORY;
+                 }
+                 File dir = new File(folder);
                  dir.mkdirs();
             }
             writeFile(path, jpeg);
@@ -165,14 +171,27 @@ public class Storage {
     }
 
     public static String generateFilepath(String title, String pictureFormat) {
+        boolean isJpeg = false;
+        String extension = null;
+        String folder = null;
         if (pictureFormat == null || pictureFormat.equalsIgnoreCase("jpeg")) {
-            if (isSaveSDCard() && SDCard.instance().isWriteable()) {
-                return SDCard.instance().getDirectory() + '/' + title + ".jpg";
+            isJpeg = true;
+            extension = ".jpg";
+            folder = DIRECTORY;
+        } else {
+            extension = ".raw";
+            folder = RAW_DIRECTORY;
+        }
+        if (isSaveSDCard() && SDCard.instance().isWriteable()) {
+            if (isJpeg) {
+                return SDCard.instance().getDirectory() +
+                    '/' + title + extension;
             } else {
-                return DIRECTORY + '/' + title + ".jpg";
+                return SDCard.instance().getRawDirectory() +
+                    '/' + title + extension;
             }
         } else {
-            return RAW_DIRECTORY + '/' + title + ".raw";
+            return folder + '/' + title + extension;
         }
     }
 
