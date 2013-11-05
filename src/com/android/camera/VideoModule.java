@@ -1756,6 +1756,12 @@ public class VideoModule implements CameraModule,
             // Show the toast.
             Toast.makeText(mActivity, R.string.video_reach_size_limit,
                     Toast.LENGTH_LONG).show();
+        } else if (what == MediaRecorder.MEDIA_RECORDER_INFO_FILE_WRITER_SPEED_NOT_CATCHUP) {
+            if (mMediaRecorderRecording) onStopVideoRecording();
+
+            // Show the toast.
+            Toast.makeText(mActivity, R.string.file_writer_speed_not_catchup,
+                    Toast.LENGTH_LONG).show();
         }
     }
 
