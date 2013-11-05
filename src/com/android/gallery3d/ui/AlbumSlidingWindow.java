@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +26,9 @@ import com.android.gallery3d.app.AlbumDataLoader;
 import com.android.gallery3d.common.Utils;
 import com.android.gallery3d.data.MediaItem;
 import com.android.gallery3d.data.MediaObject;
+// Drm start
+import com.android.gallery3d.data.LocalMediaItem;
+// Drm end
 import com.android.gallery3d.data.MediaObject.PanoramaSupportCallback;
 import com.android.gallery3d.data.Path;
 import com.android.gallery3d.glrenderer.Texture;
@@ -267,6 +272,20 @@ public class AlbumSlidingWindow implements AlbumDataLoader.DataListener {
         entry.mediaType = (item == null)
                 ? MediaItem.MEDIA_TYPE_UNKNOWN
                 : entry.item.getMediaType();
+
+        // DRM Change -- START
+        if (item instanceof LocalMediaItem) {
+            String filePath = ((LocalMediaItem)item).filePath;
+            if (filePath != null && filePath.endsWith(".dcf")) {
+                if (entry.mediaType == MediaObject.MEDIA_TYPE_IMAGE) {
+                    entry.mediaType = MediaObject.MEDIA_TYPE_DRM_IMAGE;
+                } else if (entry.mediaType == MediaObject.MEDIA_TYPE_VIDEO) {
+                    entry.mediaType = MediaObject.MEDIA_TYPE_DRM_VIDEO;
+                }
+            }
+        }
+        // DRM Change -- END
+
         entry.path = (item == null) ? null : item.getPath();
         entry.rotation = (item == null) ? 0 : item.getRotation();
         entry.contentLoader = new ThumbnailLoader(slotIndex, entry.item);

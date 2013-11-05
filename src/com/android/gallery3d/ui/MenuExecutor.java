@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +43,12 @@ import com.android.gallery3d.util.Future;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.ThreadPool.Job;
 import com.android.gallery3d.util.ThreadPool.JobContext;
+
+// DRM -- START
+import android.net.Uri; 
+import android.database.Cursor;
+import android.provider.MediaStore.Video.VideoColumns;
+// DRM -- END
 
 import java.util.ArrayList;
 
@@ -186,6 +194,7 @@ public class MenuExecutor {
         boolean supportCache = (supported & MediaObject.SUPPORT_CACHE) != 0;
         boolean supportEdit = (supported & MediaObject.SUPPORT_EDIT) != 0;
         boolean supportInfo = (supported & MediaObject.SUPPORT_INFO) != 0;
+        boolean supportDrmInfo = (supported & MediaObject.SUPPORT_DRM_INFO) != 0;// DRM Change
 
         setMenuItemVisible(menu, R.id.action_delete, supportDelete);
         setMenuItemVisible(menu, R.id.action_rotate_ccw, supportRotate);
@@ -201,6 +210,7 @@ public class MenuExecutor {
         setMenuItemVisible(menu, R.id.action_edit, supportEdit);
         // setMenuItemVisible(menu, R.id.action_simple_edit, supportEdit);
         setMenuItemVisible(menu, R.id.action_details, supportInfo);
+        setMenuItemVisible(menu, R.id.action_drm_info, supportDrmInfo);// DRM Change
     }
 
     public static void updateMenuForPanorama(Menu menu, boolean shareAsPanorama360,
@@ -277,6 +287,38 @@ public class MenuExecutor {
             case R.id.action_show_on_map:
                 title = R.string.show_on_map;
                 break;
+            // DRM Change -- START
+            case R.id.action_drm_info:
+                DataManager manager = mActivity.getDataManager();
+                Path path = getSingleSelectedPath();
+                Uri uri = manager.getContentUri(path);
+                Log.d(TAG, "onMenuClicked:" + uri);
+                String filepath = null;
+                String scheme = uri.getScheme();
+                if ("file".equals(scheme)) {
+                    filepath = uri.getPath();
+                } else {
+                    Cursor cursor = null;
+                    try {
+                        cursor = mActivity.getAndroidContext().getContentResolver().query(uri,
+                                new String[] {VideoColumns.DATA}, null, null, null);
+                        if (cursor != null && cursor.moveToNext()) {
+                            filepath = cursor.getString(0);
+                        }
+                    } catch (Throwable t) {
+                        Log.w(TAG, "cannot get path from: " + uri);
+                    } finally {
+                        if (cursor != null) cursor.close();
+                    }
+                }
+                Intent drmintent = new Intent("android.drmservice.intent.action.SHOW_PROPERTIES");
+                drmintent.putExtra("DRM_FILE_PATH", filepath);
+                drmintent.putExtra("DRM_TYPE", "OMAV1");
+                Log.d(TAG, "onMenuClicked:------filepath===" + path);
+                mActivity.getAndroidContext().sendBroadcast(drmintent);
+                title = R.string.drm_license_info;
+                break;
+            // DRM Change -- END
             default:
                 return;
         }

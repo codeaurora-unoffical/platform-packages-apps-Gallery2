@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +65,23 @@ import com.android.gallery3d.util.HelpUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+// DRM Change -- Start
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Random;
+import android.database.Cursor;
+import android.net.Uri;
+import android.drm.DrmManagerClient;
+import android.drm.DrmRights;
+import android.drm.DrmStore.RightsStatus;
+import android.drm.DrmStore.Action;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.drm.DrmStore.RightsStatus;
+import android.content.ContentValues;
+import android.provider.MediaStore.Video.VideoColumns;
+// DRM Change -- End
 
 public class AlbumSetPage extends ActivityState implements
         SelectionManager.SelectionListener, GalleryActionBar.ClusterRunner,
@@ -71,6 +90,10 @@ public class AlbumSetPage extends ActivityState implements
     private static final String TAG = "AlbumSetPage";
 
     private static final int MSG_PICK_ALBUM = 1;
+
+    // DRM Change -- Start
+    public static final String BUY_LICENSE="android.drmservice.intent.action.BUY_LICENSE";
+    // DRM Change -- End
 
     public static final String KEY_MEDIA_PATH = "media-path";
     public static final String KEY_SET_TITLE = "set-title";
@@ -242,6 +265,70 @@ public class AlbumSetPage extends ActivityState implements
         if (!mIsActive) return;
 
         MediaSet targetSet = mAlbumSetDataAdapter.getMediaSet(slotIndex);
+        // DRM Change -- Start
+        if (targetSet.getTotalMediaItemCount() == 1) {
+            MediaItem item = null;
+            item = targetSet.getCoverMediaItem();
+            Uri uri = item.getContentUri();
+            Context context = (Context) mActivity;
+
+            Log.d(TAG, "pickAlbum:uri=" + item.getContentUri());
+            String path = null;
+            String scheme = uri.getScheme();
+            if ("file".equals(scheme)) {
+                path = uri.getPath();
+            } else {
+                Cursor cursor = null;
+                try {
+                    cursor = context.getContentResolver().query(uri,
+                            new String[] {VideoColumns.DATA}, null, null, null);
+                    if (cursor != null && cursor.moveToNext()) {
+                        path = cursor.getString(0);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "cannot get path from: " + uri);
+                } finally {
+                    if (cursor != null) cursor.close();
+                }
+            }
+
+            Log.d(TAG, "pickAlbum:path = " + path);
+            if (path != null && path.endsWith(".dcf")) {
+                DrmManagerClient drmClient = new DrmManagerClient(context);
+                int status = -1;
+                Log.d(TAG, "pickAlbum:item type = " + Integer.toString(item.getMediaType()));
+                if (item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE) {
+                   status = drmClient.checkRightsStatus(path, Action.DISPLAY);
+                } else {
+                   status = drmClient.checkRightsStatus(path, Action.PLAY);
+                }
+                Log.d(TAG, "pickAlbum:status fron drmClient.checkRightsStatus is "
+                        + Integer.toString(status));
+
+                ContentValues values = drmClient.getMetadata(path);
+
+                if (RightsStatus.RIGHTS_VALID != status) {
+                    String address = values.getAsString("Rights-Issuer");
+                    Log.d(TAG, "pickAlbum:address = " + address);
+                    Intent intent = new Intent(BUY_LICENSE);
+                    intent.putExtra("DRM_FILE_PATH", address);
+                    context.sendBroadcast(intent);
+                    return;
+                }
+
+                int drmType = values.getAsInteger("DRM-TYPE");
+                Log.d(TAG, "pickAlbum:drm-type = " + Integer.toString(drmType));
+                if (drmType > DrmDeliveryType.FORWARD_LOCK) {
+                    if (item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE) {
+                        item.setConsumeRights(true);
+                    }
+                    Toast.makeText(context, R.string.action_consumes_rights,
+                            Toast.LENGTH_LONG).show();
+                }
+                if (drmClient != null) drmClient.release();
+            }
+        }
+        //DRM Change -- End
         if (targetSet == null) return; // Content is dirty, we shall reload soon
         if (targetSet.getTotalMediaItemCount() == 0) {
             showEmptyAlbumToast(Toast.LENGTH_SHORT);

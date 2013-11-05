@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +52,7 @@ public class NinePatchTexture extends ResourceTexture {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         Bitmap bitmap = BitmapFactory.decodeResource(
-                mContext.getResources(), mResId, options);
+                mContext.getResources(), mResId, options, false); // DRM CHANGE
         mBitmap = bitmap;
         setSize(bitmap.getWidth(), bitmap.getHeight());
         byte[] chunkData = bitmap.getNinePatchChunk();

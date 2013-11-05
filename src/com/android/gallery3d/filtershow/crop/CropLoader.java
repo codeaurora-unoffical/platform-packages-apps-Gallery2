@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +124,7 @@ public abstract class CropLoader {
             is = context.getContentResolver().openInputStream(uri);
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(is, null, options);
+            BitmapFactory.decodeStream(is, null, options, false);// DRM Change
             int w = options.outWidth;
             int h = options.outHeight;
             originalBounds.set(0, 0, w, h);
@@ -153,7 +155,7 @@ public abstract class CropLoader {
             options.inMutable = true;
             is.close();
             is = context.getContentResolver().openInputStream(uri);
-            return BitmapFactory.decodeStream(is, null, options);
+            return BitmapFactory.decodeStream(is, null, options, false);// DRM Change
         } catch (FileNotFoundException e) {
             Log.e(LOGTAG, "FileNotFoundException: " + uri, e);
         } catch (IOException e) {
@@ -182,7 +184,7 @@ public abstract class CropLoader {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inMutable = true;
             options.inSampleSize = sampleSize;
-            return BitmapFactory.decodeStream(is, null, options);
+            return BitmapFactory.decodeStream(is, null, options, false);// DRM Change
         } catch (FileNotFoundException e) {
             Log.e(LOGTAG, "FileNotFoundException: " + uri, e);
         } finally {

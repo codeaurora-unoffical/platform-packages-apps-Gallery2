@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,7 +185,12 @@ public class AlbumSetSlotRenderer extends AbstractSlotRenderer {
                 ((FadeInTexture) content).isAnimating()) {
             renderRequestFlags |= SlotView.RENDER_MORE_FRAME;
         }
-
+        // DRM CHANGES START
+        if ((entry.mediaType == MediaObject.MEDIA_TYPE_DRM_VIDEO)
+                || (entry.mediaType == MediaObject.MEDIA_TYPE_DRM_IMAGE)) {
+            drawDrmOverlay(canvas, width, height, entry.mediaType);
+        }
+        // DRM CHANGES END
         return renderRequestFlags;
     }
 

@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +41,22 @@ import com.android.gallery3d.data.Path;
 import com.android.gallery3d.picasasource.PicasaSource;
 import com.android.gallery3d.util.GalleryUtils;
 
+// Drm Changes Start
+import android.drm.DrmManagerClient; 
+import com.android.gallery3d.data.MediaObject;
+import android.content.ContentValues;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.drm.DrmStore.RightsStatus;
+import android.drm.DrmStore.Action;
+import android.database.Cursor;
+import android.provider.MediaStore.Video.VideoColumns;
+// Drm Changes End
+
 public final class Gallery extends AbstractGalleryActivity implements OnCancelListener {
+    // Drm start
+    public static final String BUY_LICENSE="android.drmservice.intent.action.BUY_LICENSE";
+    // Drm end
+
     public static final String EXTRA_SLIDESHOW = "slideshow";
     public static final String EXTRA_DREAM = "dream";
     public static final String EXTRA_CROP = "crop";
@@ -205,7 +222,74 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
                     startDefaultPage();
                 }
             } else {
-                Path itemPath = dm.findPathByUri(uri, contentType);
+                // DRM CHANGES START
+                Path itemPath = null;
+                String imagePath = null;
+                String scheme = uri.getScheme();
+                if ("file".equals(scheme)) {
+                    imagePath = uri.getPath();
+                } else {
+                    Cursor cursor = null;
+                    try {
+                        cursor = this.getContentResolver().query(uri,
+                                new String[] {VideoColumns.DATA}, null, null, null);
+                        if (cursor != null && cursor.moveToNext()) {
+                            imagePath = cursor.getString(0);
+                        }
+                    } catch (Throwable t) {
+                        Log.d(TAG, "cannot get path from: " + uri);
+                    } finally {
+                        if (cursor != null) cursor.close();
+                    }
+                }
+                String mime_Type = intent.getType();
+                if (imagePath != null && imagePath.endsWith(".dcf") && "*/*".equals(mime_Type)) {
+                    DrmManagerClient drmClient = new DrmManagerClient(this);
+                    mime_Type = drmClient.getOriginalMimeType(imagePath);
+                    if (drmClient != null) drmClient.release();
+                }
+
+                Log.d(TAG, "DRM mime_Type==" + mime_Type);
+                itemPath = getDataManager().findPathByUri(uri, mime_Type);
+                Log.d(TAG, "itemPath=" + itemPath);
+                // If item path not correct, just finish starting the gallery
+                if (itemPath == null) {
+                    finish();
+                    return;
+                }
+
+                Log.d(TAG,"imagePath=" + imagePath);
+                if (intent.getBooleanExtra("WidgetClick", false) == true) {
+                    DrmManagerClient drmClient = new DrmManagerClient(this);
+                    if (RightsStatus.RIGHTS_VALID !=
+                            drmClient.checkRightsStatus(imagePath, Action.DISPLAY)) {
+                        ContentValues values = drmClient.getMetadata(imagePath);
+                        String address = values.getAsString("Rights-Issuer");
+                        Intent buyIntent = new Intent(BUY_LICENSE);
+                        buyIntent.putExtra("DRM_FILE_PATH", address);
+                        sendBroadcast(buyIntent);
+                        Log.d(TAG, "startViewAction:WidgetClick,intent sent");
+                    }
+                    if (drmClient != null) drmClient.release();
+                }
+
+                if (imagePath != null && imagePath.endsWith(".dcf")) {
+                    DrmManagerClient drmClient = new DrmManagerClient(this);
+                    ContentValues values = drmClient.getMetadata(imagePath);
+                    int drmType = values.getAsInteger("DRM-TYPE");
+                    if (drmType > DrmDeliveryType.FORWARD_LOCK) {
+                        MediaItem mediaItem = (MediaItem) getDataManager()
+                                .getMediaObject(itemPath);
+                        if (mediaItem.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE) {
+                            mediaItem.setConsumeRights(true);
+                        }
+                        Toast.makeText(this, R.string.action_consumes_rights,
+                                Toast.LENGTH_LONG).show();
+                    }
+                    if (drmClient != null) drmClient.release();
+                }
+                // DRM CHANGES END
+
                 Path albumPath = dm.getDefaultSetOf(itemPath);
 
                 data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, itemPath.toString());

@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +32,11 @@ import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.ThreadPool.Job;
 import com.android.gallery3d.util.ThreadPool.JobContext;
 import com.android.gallery3d.util.UpdateHelper;
+// DRM Change -- START
+import android.drm.DrmManagerClient;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.content.ContentValues;
+// DRM Change -- END
 
 // LocalVideo represents a video in the local storage.
 public class LocalVideo extends LocalMediaItem {
@@ -152,15 +159,19 @@ public class LocalVideo extends LocalMediaItem {
 
     @Override
     public Job<Bitmap> requestImage(int type) {
-        return new LocalVideoRequest(mApplication, getPath(), type, filePath);
+        // Drm start
+        return new LocalVideoRequest(mApplication, getPath(), type, filePath, mimeType);
+        // Drm end
     }
 
     public static class LocalVideoRequest extends ImageCacheRequest {
         private String mLocalFilePath;
 
         LocalVideoRequest(GalleryApp application, Path path, int type,
-                String localFilePath) {
-            super(application, path, type, MediaItem.getTargetSize(type));
+// DRM Change -- START
+                String localFilePath, String mimetype) {
+            super(application, path, type, LocalImage.getTargetSize(type), localFilePath, mimetype);
+// DRM Change -- END
             mLocalFilePath = localFilePath;
         }
 
@@ -180,7 +191,26 @@ public class LocalVideo extends LocalMediaItem {
 
     @Override
     public int getSupportedOperations() {
-        return SUPPORT_DELETE | SUPPORT_SHARE | SUPPORT_PLAY | SUPPORT_INFO | SUPPORT_TRIM | SUPPORT_MUTE;
+        // DRM Change -- START
+        int supported = SUPPORT_DELETE | SUPPORT_PLAY | SUPPORT_INFO;
+        if (filePath != null && filePath.endsWith(".dcf")) {
+            supported |= SUPPORT_DRM_INFO;
+            DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
+            ContentValues values = drmClient.getMetadata(filePath);
+            int drmType = values.getAsInteger("DRM-TYPE");
+            Log.d("LocalVideo", "getSupportedOperations:drmType returned= "
+                    + Integer.toString(drmType) + " for path= " + filePath);
+            if (drmType == DrmDeliveryType.SEPARATE_DELIVERY) {
+                supported |= SUPPORT_SHARE;
+            }
+            if (drmClient != null) drmClient.release();
+        } else {
+            Log.e("LocalVideo", "yy:share added for path= " + filePath);
+            supported |= SUPPORT_SHARE;
+        }
+
+        return supported;
+        // DRM Change -- END
     }
 
     @Override

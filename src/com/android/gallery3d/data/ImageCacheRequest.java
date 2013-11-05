@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +27,12 @@ import com.android.gallery3d.data.BytesBufferPool.BytesBuffer;
 import com.android.gallery3d.util.ThreadPool.Job;
 import com.android.gallery3d.util.ThreadPool.JobContext;
 
+// Drm start
+import android.drm.DrmManagerClient;
+import android.drm.DrmStore.RightsStatus;
+import android.drm.DrmStore.Action;
+// Drm end
+
 abstract class ImageCacheRequest implements Job<Bitmap> {
     private static final String TAG = "ImageCacheRequest";
 
@@ -32,13 +40,19 @@ abstract class ImageCacheRequest implements Job<Bitmap> {
     private Path mPath;
     private int mType;
     private int mTargetSize;
+    private String mFilePath; // DRM Change
+    private String mMimeType; // DRM Change
 
     public ImageCacheRequest(GalleryApp application,
-            Path path, int type, int targetSize) {
+            // Drm start
+            Path path, int type, int targetSize, String filePath, String mimetype) {
+            // Drm end
         mApplication = application;
         mPath = path;
         mType = type;
         mTargetSize = targetSize;
+        mFilePath = filePath; // DRM Change
+        mMimeType = mimetype; // DRM Change
     }
 
     private String debugTag() {
@@ -50,6 +64,29 @@ abstract class ImageCacheRequest implements Job<Bitmap> {
     @Override
     public Bitmap run(JobContext jc) {
         ImageCacheService cacheService = mApplication.getImageCacheService();
+
+        // Drm start
+        if (mFilePath != null && mFilePath.endsWith(".dcf")) {
+            DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
+            if (mMimeType == null) {
+                if ((RightsStatus.RIGHTS_VALID !=
+                        drmClient.checkRightsStatus(mFilePath, Action.DISPLAY))
+                                && (RightsStatus.RIGHTS_VALID !=
+                                        drmClient.checkRightsStatus(mFilePath, Action.PLAY))) {
+                    return null;
+                }
+            } else if (mMimeType.startsWith("video/")
+                    && RightsStatus.RIGHTS_VALID !=
+                            drmClient.checkRightsStatus(mFilePath, Action.PLAY)) {
+                return null;
+            } else if (mMimeType.startsWith("image/")
+                    && RightsStatus.RIGHTS_VALID !=
+                            drmClient.checkRightsStatus(mFilePath, Action.DISPLAY)) {
+                return null;
+            }
+            if (drmClient != null) drmClient.release();
+        }
+        // Drm end
 
         BytesBuffer buffer = MediaItem.getBytesBufferPool().get();
         try {

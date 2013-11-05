@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +61,7 @@ public class WidgetClickHandler extends Activity {
             intent = new Intent(Intent.ACTION_VIEW, uri);
             // Used for checking whether it is from widget
             intent.putExtra(PhotoPage.KEY_IS_FROM_WIDGET, true);
+            intent.putExtra("WidgetClick", true);// DRM Change
             if (tediousBack) {
                 intent.putExtra(PhotoPage.KEY_TREAT_BACK_AS_UP, true);
             }
