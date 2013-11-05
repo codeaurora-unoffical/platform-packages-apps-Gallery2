@@ -80,8 +80,8 @@
                 android:id="@+id/pano_pan_left_indicator"
                 android:src="@drawable/pano_direction_left_indicator"
                 android:visibility="gone"
-                android:layout_marginRight="5dp"
-                android:layout_toLeftOf="@id/pano_pan_progress_bar_layout"
+                android:layout_marginEnd="5dp"
+                android:layout_toStartOf="@id/pano_pan_progress_bar_layout"
                 android:layout_centerVertical="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -90,8 +90,8 @@
                 android:id="@+id/pano_pan_right_indicator"
                 android:src="@drawable/pano_direction_right_indicator"
                 android:visibility="gone"
-                android:layout_marginLeft="5dp"
-                android:layout_toRightOf="@id/pano_pan_progress_bar_layout"
+                android:layout_marginStart="5dp"
+                android:layout_toEndOf="@id/pano_pan_progress_bar_layout"
                 android:layout_centerVertical="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />

@@ -66,6 +66,7 @@
             android:hardwareAccelerated="true"
             android:largeHeap="true"
             android:backupAgent="com.android.camera.CameraBackupAgent"
+	    android:supportsRtl="true"
             android:restoreAnyVersion="true">
         <uses-library android:name="com.google.android.media.effects" android:required="false" />
         <meta-data android:name="com.google.android.backup.api_key"

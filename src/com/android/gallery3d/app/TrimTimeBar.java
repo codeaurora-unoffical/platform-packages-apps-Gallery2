@@ -20,9 +20,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.text.TextUtils;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.android.gallery3d.R;
+
+import java.util.Locale;
 
 /**
  * The trim time bar view, which includes the current and total time, the progress
@@ -61,10 +65,18 @@ public class TrimTimeBar extends TimeBar {
         mTrimStartScrubberTop = 0;
         mTrimEndScrubberTop = 0;
 
-        mTrimStartScrubber = BitmapFactory.decodeResource(getResources(),
-                R.drawable.text_select_handle_left);
-        mTrimEndScrubber = BitmapFactory.decodeResource(getResources(),
-                R.drawable.text_select_handle_right);
+        if (View.LAYOUT_DIRECTION_RTL == TextUtils
+                .getLayoutDirectionFromLocale(Locale.getDefault())) {
+            mTrimStartScrubber = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.text_select_handle_right);
+            mTrimEndScrubber = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.text_select_handle_left);
+        } else {
+            mTrimStartScrubber = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.text_select_handle_left);
+            mTrimEndScrubber = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.text_select_handle_right);
+        }
         // Increase the size of this trimTimeBar, but minimize the scrubber
         // touch padding since we have 3 scrubbers now.
         mScrubberPadding = 0;
@@ -72,16 +84,29 @@ public class TrimTimeBar extends TimeBar {
     }
 
     private int getBarPosFromTime(int time) {
-        return mProgressBar.left +
-                (int) ((mProgressBar.width() * (long) time) / mTotalTime);
+        if (isLayoutRtl()) {
+            return mProgressBar.right -
+                     (int) ((mProgressBar.width() * (long) time) / mTotalTime);
+        } else {
+            return mProgressBar.left +
+                    (int) ((mProgressBar.width() * (long) time) / mTotalTime);
+        }
     }
 
     private int trimStartScrubberTipOffset() {
-        return mTrimStartScrubber.getWidth() * 3 / 4;
+        if (isLayoutRtl()) {
+            return mTrimStartScrubber.getWidth() * 1 / 4;
+        } else {
+            return mTrimStartScrubber.getWidth() * 3 / 4;
+        }
     }
 
     private int trimEndScrubberTipOffset() {
-        return mTrimEndScrubber.getWidth() / 4;
+        if (isLayoutRtl()) {
+            return mTrimStartScrubber.getWidth() * 3 / 4;
+        } else {
+            return mTrimEndScrubber.getWidth() / 4;
+        }
     }
 
     // Based on all the time info (current, total, trimStart, trimEnd), we
@@ -102,10 +127,17 @@ public class TrimTimeBar extends TimeBar {
         } else {
             // If the video is not prepared, just show the scrubber at the end
             // of progressBar
-            mPlayedBar.right = mProgressBar.left;
-            mScrubberLeft = mProgressBar.left - mScrubber.getWidth() / 2;
-            mTrimStartScrubberLeft = mProgressBar.left - trimStartScrubberTipOffset();
-            mTrimEndScrubberLeft = mProgressBar.right - trimEndScrubberTipOffset();
+            if (isLayoutRtl()) {
+                mPlayedBar.right = mProgressBar.right;
+                mScrubberLeft = mProgressBar.right - mScrubber.getWidth() / 2;
+                mTrimStartScrubberLeft = mProgressBar.right - trimStartScrubberTipOffset();
+                mTrimEndScrubberLeft = mProgressBar.left - trimEndScrubberTipOffset();
+            } else {
+                mPlayedBar.right = mProgressBar.left;
+                mScrubberLeft = mProgressBar.left - mScrubber.getWidth() / 2;
+                mTrimStartScrubberLeft = mProgressBar.left - trimStartScrubberTipOffset();
+                mTrimEndScrubberLeft = mProgressBar.right - trimEndScrubberTipOffset();
+            }
         }
     }
 
@@ -153,14 +185,25 @@ public class TrimTimeBar extends TimeBar {
     }
 
     private int clampScrubber(int scrubberLeft, int offset, int lowerBound, int upperBound) {
-        int max = upperBound - offset;
-        int min = lowerBound - offset;
+        int max=0, min=0;
+        if (isLayoutRtl()) {
+            min = upperBound - offset;
+            max = lowerBound - offset;
+        } else {
+            max = upperBound - offset;
+            min = lowerBound - offset;
+        }
         return Math.min(max, Math.max(min, scrubberLeft));
     }
 
     private int getScrubberTime(int scrubberLeft, int offset) {
-        return (int) ((long) (scrubberLeft + offset - mProgressBar.left)
-                * mTotalTime / mProgressBar.width());
+        if (isLayoutRtl()) {
+            return (int) ((long) (mProgressBar.width() - (scrubberLeft + offset
+                    - mProgressBar.left)) * mTotalTime / mProgressBar.width());
+        } else {
+            return (int) ((long) (scrubberLeft + offset - mProgressBar.left)
+                    * mTotalTime / mProgressBar.width());
+        }
     }
 
     @Override
@@ -193,16 +236,26 @@ public class TrimTimeBar extends TimeBar {
         canvas.drawRect(mPlayedBar, mPlayedPaint);
 
         if (mShowTimes) {
-            canvas.drawText(
-                    stringForTime(mCurrentTime),
-                            mTimeBounds.width() / 2 + getPaddingLeft(),
-                            mTimeBounds.height() / 2 +  mTrimStartScrubberTop,
-                    mTimeTextPaint);
-            canvas.drawText(
-                    stringForTime(mTotalTime),
-                            getWidth() - getPaddingRight() - mTimeBounds.width() / 2,
-                            mTimeBounds.height() / 2 +  mTrimStartScrubberTop,
-                    mTimeTextPaint);
+            if (isLayoutRtl()) {
+                canvas.drawText(stringForTime(mTotalTime), mTimeBounds.width() / 2
+                        + getPaddingLeft(), mTimeBounds.height() / 2 + mTrimStartScrubberTop,
+                        mTimeTextPaint);
+                canvas.drawText(stringForTime(mCurrentTime), getWidth() - getPaddingRight()
+                        - mTimeBounds.width() / 2,
+                        mTimeBounds.height() / 2 + mTrimStartScrubberTop, mTimeTextPaint);
+            } else {
+                canvas.drawText(
+                        stringForTime(mCurrentTime),
+                                mTimeBounds.width() / 2 + getPaddingLeft(),
+                                mTimeBounds.height() / 2 +  mTrimStartScrubberTop,
+                        mTimeTextPaint);
+               canvas.drawText(
+                        stringForTime(mTotalTime),
+                                getWidth() - getPaddingRight() - mTimeBounds.width() / 2,
+                                mTimeBounds.height() / 2 +  mTrimStartScrubberTop,
+                        mTimeTextPaint);
+            }
+
         }
 
         // draw extra scrubbers
@@ -268,11 +321,16 @@ public class TrimTimeBar extends TimeBar {
                                 break;
                             case SCRUBBER_START:
                                 mTrimStartScrubberLeft = x - mScrubberCorrection;
-                                // Limit start <= end
-                                if (mTrimStartScrubberLeft > mTrimEndScrubberLeft) {
+                                // Limit start <= end in LTR
+                                if (mTrimStartScrubberLeft > mTrimEndScrubberLeft
+                                        && !isLayoutRtl()) {
                                     mTrimStartScrubberLeft = mTrimEndScrubberLeft;
                                 }
-                                lowerBound = mProgressBar.left;
+                                if (isLayoutRtl()) {
+                                    lowerBound = mProgressBar.right;
+                                } else {
+                                    lowerBound = mProgressBar.left;
+                                }
                                 mTrimStartScrubberLeft =
                                         clampScrubber(mTrimStartScrubberLeft,
                                                 trimStartScrubberTipOffset(),
@@ -282,7 +340,16 @@ public class TrimTimeBar extends TimeBar {
                                 break;
                             case SCRUBBER_END:
                                 mTrimEndScrubberLeft = x - mScrubberCorrection;
-                                upperBound = mProgressBar.right;
+                                // Limit start >= end in RTL
+                                if (mTrimStartScrubberLeft < mTrimEndScrubberLeft
+                                        && isLayoutRtl()) {
+                                    mTrimEndScrubberLeft = mTrimStartScrubberLeft;
+                                }
+                                if (isLayoutRtl()) {
+                                    upperBound = mProgressBar.left;
+                                } else {
+                                    upperBound = mProgressBar.right;
+                                }
                                 mTrimEndScrubberLeft =
                                         clampScrubber(mTrimEndScrubberLeft,
                                                 trimEndScrubberTipOffset(),

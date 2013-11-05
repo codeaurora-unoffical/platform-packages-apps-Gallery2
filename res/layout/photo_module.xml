@@ -26,6 +26,7 @@
     android:layout_gravity="center">
     <include layout="@layout/count_down_to_capture"/>
     <com.android.camera.PreviewFrameLayout android:id="@+id/frame"
+        android:layoutDirection="ltr"
         android:layout_centerInParent="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
