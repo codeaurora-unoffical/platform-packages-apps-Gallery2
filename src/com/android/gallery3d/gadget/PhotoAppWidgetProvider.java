@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +108,9 @@ public class PhotoAppWidgetProvider extends AppWidgetProvider {
                 context.getPackageName(), R.layout.photo_frame);
         try {
             byte[] data = entry.imageData;
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            // DRM Change -- Start
+            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, false);
+            // DRM Change -- End
             views.setImageViewBitmap(R.id.photo, bitmap);
         } catch (Throwable t) {
             Log.w(TAG, "cannot load widget image: " + appWidgetId, t);

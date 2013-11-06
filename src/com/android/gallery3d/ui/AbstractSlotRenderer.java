@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +21,10 @@ package com.android.gallery3d.ui;
 import android.content.Context;
 import android.graphics.Rect;
 
+// Drm start
+import com.android.gallery3d.data.MediaObject;
+// Drm end
+
 import com.android.gallery3d.R;
 import com.android.gallery3d.glrenderer.FadeOutTexture;
 import com.android.gallery3d.glrenderer.GLCanvas;
@@ -33,6 +39,7 @@ public abstract class AbstractSlotRenderer implements SlotView.SlotRenderer {
     private final ResourceTexture mPanoramaIcon;
     private final NinePatchTexture mFramePressed;
     private final NinePatchTexture mFrameSelected;
+    private final ResourceTexture mDrmIcon; // DRM CHANGES
     private FadeOutTexture mFramePressedUp;
 
     protected AbstractSlotRenderer(Context context) {
@@ -41,6 +48,7 @@ public abstract class AbstractSlotRenderer implements SlotView.SlotRenderer {
         mPanoramaIcon = new ResourceTexture(context, R.drawable.ic_360pano_holo_light);
         mFramePressed = new NinePatchTexture(context, R.drawable.grid_pressed);
         mFrameSelected = new NinePatchTexture(context, R.drawable.grid_selected);
+        mDrmIcon = new ResourceTexture(context, R.drawable.drm_image); // DRM CHANGES
     }
 
     protected void drawContent(GLCanvas canvas,
@@ -78,6 +86,21 @@ public abstract class AbstractSlotRenderer implements SlotView.SlotRenderer {
         int s = Math.min(width, height) / 6;
         mVideoPlayIcon.draw(canvas, (width - s) / 2, (height - s) / 2, s, s);
     }
+
+    // DRM CHANGES START
+    protected void drawDrmOverlay(GLCanvas canvas, int width, int height, int Drm_mediaType) {
+        // Scale the video overlay to the height of the thumbnail and put it on the left side.
+        if (Drm_mediaType == MediaObject.MEDIA_TYPE_DRM_VIDEO) {
+            ResourceTexture v = mVideoOverlay;
+            float scale = (float) height / v.getHeight();
+            int w = Math.round(scale * v.getWidth());
+            int h = Math.round(scale * v.getHeight());
+            v.draw(canvas, 0, 0, w, h);
+        }
+        int side = Math.min(width, height) / 6;
+        mDrmIcon.draw(canvas, (width - side) / 2, (height - side) / 2, side, side);
+    }
+    // DRM CHANGES END
 
     protected void drawPanoramaIcon(GLCanvas canvas, int width, int height) {
         int iconSize = Math.min(width, height) / 6;

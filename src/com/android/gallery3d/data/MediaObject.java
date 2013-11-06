@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,12 +43,19 @@ public abstract class MediaObject {
     public static final int SUPPORT_ACTION = 1 << 14;
     public static final int SUPPORT_CAMERA_SHORTCUT = 1 << 15;
     public static final int SUPPORT_MUTE = 1 << 16;
+    // DRM Change -- START
+    public static final int SUPPORT_DRM_INFO = 1 << 17;
+    // DRM Change -- END
     public static final int SUPPORT_ALL = 0xffffffff;
 
     // These are the bits returned from getMediaType():
     public static final int MEDIA_TYPE_UNKNOWN = 1;
     public static final int MEDIA_TYPE_IMAGE = 2;
     public static final int MEDIA_TYPE_VIDEO = 4;
+    // Drm start
+    public static final int MEDIA_TYPE_DRM_VIDEO = 5;
+    public static final int MEDIA_TYPE_DRM_IMAGE = 6;
+    // Drm end
     public static final int MEDIA_TYPE_ALL = MEDIA_TYPE_IMAGE | MEDIA_TYPE_VIDEO;
 
     public static final String MEDIA_TYPE_IMAGE_STRING = "image";
@@ -65,7 +74,9 @@ public abstract class MediaObject {
     public static final int CACHE_STATUS_CACHED_FULL = 3;
 
     private static long sVersionSerial = 0;
-
+    // DRM Change -- START
+    protected boolean consumeRights = false;
+    // DRM Change -- END
     protected long mDataVersion;
 
     protected final Path mPath;
@@ -143,6 +154,16 @@ public abstract class MediaObject {
     public void cache(int flag) {
         throw new UnsupportedOperationException();
     }
+
+    // DRM Change -- START
+    public void setConsumeRights(boolean flag) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean getConsumeRights() {
+        throw new UnsupportedOperationException();
+    }
+    // DRM Change -- END
 
     public static synchronized long nextVersionNumber() {
         return ++MediaObject.sVersionSerial;

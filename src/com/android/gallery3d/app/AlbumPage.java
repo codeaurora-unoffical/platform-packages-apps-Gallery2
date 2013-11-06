@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +38,7 @@ import android.widget.Toast;
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.Utils;
 import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.LocalMediaItem;// DRM Change
 import com.android.gallery3d.data.MediaDetails;
 import com.android.gallery3d.data.MediaItem;
 import com.android.gallery3d.data.MediaObject;
@@ -63,11 +66,35 @@ import com.android.gallery3d.util.MediaSetUtils;
 
 import java.util.Locale;
 
+// DRM Change -- Start
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Random;
+import android.database.Cursor;
+
+import android.drm.DrmManagerClient;
+import android.drm.DrmRights;
+import android.drm.DrmStore.RightsStatus;
+import android.drm.DrmStore.Action;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.drm.DrmStore.RightsStatus;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
+import android.graphics.Rect;
+import android.content.ContentValues;
+import android.provider.MediaStore.Video.VideoColumns;
+// DRM Change -- End
 
 public class AlbumPage extends ActivityState implements GalleryActionBar.ClusterRunner,
         SelectionManager.SelectionListener, MediaSet.SyncListener, GalleryActionBar.OnAlbumModeSelectedListener {
     @SuppressWarnings("unused")
     private static final String TAG = "AlbumPage";
+
+    // DRM Change -- Start
+    public static final String BUY_LICENSE="android.drmservice.intent.action.BUY_LICENSE";
+    // DRM Change -- End
 
     public static final String KEY_MEDIA_PATH = "media-path";
     public static final String KEY_PARENT_MEDIA_PATH = "parent-media-path";
@@ -101,7 +128,7 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
 
     private boolean mGetContent;
     private boolean mShowClusterMenu;
-
+    private boolean mIsWallpaper; // DRM CHANGE
     private ActionModeHandler mActionModeHandler;
     private int mFocusIndex = 0;
     private DetailsHelper mDetailsHelper;
@@ -322,6 +349,66 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
             transitions.put(PhotoPage.KEY_INDEX_HINT, slotIndex);
             onBackPressed();
         } else {
+            // DRM Change -- START
+            Context context = (Context) mActivity;
+            Uri uri = item.getContentUri();
+            Log.d(TAG, "pickPhoto:uri=" + item.getContentUri());
+            String path = null;
+            String scheme = uri.getScheme();
+            if ("file".equals(scheme)) {
+                path = uri.getPath();
+            } else {
+                Cursor cursor = null;
+                try {
+                    cursor = context.getContentResolver().query(uri,
+                            new String[] {VideoColumns.DATA}, null, null, null);
+                    if (cursor != null && cursor.moveToNext()) {
+                        path = cursor.getString(0);
+                    }
+                } catch (Throwable t) {
+                    Log.d(TAG, "cannot get path from: " + uri);
+                } finally {
+                    if (cursor != null) cursor.close();
+                }
+            }
+
+            Log.d(TAG, "pickPhoto:path = " + path);
+            if (path != null && path.endsWith(".dcf")) {
+                DrmManagerClient drmClient = new DrmManagerClient(context);
+                int status = -1;
+                Log.d(TAG, "pickPhoto:item type = " + Integer.toString(item.getMediaType()));
+                if (item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE) {
+                    status = drmClient.checkRightsStatus(path, Action.DISPLAY);
+                } else {
+                    status = drmClient.checkRightsStatus(path, Action.PLAY);
+                }
+                Log.d(TAG, "pickPhoto:status fron drmClient.checkRightsStatus is "
+                        + Integer.toString(status));
+
+                ContentValues values = drmClient.getMetadata(path);
+
+                if (RightsStatus.RIGHTS_VALID!= status) {
+                    String address = values.getAsString("Rights-Issuer");
+                    Log.d(TAG, "pickPhoto:address = " + address);
+                    Intent intent = new Intent(BUY_LICENSE);
+                    intent.putExtra("DRM_FILE_PATH", address);
+                    context.sendBroadcast(intent);
+                    return;
+                }
+
+                int drmType = values.getAsInteger("DRM-TYPE");
+                Log.d(TAG, "onSingleTapUp:drm-type = " + Integer.toString(drmType));
+                if (drmType > DrmDeliveryType.FORWARD_LOCK) {
+                    if (item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE) {
+                        item.setConsumeRights(true);
+                    }
+                    Toast.makeText(context, R.string.action_consumes_rights,
+                            Toast.LENGTH_LONG).show();
+                }
+                if (drmClient != null) drmClient.release();
+            }
+            // DRM Change -- END
+
             // Get into the PhotoPage.
             // mAlbumView.savePositions(PositionRepository.getInstance(mActivity));
             Bundle data = new Bundle();
@@ -362,7 +449,31 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
                 intent.putExtra(CropExtras.KEY_RETURN_DATA, true);
             }
             activity.startActivity(intent);
+            activity.finish(); 
+        // DRM -- START
+        } else if (mIsWallpaper == false) {
+            String path = null;
+            if (item instanceof LocalMediaItem) {
+                path = ((LocalMediaItem)item).filePath;
+            }
+            if (path != null && path.endsWith(".dcf")) {
+                DrmManagerClient drmClient = new DrmManagerClient((Context) mActivity);
+                ContentValues values = drmClient.getMetadata(path);
+                int drmType = values.getAsInteger("DRM-TYPE");
+                Log.d(TAG, "onGetContent:DRM-TYPE = " + Integer.toString(drmType));
+                if (drmType == DrmDeliveryType.SEPARATE_DELIVERY) {
+                    activity.setResult(Activity.RESULT_OK, new Intent(null, item.getContentUri()));
+                } else {
+                    Toast.makeText((Context) mActivity, R.string.no_permission_for_drm,
+                            Toast.LENGTH_LONG).show();
+                }
+                if (drmClient != null) drmClient.release();
+            } else {
+                activity.setResult(Activity.RESULT_OK,
+                        new Intent(null, item.getContentUri()));
+            }
             activity.finish();
+        // DRM -- END
         } else {
             Intent intent = new Intent(null, item.getContentUri())
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -405,6 +516,9 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
         initializeViews();
         initializeData(data);
         mGetContent = data.getBoolean(Gallery.KEY_GET_CONTENT, false);
+        // DRM CHANGE START
+        mIsWallpaper = data.getBoolean("com.android.gallery3d.IsWallpaper", false);
+        // DRM CHANGE END
         mShowClusterMenu = data.getBoolean(KEY_SHOW_CLUSTER_MENU, false);
         mDetailsSource = new MyDetailsSource();
         Context context = mActivity.getAndroidContext();

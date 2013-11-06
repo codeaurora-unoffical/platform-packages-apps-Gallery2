@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +54,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+// Drm start
+import android.provider.MediaStore.Video.VideoColumns;
+// Drm end
 import android.provider.OpenableColumns;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -78,6 +83,13 @@ import org.codeaurora.gallery3d.video.ExtensionHelper;
 import org.codeaurora.gallery3d.video.MovieTitleHelper;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
+
+// DRM Change -- START
+import android.widget.Toast;
+import android.drm.DrmManagerClient;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.content.ContentValues;
+// DRM Change -- END
 
 /**
  * This activity plays a video from a specified URI.
@@ -304,6 +316,39 @@ public class MovieActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
+
+        // DRM Change -- START
+        String path = null;
+        String scheme = mUri.getScheme();
+        if ("file".equals(scheme)) {
+            path = mUri.getPath();
+        } else {
+            Cursor cursor = null;
+            try {
+                cursor = getContentResolver().query(mUri,
+                        new String[] {VideoColumns.DATA}, null, null, null);
+                if (cursor != null && cursor.moveToNext()) {
+                    path = cursor.getString(0);
+                }
+            } catch (Throwable t) {
+                Log.d(TAG, "cannot get path from: " + mUri);
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+        }
+        Log.d(TAG, "onCreateOptionsMenu= " + path);
+        if ((path != null) && (path.endsWith(".dcf"))) {
+            DrmManagerClient drmClient = new DrmManagerClient(this);
+            ContentValues values = drmClient.getMetadata(path);
+            int drmType = values.getAsInteger("DRM-TYPE");
+            Log.d(TAG, "onCreateOptionsMenu:DRM-TYPE = " + Integer.toString(drmType));
+            if (drmType != DrmDeliveryType.SEPARATE_DELIVERY) {
+                return true;
+            }
+            if (drmClient != null) drmClient.release();
+        }
+        // DRM Change -- END
+
         if (isSharable() && checkIsAvailableUriFor3GPP(mMovieItem.getOriginalUri())) {
             getMenuInflater().inflate(R.menu.movie, menu);
 

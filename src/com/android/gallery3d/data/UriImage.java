@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +39,13 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-
+// DRM Change -- START
+import android.drm.DrmManagerClient;
+import android.drm.DrmStore.DrmDeliveryType;
+import android.content.ContentValues;
+import android.provider.MediaStore.Video.VideoColumns;
+import android.database.Cursor;
+// DRM Change -- END
 public class UriImage extends MediaItem {
     private static final String TAG = "UriImage";
 
@@ -211,8 +219,44 @@ public class UriImage extends MediaItem {
 
     @Override
     public int getSupportedOperations() {
-        int supported = SUPPORT_EDIT | SUPPORT_SETAS;
-        if (isSharable()) supported |= SUPPORT_SHARE;
+        // DRM Change -- START
+        int supported = SUPPORT_SETAS;
+        String filePath = null;
+        String scheme = mUri.getScheme();
+        if ("file".equals(scheme)) {
+            filePath = mUri.getPath();
+        } else {
+            Cursor cursor = null;
+            try {
+                cursor = mApplication.getContentResolver().query(mUri,
+                        new String[] {VideoColumns.DATA}, null, null, null);
+                if (cursor != null && cursor.moveToNext()) {
+                    filePath = cursor.getString(0);
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "cannot get path from: " + mUri);
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+        }
+
+        if (filePath != null && filePath.endsWith(".dcf")) {
+            supported |= SUPPORT_DRM_INFO;
+            DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
+            ContentValues values = drmClient.getMetadata(filePath);
+            int drmType = values.getAsInteger("DRM-TYPE");
+            Log.d(TAG, "getSupportedOperations:drmType returned= "
+                    + Integer.toString(drmType) + " for path= " + filePath);
+            if (drmType == DrmDeliveryType.SEPARATE_DELIVERY) {
+                if (isSharable()) supported |= SUPPORT_SHARE;
+            }
+            if (drmClient != null) drmClient.release();
+        } else {
+            supported |= SUPPORT_EDIT;
+            if (isSharable()) supported |= SUPPORT_SHARE;
+        }
+        // DRM Change -- END
+
         if (BitmapUtils.isSupportedByRegionDecoder(mContentType)) {
             supported |= SUPPORT_FULL_IMAGE;
         }
@@ -295,4 +339,16 @@ public class UriImage extends MediaItem {
     public int getRotation() {
         return mRotation;
     }
+
+    // DRM Change -- START
+    @Override
+    public void setConsumeRights(boolean flag) {
+        consumeRights = flag;
+    }
+
+    @Override
+    public boolean getConsumeRights() {
+        return consumeRights;
+    }
+    // DRM Change -- END
 }

@@ -176,6 +176,9 @@
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/webp" />
                 <data android:mimeType="image/x-ms-bmp" />
+                <!-- Drm start -->
+                <data android:mimeType="image/x-MS-bmp" />
+                <!-- Drm end -->
                 <data android:mimeType="image/vnd.wap.wbmp" />
                 <data android:mimeType="application/vnd.google.panorama360+jpg" />
             </intent-filter>

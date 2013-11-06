@@ -1139,4 +1139,10 @@ CHAR LIMIT = NONE] -->
     <string name="can_not_trim">Only mp4 file can be trimmed</string>
     <string name="internal_video_error">Internal application error.</string>
     <string name="in_call_video_error">Camcorder is not allowed during call.</string>
+
+    <!-- Drm warning message -->
+    <string name="no_permission_for_drm">"Sorry, Drm file can not be shared"</string>
+    <string name="drm_license_info">Drm license info</string>
+    <string name="mimetype_not_supported">This file can not be played</string>
+    <string name="action_consumes_rights">Rights will be consumed for playing  this media</string>
 </resources>

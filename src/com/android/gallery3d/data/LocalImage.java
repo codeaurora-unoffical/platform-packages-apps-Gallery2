@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +50,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel.MapMode;
+// DRM Change -- START
+import android.drm.DrmManagerClient;
+import android.drm.DrmStore.DrmDeliveryType;
+// DRM Change -- END
 
 // LocalImage represents an image in the local storage.
 public class LocalImage extends LocalMediaItem {
@@ -175,15 +181,19 @@ public class LocalImage extends LocalMediaItem {
 
     @Override
     public Job<Bitmap> requestImage(int type) {
-        return new LocalImageRequest(mApplication, mPath, type, filePath);
+        // Drm start
+        return new LocalImageRequest(mApplication, mPath, type, filePath, mimeType);
+        // Drm end
     }
 
     public static class LocalImageRequest extends ImageCacheRequest {
         private String mLocalFilePath;
 
         LocalImageRequest(GalleryApp application, Path path, int type,
-                String localFilePath) {
-            super(application, path, type, MediaItem.getTargetSize(type));
+// DRM Change -- START
+                String localFilePath, String mimetype) {
+            super(application, path, type, MediaItem.getTargetSize(type), localFilePath, mimetype);
+// DRM Change -- END
             mLocalFilePath = localFilePath;
         }
 
@@ -241,8 +251,25 @@ public class LocalImage extends LocalMediaItem {
         if (progressManager != null && progressManager.getProgress(getContentUri()) != null) {
             return 0; // doesn't support anything while stitching!
         }
-        int operation = SUPPORT_DELETE | SUPPORT_SHARE | SUPPORT_CROP
-                | SUPPORT_SETAS | SUPPORT_EDIT | SUPPORT_INFO;
+
+        // DRM Change -- START
+        int operation = SUPPORT_DELETE  | SUPPORT_SETAS | SUPPORT_INFO;
+        if (filePath != null && filePath.endsWith(".dcf")) {
+            operation |= SUPPORT_DRM_INFO;
+            DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
+            ContentValues values = drmClient.getMetadata(filePath);
+            int drmType = values.getAsInteger("DRM-TYPE");
+            Log.d(TAG, "getSupportedOperations:drmType returned= "
+                    + Integer.toString(drmType) + " for path= " + filePath);
+            if (drmType == DrmDeliveryType.SEPARATE_DELIVERY) {
+                operation |=SUPPORT_SHARE;
+            }
+            if (drmClient != null) drmClient.release();
+        } else {
+            operation |=SUPPORT_SHARE | SUPPORT_EDIT | SUPPORT_CROP;
+        }
+        // DRM Change -- END
+
         if (BitmapUtils.isSupportedByRegionDecoder(mimeType)) {
             operation |= SUPPORT_FULL_IMAGE;
         }
@@ -350,4 +377,16 @@ public class LocalImage extends LocalMediaItem {
     public String getFilePath() {
         return filePath;
     }
+
+    // DRM Change -- START
+    @Override
+    public void setConsumeRights(boolean flag) {
+        consumeRights = flag;
+    }
+
+    @Override
+    public boolean getConsumeRights() {
+        return consumeRights;
+    }
+    // DRM Change -- END
 }
