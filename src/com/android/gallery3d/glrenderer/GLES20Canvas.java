@@ -31,6 +31,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 
 public class GLES20Canvas implements GLCanvas {
     // ************** Constants **********************
@@ -162,6 +163,9 @@ public class GLES20Canvas implements GLCanvas {
 
     // GL buffer containing BOX_COORDINATES
     private int mBoxCoordinates;
+
+    // hashmap to autokern tiles
+    private Hashtable<Long, Float> mJointTable = new Hashtable<Long, Float>();
 
     // Handle indices -- common
     private static final int INDEX_POSITION = 0;
@@ -473,6 +477,8 @@ public class GLES20Canvas implements GLCanvas {
         if (restoreMatrix) {
             mCurrentMatrixIndex -= MATRIX_SIZE;
         }
+
+        mJointTable.clear();
     }
 
     @Override
@@ -553,7 +559,7 @@ public class GLES20Canvas implements GLCanvas {
 
     private void draw(ShaderParameter[] params, int type, int count, float x, float y, float width,
             float height) {
-        setMatrix(params, x, y, width, height);
+        setMatrix(params, x, y, width, height, (type == GLES20.GL_TRIANGLE_STRIP));
         int positionHandle = params[INDEX_POSITION].handle;
         GLES20.glEnableVertexAttribArray(positionHandle);
         checkError();
@@ -563,12 +569,48 @@ public class GLES20Canvas implements GLCanvas {
         checkError();
     }
 
-    private void setMatrix(ShaderParameter[] params, float x, float y, float width, float height) {
+    private void setMatrix(ShaderParameter[] params, float x, float y, float width, float height,
+            boolean needCheckJoint) {
         Matrix.translateM(mTempMatrix, 0, mMatrices, mCurrentMatrixIndex, x, y, 0f);
         Matrix.scaleM(mTempMatrix, 0, width, height, 1f);
         Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mProjectionMatrix, 0, mTempMatrix, 0);
+        if (needCheckJoint) {
+            checkJoint(mTempMatrix, MATRIX_SIZE);
+        }
         GLES20.glUniformMatrix4fv(params[INDEX_MATRIX].handle, 1, false, mTempMatrix, MATRIX_SIZE);
         checkError();
+    }
+
+    // Workaround blacklines between tiles. Adjacent tiles should have exactly the same screen
+    // space coordinates on shared vertice. But in the gallery, different tiles have different
+    // matrixes in the vertex shader. After transform, the shared vertice have different screen
+    // space coordinates in adjacent tiles, which cause a gap or overlap between tiles.
+    // To workaround this bug, cache the shared vertice uniform and re-use it in its adjacent
+    // tiles. Make adjacent tiles have exactly the same uniform.
+    private void checkJoint(float[] vsMatix, int offset) {
+        final long  N_1M = 1000000;
+        final float w = vsMatix[offset];
+        final float h = vsMatix[5 + offset];
+        float tx = vsMatix[12 + offset];
+        float ty = vsMatix[13 + offset];
+
+        if (!mJointTable.isEmpty()) {
+
+            // adjust top-left of a tile
+            long key = (long)(tx * N_1M);
+            if (mJointTable.containsKey(key)) {
+                tx = vsMatix[12 + offset] = mJointTable.get(key);
+            }
+
+            key = (long)(ty * N_1M);
+            if (mJointTable.containsKey(key)) {
+                ty = vsMatix[13 + offset] = mJointTable.get(key);
+            }
+        }
+
+        // cache right-bottom of a tile
+        mJointTable.put((long)((tx + w) * N_1M), (tx + w));
+        mJointTable.put((long)((ty + h) * N_1M), (ty + h));
     }
 
     @Override
@@ -741,7 +783,7 @@ public class GLES20Canvas implements GLCanvas {
         GLES20.glEnableVertexAttribArray(texCoordHandle);
         checkError();
 
-        setMatrix(mMeshParameters, x, y, 1, 1);
+        setMatrix(mMeshParameters, x, y, 1, 1, false);
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indexCount, GLES20.GL_UNSIGNED_BYTE, 0);
         checkError();
 
