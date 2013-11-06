@@ -446,4 +446,5 @@
     <string name="menu_auto_upload_to_xcloud_switch">Wifi下自动上传到百度云</string>
     <string name="fail_trim">抱歉，不能修剪该视频文件</string>
     <string name="can_not_trim">只有mp4文件才能修剪</string>
+    <string name="file_writer_speed_not_catchup ">外置SD卡写入速度过慢。</string>
 </resources>

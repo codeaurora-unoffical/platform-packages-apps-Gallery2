@@ -1134,4 +1134,5 @@ CHAR LIMIT = NONE] -->
     <!-- The tips of trimming video -->
     <string name="fail_trim">Sorry, this video file can not be trimmed</string>
     <string name="can_not_trim">Only mp4 file can be trimmed</string>
+    <string name="file_writer_speed_not_catchup ">Write speed of external storage too slow.</string>
 </resources>
