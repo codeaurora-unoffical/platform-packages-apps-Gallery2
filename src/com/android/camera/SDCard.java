@@ -43,22 +43,36 @@ public class SDCard {
     private IMountService mMountService = null;
     private StorageVolume mVolume = null;
     private String path = null;
+    private String rawpath = null;
     private static SDCard sSDCard;
 
     public boolean isWriteable() {
         if (mVolume == null) return false;
         final String state = getSDCardStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state))
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
             return true;
+        }
         return false;
     }
 
     public String getDirectory() {
-        if (mVolume == null)
+        if (mVolume == null) {
             return null;
-        if (path == null)
+        }
+        if (path == null) {
             path = mVolume.getPath() + "/DCIM/Camera";
+        }
         return path;
+    }
+
+    public String getRawDirectory() {
+        if (mVolume == null) {
+            return null;
+        }
+        if (rawpath == null) {
+            rawpath = mVolume.getPath() + "/DCIM/Camera/raw";
+        }
+        return rawpath;
     }
 
     public static synchronized SDCard instance() {
