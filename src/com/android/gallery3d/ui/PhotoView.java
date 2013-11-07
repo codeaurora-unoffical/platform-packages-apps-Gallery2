@@ -738,7 +738,7 @@ public class PhotoView extends GLView {
             if (mIsVideoOrGif) {
                 drawVideoPlayIcon(canvas, s);
             }
-            if (mLoadingState == Model.LOADING_FAIL ) {
+            if (mLoadingState == Model.LOADING_FAIL) {
                 // we shouldn't show the loading fail message when mFullScreenCamera is true.
                 if (!mFullScreenCamera) {
                     drawLoadingFailMessage(canvas);
