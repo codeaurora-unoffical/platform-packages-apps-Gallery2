@@ -398,15 +398,18 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
         return mSurfaceViewReady;
     }
 
-    public void showRecordingUI(boolean recording, boolean zoomSupported) {
+    public void showRecordingUI(boolean recording, boolean zoomSupported, boolean isTimeLapse) {
         mMenu.setVisibility(recording ? View.GONE : View.VISIBLE);
+        mMenu.setEnabled(recording ? false : true);
         mOnScreenIndicators.setVisibility(recording ? View.GONE : View.VISIBLE);
         if (recording) {
             mShutterButton.setImageResource(R.drawable.btn_shutter_video_recording);
             mActivity.hideSwitcher();
             mRecordingTimeView.setText("");
             mRecordingTimeView.setVisibility(View.VISIBLE);
-            mPauseButton.setVisibility(View.VISIBLE);
+            if (!isTimeLapse) {
+                mPauseButton.setVisibility(View.VISIBLE);
+            }
             // The camera is not allowed to be accessed in older api levels during
             // recording. It is therefore necessary to hide the zoom UI on older
             // platforms.
@@ -419,7 +422,8 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mShutterButton.setImageResource(R.drawable.btn_new_shutter_video);
             mActivity.showSwitcher();
             mRecordingTimeView.setVisibility(View.GONE);
-            mPauseButton.setVisibility(View.GONE);
+            if (!isTimeLapse)
+                mPauseButton.setVisibility(View.GONE);
             if (!ApiHelper.HAS_ZOOM_WHEN_RECORDING && zoomSupported) {
                 // TODO: enable zoom UI here.
             }

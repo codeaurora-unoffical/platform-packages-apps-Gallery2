@@ -821,10 +821,12 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
     public void suspend() {
         // HTTP streaming will call mMediaPlayer->suspend(), others will call release()
         if (isHTTPStreaming(mUri) && mCurrentState != STATE_PREPARING) {
-            if (mMediaPlayer.suspend()) {
-                mTargetState = mCurrentState;
-                mCurrentState = STATE_SUSPENDED;
-                return;
+            if (mMediaPlayer != null) {
+                if (mMediaPlayer.suspend()) {
+                    mTargetState = mCurrentState;
+                    mCurrentState = STATE_SUSPENDED;
+                    return;
+                }
             }
         }
         release(false);
