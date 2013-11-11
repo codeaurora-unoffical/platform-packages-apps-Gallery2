@@ -90,7 +90,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
         initializeMiscControls();
         initializeControlByIntent();
         initializeOverlay();
-        initializePauseButton();
+        //initializePauseButton();
     }
 
     private void initializeControlByIntent() {
@@ -407,7 +407,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mActivity.hideSwitcher();
             mRecordingTimeView.setText("");
             mRecordingTimeView.setVisibility(View.VISIBLE);
-            if (!isTimeLapse) {
+            if (!isTimeLapse && mPauseButton != null) {
                 mPauseButton.setVisibility(View.VISIBLE);
             }
             // The camera is not allowed to be accessed in older api levels during
@@ -422,7 +422,7 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
             mShutterButton.setImageResource(R.drawable.btn_new_shutter_video);
             mActivity.showSwitcher();
             mRecordingTimeView.setVisibility(View.GONE);
-            if (!isTimeLapse)
+            if (!isTimeLapse && mPauseButton != null)
                 mPauseButton.setVisibility(View.GONE);
             if (!ApiHelper.HAS_ZOOM_WHEN_RECORDING && zoomSupported) {
                 // TODO: enable zoom UI here.
@@ -573,8 +573,10 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
     }
 
     public void resetPauseButton() {
-        mRecordingTimeView.setCompoundDrawablesWithIntrinsicBounds(
-            R.drawable.ic_recording_indicator, 0, 0, 0);
-        mPauseButton.setPaused(false);
+        if (mPauseButton != null) {
+            mRecordingTimeView.setCompoundDrawablesWithIntrinsicBounds(
+                R.drawable.ic_recording_indicator, 0, 0, 0);
+            mPauseButton.setPaused(false);
+        }
     }
 }
