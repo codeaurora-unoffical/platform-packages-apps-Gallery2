@@ -631,7 +631,8 @@ public abstract class PhotoPage extends ActivityState implements
                     }
                     // DRM Change -- START
                     MediaItem item = mModel.getMediaItem(0);
-                    if (item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE
+                    if (item != null
+                            && item.getMediaType() == MediaObject.MEDIA_TYPE_IMAGE
                             && item.getConsumeRights() ==  true) {
                         Log.d(TAG, "onDestroy,consume rights = true");
                         item.setConsumeRights(false);
