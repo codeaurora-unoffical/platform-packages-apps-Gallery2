@@ -349,6 +349,9 @@ public class VideoUI implements SurfaceHolder.Callback, PieRenderer.PieListener,
         if (mShutterButton != null) {
             mShutterButton.setEnabled(enable);
         }
+        if (mPauseButton!= null) {
+            mPauseButton.setEnabled(enable);
+        }
     }
 
     // PieListener
