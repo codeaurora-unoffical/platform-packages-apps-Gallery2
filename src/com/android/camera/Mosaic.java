@@ -140,6 +140,13 @@ public class Mosaic {
     public native float[] setSourceImageFromGPU();
 
     /**
+     * Get the estimated memory required by algorithm.
+     *
+     * @return Int value of estimated memory consumption in byte.
+     */
+    public native int getEstimateMemConsumption();
+
+    /**
      * Set the type of blending.
      *
      * @param type the blending type defined in the class. {BLENDTYPE_FULL,

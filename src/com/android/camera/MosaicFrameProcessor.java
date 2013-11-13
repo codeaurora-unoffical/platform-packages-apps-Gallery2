@@ -17,6 +17,8 @@
 package com.android.camera;
 
 import android.util.Log;
+import android.app.ActivityManager;
+import android.content.Context;
 
 /**
  * Class to handle the processing of each frame by Mosaicer.
@@ -154,7 +156,7 @@ public class MosaicFrameProcessor {
     // Processes the last filled image frame through the mosaicer and
     // updates the UI to show progress.
     // When done, processes and displays the final mosaic.
-    public void processFrame() {
+    public void processFrame(Context context) {
         if (!mIsMosaicMemoryAllocated) {
             // clear() is called and buffers are cleared, stop computation.
             // This can happen when the onPause() is called in the activity, but still some frames
@@ -175,11 +177,31 @@ public class MosaicFrameProcessor {
             if (mTotalFrameCount < MAX_NUMBER_OF_FRAMES) {
                 // If we are still collecting new frames for the current mosaic,
                 // process the new frame.
+                int PreviousFrameCount = mTotalFrameCount;
+                boolean shouldFinish = false;
                 calculateTranslationRate();
+                int estimateMem;
+                if (PreviousFrameCount != mTotalFrameCount)
+                {
+                    PreviousFrameCount = mTotalFrameCount;
+                    ActivityManager activityManager = (ActivityManager)
+                            context.getSystemService(Context.ACTIVITY_SERVICE);
+                    ActivityManager.MemoryInfo info = new ActivityManager.MemoryInfo();
+                    activityManager.getMemoryInfo(info);
+
+                    estimateMem = mMosaicer.getEstimateMemConsumption();
+
+                    if ((info.availMem - estimateMem) < info.threshold/2)
+                    {
+                        shouldFinish = true;
+                        Log.d(TAG, "avail mem is " + info.availMem + " thresh is " + info.threshold);
+                        Log.d(TAG, "estimateMem is " + estimateMem);
+                    }
+                }
 
                 // Publish progress of the ongoing processing
                 if (mProgressListener != null) {
-                    mProgressListener.onProgress(false, mPanningRateX, mPanningRateY,
+                    mProgressListener.onProgress(shouldFinish, mPanningRateX, mPanningRateY,
                             mTranslationLastX * HR_TO_LR_DOWNSAMPLE_FACTOR / mPreviewWidth,
                             mTranslationLastY * HR_TO_LR_DOWNSAMPLE_FACTOR / mPreviewHeight);
                 }
