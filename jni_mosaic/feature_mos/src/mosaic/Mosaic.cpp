@@ -188,6 +188,16 @@ int Mosaic::addFrame(ImageType imageYVU)
     return ret;
 }
 
+int Mosaic::estimateMemConsumption()
+{
+    if (blender != NULL)
+    {
+        return blender->EstimateMemConsumption((MosaicFrame **) frames,
+                (MosaicFrame **) rframes, frames_size);
+    }
+    else
+        return 0;
+}
 
 int Mosaic::createMosaic(float &progress, bool &cancelComputation)
 {
