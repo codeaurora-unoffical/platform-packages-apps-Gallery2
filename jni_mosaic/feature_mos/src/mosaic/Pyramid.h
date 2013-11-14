@@ -43,6 +43,7 @@ public:
   static void freeImage(PyramidShort *image);
 
   static unsigned int calcStorage(real width, real height, real border2, int levels, int *lines);
+  static unsigned int calcMemorySize(real width, real height, real border, int levels);
 
   static void BorderSpread(PyramidShort *pyr, int left, int right, int top, int bot);
   static void BorderExpandOdd(PyramidShort *in, PyramidShort *out, PyramidShort *scr, int mode);
