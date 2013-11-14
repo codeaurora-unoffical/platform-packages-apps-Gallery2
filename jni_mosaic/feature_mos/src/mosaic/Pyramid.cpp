@@ -109,6 +109,22 @@ unsigned int PyramidShort::calcStorage(real width, real height, real border2,   
     return size;
 }
 
+unsigned int PyramidShort::calcMemorySize(real width, real height, real border, int levels)
+{
+    int size;
+    int lines;
+    real border2 = (real) (border << 1);
+
+    lines = size = 0;
+    size = calcStorage(width, height, border2, levels, &lines);
+
+    size = (sizeof(PyramidShort) * levels
+            + sizeof(short *) * (lines) +
+            + sizeof(short) * size)*1;
+
+    return size;
+}
+
 void PyramidShort::BorderSpread(PyramidShort *pyr, int left, int right,
         int top, int bot)
 {
