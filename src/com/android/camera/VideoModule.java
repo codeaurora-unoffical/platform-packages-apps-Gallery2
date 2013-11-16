@@ -97,10 +97,12 @@ public class VideoModule implements CameraModule,
     private static final int HIDE_SURFACE_VIEW = 10;
     private static final int CAPTURE_ANIMATION_DONE = 11;
     private static final int START_PREVIEW_DONE = 12;
+    private static final int ENABLE_PAUSE_BUTTON = 13;
 
     private static final int SCREEN_DELAY = 2 * 60 * 1000;
 
     private static final long SHUTTER_BUTTON_TIMEOUT = 500L; // 500ms
+    private static final long PAUSE_BUTTON_TIMEOUT = 500L; // 500ms
 
     /**
      * An unpublished intent flag requesting to start recording straight away
@@ -336,6 +338,10 @@ public class VideoModule implements CameraModule,
 
                 case ENABLE_SHUTTER_BUTTON:
                     mUI.enableShutter(true);
+                    break;
+
+                case ENABLE_PAUSE_BUTTON:
+                    mUI.enablePause(true);
                     break;
 
                 case CLEAR_SCREEN_DELAY: {
@@ -957,7 +963,7 @@ public class VideoModule implements CameraModule,
             mStartPreviewThread.start();
         } else {
             // preview already started
-            mUI.enableShutter(true);
+            mHandler.sendEmptyMessage(ENABLE_SHUTTER_BUTTON);
         }
 
         // Initializing it here after the preview is started.
@@ -2142,10 +2148,8 @@ public class VideoModule implements CameraModule,
         }
         if (isSupported(HighFrameRate,
                 mParameters.getSupportedVideoHighFrameRateModes()) &&
-                !mUnsupportedHFRVideoSize && !("off".equals(HighFrameRate))) {
+                !mUnsupportedHFRVideoSize) {
             mParameters.setVideoHighFrameRate(HighFrameRate);
-            int hfr_value = Integer.parseInt(HighFrameRate);
-            mParameters.setPreviewFpsRange(hfr_value*1000, hfr_value*1000);
         } else
             mParameters.setVideoHighFrameRate("off");
 
@@ -2206,7 +2210,7 @@ public class VideoModule implements CameraModule,
     private void setCameraParameters() {
         Log.d(TAG,"Preview dimension in App->"+mDesiredPreviewWidth+"X"+mDesiredPreviewHeight);
         mParameters.setPreviewSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
-        mParameters.setPreviewFpsRange(mProfile.videoFrameRate*1000, mProfile.videoFrameRate*1000);
+        mParameters.setPreviewFrameRate(mProfile.videoFrameRate);
 
         videoWidth = mProfile.videoFrameWidth;
         videoHeight = mProfile.videoFrameHeight;
@@ -2763,10 +2767,16 @@ public class VideoModule implements CameraModule,
     @Override
     public void onButtonPause() {
         pauseVideoRecording();
+        mUI.enablePause(false);
+        mHandler.sendEmptyMessageDelayed(
+                ENABLE_PAUSE_BUTTON, PAUSE_BUTTON_TIMEOUT);
     }
 
     @Override
     public void onButtonContinue() {
         resumeVideoRecording();
+        mUI.enablePause(false);
+        mHandler.sendEmptyMessageDelayed(
+                ENABLE_PAUSE_BUTTON, PAUSE_BUTTON_TIMEOUT);
     }
 }
