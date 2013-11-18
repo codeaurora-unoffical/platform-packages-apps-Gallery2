@@ -373,7 +373,7 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
             }
 
             Log.d(TAG, "pickPhoto:path = " + path);
-            if (path != null && path.endsWith(".dcf")) {
+            if (path != null && (path.endsWith(".dcf") || path.endsWith(".dm"))) {
                 DrmManagerClient drmClient = new DrmManagerClient(context);
                 int status = -1;
                 Log.d(TAG, "pickPhoto:item type = " + Integer.toString(item.getMediaType()));
@@ -456,7 +456,7 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
             if (item instanceof LocalMediaItem) {
                 path = ((LocalMediaItem)item).filePath;
             }
-            if (path != null && path.endsWith(".dcf")) {
+            if (path != null && (path.endsWith(".dcf") || path.endsWith(".dm"))) {
                 DrmManagerClient drmClient = new DrmManagerClient((Context) mActivity);
                 ContentValues values = drmClient.getMetadata(path);
                 int drmType = values.getAsInteger("DRM-TYPE");

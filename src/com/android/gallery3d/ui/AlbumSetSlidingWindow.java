@@ -285,7 +285,7 @@ public class AlbumSetSlidingWindow implements AlbumSetDataLoader.DataListener {
             // DRM Change -- START
             if (cover instanceof LocalMediaItem) {
                 String filePath = ((LocalMediaItem) cover).filePath;
-                if (filePath != null && filePath.endsWith(".dcf")) {
+                if (filePath != null && (filePath.endsWith(".dcf") || filePath.endsWith(".dm"))) {
                     if (entry.mediaType == MediaObject.MEDIA_TYPE_IMAGE) {
                         entry.mediaType = MediaObject.MEDIA_TYPE_DRM_IMAGE;
                     } else if (entry.mediaType == MediaObject.MEDIA_TYPE_VIDEO) {

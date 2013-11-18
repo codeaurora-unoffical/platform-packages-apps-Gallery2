@@ -254,7 +254,7 @@ public class LocalImage extends LocalMediaItem {
 
         // DRM Change -- START
         int operation = SUPPORT_DELETE  | SUPPORT_SETAS | SUPPORT_INFO;
-        if (filePath != null && filePath.endsWith(".dcf")) {
+        if (filePath != null && (filePath.endsWith(".dcf") || filePath.endsWith(".dm"))) {
             operation |= SUPPORT_DRM_INFO;
             DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
             ContentValues values = drmClient.getMetadata(filePath);

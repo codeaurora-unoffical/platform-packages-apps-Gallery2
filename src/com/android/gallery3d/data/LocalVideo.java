@@ -193,7 +193,7 @@ public class LocalVideo extends LocalMediaItem {
     public int getSupportedOperations() {
         // DRM Change -- START
         int supported = SUPPORT_DELETE | SUPPORT_PLAY | SUPPORT_INFO;
-        if (filePath != null && filePath.endsWith(".dcf")) {
+        if (filePath != null && (filePath.endsWith(".dcf") || filePath.endsWith(".dm"))) {
             supported |= SUPPORT_DRM_INFO;
             DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
             ContentValues values = drmClient.getMetadata(filePath);

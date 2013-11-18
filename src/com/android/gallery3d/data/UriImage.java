@@ -240,7 +240,7 @@ public class UriImage extends MediaItem {
             }
         }
 
-        if (filePath != null && filePath.endsWith(".dcf")) {
+        if (filePath != null && (filePath.endsWith(".dcf") || filePath.endsWith(".dm"))) {
             supported |= SUPPORT_DRM_INFO;
             DrmManagerClient drmClient = new DrmManagerClient(mApplication.getAndroidContext());
             ContentValues values = drmClient.getMetadata(filePath);

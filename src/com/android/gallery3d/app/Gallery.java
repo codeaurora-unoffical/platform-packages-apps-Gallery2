@@ -243,7 +243,9 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
                     }
                 }
                 String mime_Type = intent.getType();
-                if (imagePath != null && imagePath.endsWith(".dcf") && "*/*".equals(mime_Type)) {
+                if (imagePath != null
+                        && (imagePath.endsWith(".dcf") || imagePath.endsWith(".dm"))
+                        && "*/*".equals(mime_Type)) {
                     DrmManagerClient drmClient = new DrmManagerClient(this);
                     mime_Type = drmClient.getOriginalMimeType(imagePath);
                     if (drmClient != null) drmClient.release();
@@ -273,7 +275,8 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
                     if (drmClient != null) drmClient.release();
                 }
 
-                if (imagePath != null && imagePath.endsWith(".dcf")) {
+                if (imagePath != null
+                        && (imagePath.endsWith(".dcf") || imagePath.endsWith(".dm"))) {
                     DrmManagerClient drmClient = new DrmManagerClient(this);
                     ContentValues values = drmClient.getMetadata(imagePath);
                     int drmType = values.getAsInteger("DRM-TYPE");
