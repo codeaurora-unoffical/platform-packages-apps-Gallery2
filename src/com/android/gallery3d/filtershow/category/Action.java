@@ -24,8 +24,11 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+
 import com.android.gallery3d.filtershow.cache.RenderingRequest;
 import com.android.gallery3d.filtershow.cache.RenderingRequestCaller;
+import com.android.gallery3d.filtershow.filters.FilterColorBorderRepresentation;
+import com.android.gallery3d.filtershow.filters.FilterImageBorderRepresentation;
 import com.android.gallery3d.filtershow.filters.FilterRepresentation;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
 import com.android.gallery3d.filtershow.presets.ImagePreset;
@@ -61,7 +64,9 @@ public class Action implements RenderingRequestCaller {
 
     public void setRepresentation(FilterRepresentation representation) {
         mRepresentation = representation;
-        if (representation.getTextId() != 0) {
+        if (!(representation instanceof FilterImageBorderRepresentation)
+                && !(representation instanceof FilterColorBorderRepresentation)
+                && representation.getTextId() != 0) {
             mName = mContext.getResources().getString(representation.getTextId());
         } else {
             mName = representation.getName();
