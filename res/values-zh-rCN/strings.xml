@@ -284,13 +284,13 @@
     <string name="pref_camera_whitebalance_label" msgid="7467403405883190920">"白平衡"</string>
     <string name="pref_camera_whitebalance_entry_auto" msgid="6580665476983469293">"自动"</string>
     <string name="pref_camera_whitebalance_entry_incandescent" msgid="8856667786449549938">"白炽光"</string>
-    <string name="pref_camera_whitebalance_entry_daylight" msgid="2534757270149561027">"日光"</string>
-    <string name="pref_camera_whitebalance_entry_fluorescent" msgid="2435332872847454032">"荧光"</string>
+    <string name="pref_camera_whitebalance_entry_daylight" msgid="2534757270149561027">"晴天"</string>
+    <string name="pref_camera_whitebalance_entry_fluorescent" msgid="2435332872847454032">"日光灯"</string>
     <string name="pref_camera_whitebalance_entry_cloudy" msgid="3531996716997959326">"阴天"</string>
     <string name="pref_camera_whitebalance_label_auto" msgid="1479694362310491429">"自动"</string>
     <string name="pref_camera_whitebalance_label_incandescent" msgid="7427628260209908900">"白炽光"</string>
-    <string name="pref_camera_whitebalance_label_daylight" msgid="1859710806141461399">"日光"</string>
-    <string name="pref_camera_whitebalance_label_fluorescent" msgid="5173251749161337707">"荧光"</string>
+    <string name="pref_camera_whitebalance_label_daylight" msgid="1859710806141461399">"晴天"</string>
+    <string name="pref_camera_whitebalance_label_fluorescent" msgid="5173251749161337707">"日光灯"</string>
     <string name="pref_camera_whitebalance_label_cloudy" msgid="8230173517179285320">"阴天"</string>
     <string name="pref_camera_scenemode_title" msgid="1420535844292504016">"取景模式"</string>
     <string name="pref_camera_scenemode_entry_auto" msgid="7113995286836658648">"自动"</string>
