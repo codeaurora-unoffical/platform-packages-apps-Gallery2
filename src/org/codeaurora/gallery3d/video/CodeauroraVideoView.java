@@ -250,11 +250,6 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
         mErrorListener = new MediaPlayer.OnErrorListener() {
             public boolean onError(final MediaPlayer mp, final int frameworkErr, final int implErr) {
                 Log.d(TAG, "Error: " + frameworkErr + "," + implErr);
-                if (mCurrentState == STATE_ERROR) {
-                    Log.w(TAG, "Duplicate error message. error message has been sent! " +
-                            "error=(" + frameworkErr + "," + implErr + ")");
-                    return true;
-                }
                 //record error position and duration
                 //here disturb the original logic
                 mSeekWhenPrepared = getCurrentPosition();
@@ -560,57 +555,7 @@ public class CodeauroraVideoView extends SurfaceView implements MediaPlayerContr
         }
     };
 
-    private MediaPlayer.OnErrorListener mErrorListener =
-        new MediaPlayer.OnErrorListener() {
-        public boolean onError(MediaPlayer mp, int framework_err, int impl_err) {
-            Log.d(TAG, "Error: " + framework_err + "," + impl_err);
-            mCurrentState = STATE_ERROR;
-            mTargetState = STATE_ERROR;
-            if (mMediaController != null) {
-                mMediaController.hide();
-            }
-
-            /* If an error handler has been supplied, use it and finish. */
-            if (mOnErrorListener != null) {
-                if (mOnErrorListener.onError(mMediaPlayer, framework_err, impl_err)) {
-                    return true;
-                }
-            }
-
-            /* Otherwise, pop up an error dialog so the user knows that
-             * something bad has happened. Only try and pop up the dialog
-             * if we're attached to a window. When we're going away and no
-             * longer have a window, don't bother showing the user an error.
-             */
-            if (getWindowToken() != null) {
-                Resources r = mContext.getResources();
-                int messageId;
-
-                if (framework_err == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
-                    messageId = com.android.internal.R.string.VideoView_error_text_invalid_progressive_playback;
-                } else {
-                    messageId = com.android.internal.R.string.VideoView_error_text_unknown;
-                }
-
-                new AlertDialog.Builder(mContext)
-                        .setMessage(messageId)
-                        .setPositiveButton(com.android.internal.R.string.VideoView_error_button,
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        /* If we get here, there is no onError listener, so
-                                         * at least inform them that the video is over.
-                                         */
-                                        if (mOnCompletionListener != null) {
-                                            mOnCompletionListener.onCompletion(mMediaPlayer);
-                                        }
-                                    }
-                                })
-                        .setCancelable(false)
-                        .show();
-            }
-            return true;
-        }
-    };
+    private MediaPlayer.OnErrorListener mErrorListener;
 
     private MediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
         new MediaPlayer.OnBufferingUpdateListener() {
