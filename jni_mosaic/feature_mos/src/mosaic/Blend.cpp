@@ -371,6 +371,48 @@ int Blend::FillFramePyramid(MosaicFrame *mb)
     }
 }
 
+int Blend::EstimateMemConsumption(MosaicFrame **oframes, MosaicFrame **rframes, int frames_size)
+{
+    int ret;
+    MosaicFrame **frames;
+
+
+    frames = oframes;
+
+    if (frames_size <= 0)
+        return 0;
+
+    ComputeBlendParameters(frames, frames_size, true);
+
+    BlendRect global_rect;
+    global_rect.lft = global_rect.bot = 2e30; // min values
+    global_rect.rgt = global_rect.top = -2e30; // max values
+    MosaicFrame *mb = NULL;
+
+    for(int mfit = 0; mfit < frames_size; mfit++)
+    {
+        mb = frames[mfit];
+
+        // Compute clipping for this frame's rect
+        FrameToMosaicRect(mb->width, mb->height, mb->trs, mb->brect);
+        // Clip global rect using this frame's rect
+        ClipRect(mb->brect, global_rect);
+    }
+
+    MosaicRect fullRect;
+    fullRect.left = (int) floor(global_rect.lft); // min-x
+    fullRect.top = (int) floor(global_rect.bot);  // min-y
+    fullRect.right = (int) ceil(global_rect.rgt); // max-x
+    fullRect.bottom = (int) ceil(global_rect.top);// max-y
+    Mwidth = (unsigned short) (fullRect.right - fullRect.left );
+    Mheight = (unsigned short) (fullRect.bottom - fullRect.top );
+
+
+    return PyramidShort::calcMemorySize((unsigned short)Mwidth, (unsigned short)Mheight, BORDER >> 2, m_wb.nlevs)
+            +PyramidShort::calcMemorySize((unsigned short)Mwidth, (unsigned short)Mheight, BORDER >> 2, m_wb.nlevsC)
+            +PyramidShort::calcMemorySize((unsigned short)Mwidth, (unsigned short)Mheight, BORDER >> 2, m_wb.nlevsC);
+}
+
 int Blend::DoMergeAndBlend(MosaicFrame **frames, int nsite,
              int width, int height, YUVinfo &imgMos, MosaicRect &rect,
              MosaicRect &cropping_rect, float &progress, bool &cancelComputation)
