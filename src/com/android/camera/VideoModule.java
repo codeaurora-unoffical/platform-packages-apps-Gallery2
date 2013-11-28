@@ -559,6 +559,7 @@ public class VideoModule implements CameraModule,
             return;
         }
 
+     /*
         // Set rotation and gps data.
         int rotation = Util.getJpegRotation(mCameraId, mOrientation);
         mParameters.setRotation(rotation);
@@ -572,6 +573,7 @@ public class VideoModule implements CameraModule,
         mSnapshotInProgress = true;
         UsageStatistics.onEvent(UsageStatistics.COMPONENT_CAMERA,
                 UsageStatistics.ACTION_CAPTURE_DONE, "VideoSnapshot");
+        */
     }
 
     @Override
