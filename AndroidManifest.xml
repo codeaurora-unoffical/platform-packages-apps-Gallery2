@@ -88,6 +88,7 @@
                 <data android:scheme="https" />
                 <data android:scheme="content" />
                 <data android:scheme="file" />
+                <data android:scheme="rtsp" />
                 <data android:mimeType="video/mpeg4" />
                 <data android:mimeType="video/mp4" />
                 <data android:mimeType="video/3gp" />
