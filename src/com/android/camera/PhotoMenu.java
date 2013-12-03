@@ -88,10 +88,10 @@ public class PhotoMenu extends PieController
         // the order is from left to right in the menu
 
         // hdr
-        if (group.findPreference(CameraSettings.KEY_CAMERA_HDR) != null) {
+        /* if (group.findPreference(CameraSettings.KEY_CAMERA_HDR) != null) {
             item = makeSwitchItem(CameraSettings.KEY_CAMERA_HDR, true);
             mRenderer.addItem(item);
-        }
+        } */
 
         mOtherKeys1 = new String[] {
                 CameraSettings.KEY_SCENE_MODE,
@@ -101,7 +101,7 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_FOCUS_MODE,
                 CameraSettings.KEY_PICTURE_FORMAT,
                 CameraSettings.KEY_JPEG_QUALITY,
-                CameraSettings.KEY_ZSL,
+                /* CameraSettings.KEY_ZSL, */
                 CameraSettings.KEY_CAMERA_SAVEPATH
         };
 
@@ -120,7 +120,7 @@ public class PhotoMenu extends PieController
         mOtherKeys3 = new String[] {
                 CameraSettings.KEY_ANTIBANDING,
                 CameraSettings.KEY_ISO,
-                CameraSettings.KEY_DENOISE,
+                /* CameraSettings.KEY_DENOISE, */
                 CameraSettings.KEY_EXPOSURE,
                 CameraSettings.KEY_WHITE_BALANCE,
                 CameraSettings.KEY_FLASH_MODE,
