@@ -859,7 +859,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         HistoryAdapter adapter = mMasterImage.getHistory();
         adapter.reset();
         ImagePreset original = new ImagePreset(adapter.getItem(0));
-        mMasterImage.setPreset(original, true);
+        mMasterImage.setPreset(original, false);
         invalidateViews();
         backToMain();
     }
