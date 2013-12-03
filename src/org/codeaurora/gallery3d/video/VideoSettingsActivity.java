@@ -116,7 +116,9 @@ public class VideoSettingsActivity extends ListActivity {
     private DialogInterface.OnClickListener mStepOptionSelectedListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int whichItemSelect) {
-            setSelectedStepOption(whichItemSelect);
+            if(sStepOptionArray != null) {
+                setSelectedStepOption(whichItemSelect);
+            }
             dialog.dismiss();
         }
     };
