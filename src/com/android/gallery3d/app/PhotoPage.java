@@ -226,6 +226,8 @@ public abstract class PhotoPage extends ActivityState implements
             new MyMenuVisibilityListener();
     private UpdateProgressListener mProgressListener;
 
+    private boolean mInCameraAlbum = false;
+
     private final PanoramaSupportCallback mUpdatePanoramaMenuItemsCallback = new PanoramaSupportCallback() {
         @Override
         public void panoramaInfoAvailable(MediaObject mediaObject, boolean isPanorama,
@@ -507,11 +509,13 @@ public abstract class PhotoPage extends ActivityState implements
 
                 // Start from the screen nail.
                 itemPath = screenNailItemPath;
+                mInCameraAlbum = true;
             } else if (inCameraRoll && GalleryUtils.isCameraAvailable(mActivity)) {
                 mSetPathString = "/combo/item/{" + FilterSource.FILTER_CAMERA_SHORTCUT +
                         "," + mSetPathString + "}";
                 mCurrentIndex++;
                 mHasCameraScreennailOrPlaceholder = true;
+                mInCameraAlbum = true;
             }
 
             MediaSet originalSet = mActivity.getDataManager()
@@ -1777,12 +1781,22 @@ public abstract class PhotoPage extends ActivityState implements
 
         @Override
         public int size() {
-            return mMediaSet != null ? mMediaSet.getMediaItemCount() : 1;
+            int size =  mMediaSet != null ? mMediaSet.getMediaItemCount() : 1;
+            //In camera album, we return size - 1, because the first item is Camera.
+            if (mInCameraAlbum) {
+                size--;
+            }
+            return size;
         }
 
         @Override
         public int setIndex() {
-            return mModel.getCurrentIndex();
+            int index = mModel.getCurrentIndex();
+            //In camera album, we return index - 1, because the first item is Camera.
+            if (mInCameraAlbum) {
+                index--;
+            }
+            return index;
         }
     }
 
