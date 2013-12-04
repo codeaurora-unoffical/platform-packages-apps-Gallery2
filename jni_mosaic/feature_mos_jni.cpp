@@ -361,6 +361,12 @@ void ConvertYVUAiToPlanarYVU(unsigned char *planar, unsigned char *in, int width
     }
 }
 
+JNIEXPORT jint JNICALL Java_com_android_camera_Mosaic_getEstimateMemConsumption(
+        JNIEnv* env, jobject thiz)
+{
+    return mosaic[LR]->estimateMemConsumption()*H2L_FACTOR*H2L_FACTOR;
+}
+
 JNIEXPORT jfloatArray JNICALL Java_com_android_camera_Mosaic_setSourceImageFromGPU(
         JNIEnv* env, jobject thiz)
 {

@@ -111,6 +111,8 @@ public:
     */
   int addFrameRGB(ImageType imageRGB);
 
+  int estimateMemConsumption();
+
    /*!
     *   After adding all frames, call this function to perform the final blending.
     *   \param progress     Variable to set the current progress in.

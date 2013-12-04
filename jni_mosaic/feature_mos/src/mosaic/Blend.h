@@ -76,6 +76,8 @@ public:
   int runBlend(MosaicFrame **frames, MosaicFrame **rframes, int frames_size, ImageType &imageMosaicYVU,
         int &mosaicWidth, int &mosaicHeight, float &progress, bool &cancelComputation);
 
+  int  EstimateMemConsumption(MosaicFrame **oframes, MosaicFrame **rframes, int frames_size);
+
 protected:
 
   PyramidShort *m_pFrameYPyr;
