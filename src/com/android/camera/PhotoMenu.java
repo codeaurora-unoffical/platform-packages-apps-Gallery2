@@ -57,6 +57,7 @@ public class PhotoMenu extends PieController
     private int popupNum = 0;
     private boolean mPopupSecondLevelMenu = false;
     private OnFirstLevelMenuDismiss mOnFirstLevelMenuDismissHandler = null;
+    private static boolean mListPrefChanged = false;
 
     public interface OnFirstLevelMenuDismiss {
         public void doAfterFirstLevelMenuDismiss();
@@ -85,6 +86,7 @@ public class PhotoMenu extends PieController
         popupNum = 0;
         final Resources res = mActivity.getResources();
         Locale locale = res.getConfiguration().locale;
+        mListPrefChanged = false;
         // the order is from left to right in the menu
 
         // hdr
@@ -202,18 +204,31 @@ public class PhotoMenu extends PieController
     // Hit when an item in a popup gets selected
     public void onListPrefChanged(ListPreference pref) {
         if (mPopup != null && mPopup1 != null && mPopup2 != null && mPopup3 != null) {
-               mUI.dismissPopup();
+            mListPrefChanged = true;
+            mUI.dismissPopup();
         }
         onSettingChanged(pref);
+        mListPrefChanged = false;
     }
 
    @Override
     public void overrideSettings(final String ... keyvalues) {
         super.overrideSettings(keyvalues);
-       if ((mPopup1 == null) &&  (mPopup2 == null)  &&  (mPopup3 == null)) initializePopup();
-        mPopup1.overrideSettings(keyvalues);
-        mPopup2.overrideSettings(keyvalues);
-        mPopup3.overrideSettings(keyvalues);
+       if ((mPopup1 == null) && (mPopup2 == null) && (mPopup3 == null)) {
+           initializePopup();
+       }
+
+       if (mPopup1 != null) {
+           mPopup1.overrideSettings(keyvalues);
+       }
+
+       if (mPopup2 != null) {
+           mPopup2.overrideSettings(keyvalues);
+       }
+
+       if (mPopup3 != null) {
+           mPopup3.overrideSettings(keyvalues);
+       }
     }
 
     protected void initializePopup() {
@@ -244,9 +259,37 @@ public class PhotoMenu extends PieController
      freshUiItems();
      }
 
-    public void popupDismissed() {
-        if (mPopupStatus == POPUP_SECOND_LEVEL) {
+
+    private class InitializePopupThread extends Thread {
+        private volatile boolean cancelled;
+
+        public void cancel() {
+            cancelled = true;
+        }
+
+        public boolean isCanceled() {
+            return cancelled;
+        }
+
+        @Override
+        public void run() {
             initializePopup();
+        }
+    }
+
+    public void popupDismissed() {
+        InitializePopupThread initializePopupThread = new InitializePopupThread();
+
+        if (mPopupStatus == POPUP_SECOND_LEVEL) {
+
+            if ((initializePopupThread != null) && (mListPrefChanged == true)) {
+                initializePopupThread.start();
+            }
+
+            else {
+                initializePopup();
+            }
+
             mPopupStatus = POPUP_FIRST_LEVEL;
                 if (popupNum == 1)
                     mUI.showPopup(mPopup1);
@@ -264,7 +307,14 @@ public class PhotoMenu extends PieController
                     mOnFirstLevelMenuDismissHandler.doAfterFirstLevelMenuDismiss();
                 }
             }
-            initializePopup();
+
+            if ((initializePopupThread != null) && (mListPrefChanged == true)) {
+                initializePopupThread.start();
+            }
+
+            else {
+                initializePopup();
+            }
         }
 
     }
