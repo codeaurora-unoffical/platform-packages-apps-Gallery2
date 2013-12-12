@@ -2024,7 +2024,7 @@ public class PhotoModule
                     }
                 }
                 brightnessProgressBar.setProgress(mbrightness);
-                brightnessProgressBar.setVisibility(View.VISIBLE);
+                brightnessProgressBar.setVisibility(View.INVISIBLE);
             }
             break;
            case KeyEvent.KEYCODE_DPAD_RIGHT:
@@ -2041,7 +2041,7 @@ public class PhotoModule
                     }
                 }
                 brightnessProgressBar.setProgress(mbrightness);
-                brightnessProgressBar.setVisibility(View.VISIBLE);
+                brightnessProgressBar.setVisibility(View.INVISIBLE);
             }
             break;
         case KeyEvent.KEYCODE_DPAD_CENTER:
@@ -3093,7 +3093,7 @@ public class PhotoModule
             Integer.toString(mskinToneValue - MIN_SCE_FACTOR));
         editor.apply();
         if(brightnessProgressBar != null)
-             brightnessProgressBar.setVisibility(View.VISIBLE);
+             brightnessProgressBar.setVisibility(View.INVISIBLE);
     }
 }
 
