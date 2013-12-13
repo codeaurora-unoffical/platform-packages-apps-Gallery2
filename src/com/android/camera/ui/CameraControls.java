@@ -42,6 +42,7 @@ public class CameraControls extends RotatableLayout {
     private View mPreview;
     private Object mDisplayListener = null;
     private int mLastRotation = 0;
+    private static final int CMCC_UI_ADJUST_OFFSET = 20;
 
     public CameraControls(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -240,8 +241,8 @@ public class CameraControls extends RotatableLayout {
         switch (rotation) {
         case 0:
             // portrait, to left of anchor at bottom
-            l = other.left - tw + lp.leftMargin;
-            r = other.left - lp.rightMargin;
+            l = other.left - tw + lp.leftMargin - CMCC_UI_ADJUST_OFFSET;
+            r = other.left - lp.rightMargin - CMCC_UI_ADJUST_OFFSET;
             t = cy - th / 2 + lp.topMargin;
             b = cy + th / 2 - lp.bottomMargin;
             break;
@@ -249,13 +250,13 @@ public class CameraControls extends RotatableLayout {
             // phone landscape: below anchor on right
             l = cx - tw / 2 + lp.leftMargin;
             r = cx + tw / 2 - lp.rightMargin;
-            t = other.bottom + lp.topMargin;
-            b = other.bottom + th - lp.bottomMargin;
+            t = other.bottom + lp.topMargin + CMCC_UI_ADJUST_OFFSET;
+            b = other.bottom + th - lp.bottomMargin + CMCC_UI_ADJUST_OFFSET;
             break;
         case 180:
             // phone upside down: right of anchor at top
-            l = other.right + lp.leftMargin;
-            r = other.right + tw - lp.rightMargin;
+            l = other.right + lp.leftMargin + CMCC_UI_ADJUST_OFFSET;
+            r = other.right + tw - lp.rightMargin + CMCC_UI_ADJUST_OFFSET;
             t = cy - th / 2 + lp.topMargin;
             b = cy + th / 2 - lp.bottomMargin;
             break;
@@ -263,8 +264,8 @@ public class CameraControls extends RotatableLayout {
             // reverse landscape: above anchor on left
             l = cx - tw / 2 + lp.leftMargin;
             r = cx + tw / 2 - lp.rightMargin;
-            t = other.top - th + lp.topMargin;
-            b = other.top - lp.bottomMargin;
+            t = other.top - th + lp.topMargin - CMCC_UI_ADJUST_OFFSET;
+            b = other.top - lp.bottomMargin - CMCC_UI_ADJUST_OFFSET;
             break;
         }
         v.layout(l, t, r, b);
@@ -279,28 +280,28 @@ public class CameraControls extends RotatableLayout {
         int l = 0, r = 0, t = 0, b = 0;
         switch (rotation) {
         case 0:
-            l = other.right + lp.leftMargin;
-            r = other.right + tw - lp.rightMargin;
+            l = other.right + lp.leftMargin + CMCC_UI_ADJUST_OFFSET;
+            r = other.right + tw - lp.rightMargin + CMCC_UI_ADJUST_OFFSET;
             t = cy - th / 2 + lp.topMargin;
             b = cy + th / 2 - lp.bottomMargin;
             break;
         case 90:
             l = cx - tw / 2 + lp.leftMargin;
             r = cx + tw / 2 - lp.rightMargin;
-            t = other.top - th + lp.topMargin;
-            b = other.top - lp.bottomMargin;
+            t = other.top - th + lp.topMargin - CMCC_UI_ADJUST_OFFSET;
+            b = other.top - lp.bottomMargin - CMCC_UI_ADJUST_OFFSET;
             break;
         case 180:
-            l = other.left - tw + lp.leftMargin;
-            r = other.left - lp.rightMargin;
+            l = other.left - tw + lp.leftMargin - CMCC_UI_ADJUST_OFFSET;
+            r = other.left - lp.rightMargin - CMCC_UI_ADJUST_OFFSET;
             t = cy - th / 2 + lp.topMargin;
             b = cy + th / 2 - lp.bottomMargin;
             break;
         case 270:
             l = cx - tw / 2 + lp.leftMargin;
             r = cx + tw / 2 - lp.rightMargin;
-            t = other.bottom + lp.topMargin;
-            b = other.bottom + th - lp.bottomMargin;
+            t = other.bottom + lp.topMargin + CMCC_UI_ADJUST_OFFSET;
+            b = other.bottom + th - lp.bottomMargin + CMCC_UI_ADJUST_OFFSET;
             break;
         }
         v.layout(l, t, r, b);
