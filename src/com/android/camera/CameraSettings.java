@@ -300,6 +300,8 @@ public class CameraSettings {
         if (touchAfAec != null) {
             filterUnsupportedOptions(group,
                     touchAfAec, mParameters.getSupportedTouchAfAec());
+            if (mParameters.getSupportedFocusModes().indexOf(",") == -1)
+                touchAfAec.setTitle(mContext.getString(R.string.pref_camera_touchaec_title));
         }
 
         if (!mParameters.isPowerModeSupported() && powerMode != null) {

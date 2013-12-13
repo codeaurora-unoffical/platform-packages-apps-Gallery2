@@ -448,4 +448,6 @@
     <string name="can_not_trim">只有mp4文件才能修剪</string>
     <string name="internal_video_error">内部应用错误。</string>
     <string name="in_call_video_error">通话中，无法录像。</string>
+    <!-- Settings screen, Select Touch AEC title -->
+    <string name="pref_camera_touchaec_title">"触摸 AEC"</string>
 </resources>
