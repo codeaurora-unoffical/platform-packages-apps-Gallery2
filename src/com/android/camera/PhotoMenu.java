@@ -125,7 +125,6 @@ public class PhotoMenu extends PieController
                 CameraSettings.KEY_WHITE_BALANCE,
                 CameraSettings.KEY_FLASH_MODE,
                 CameraSettings.KEY_REDEYE_REDUCTION,
-                CameraSettings.KEY_AE_BRACKET_HDR,
                 CameraSettings.KEY_TIMER,
                 CameraSettings.KEY_TIMER_SOUND_EFFECTS
         };
