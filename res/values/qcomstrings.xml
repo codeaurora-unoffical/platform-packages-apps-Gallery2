@@ -176,24 +176,27 @@
      <string name="pref_camera_mce_default">enable</string>
 
      <!-- The message is shown in dialog when the app encounters an unsupported resolution for HFR mode -->
-     <string name="error_app_unsupported_hfr">HFR is not supported for selected resolution</string>
+     <string name="error_app_unsupported_hfr">HFR is not supported for selected resolution.
+        Close HFR or change resolution</string>
 
      <!-- The message is shown in dialog when the app encounters an unsupported video codec for HFR mode -->
-     <string name="error_app_unsupported_hfr_codec">Only H264 video encoding is supported when HFR is ON</string>
+     <string name="error_app_unsupported_hfr_codec">Only H264 video encoding is supported when HFR is ON.
+        Close HFR or set to H264</string>
 
      <!-- The message is shown in dialog when the app encounters an time lapse mode for HFR mode -->
-     <string name="error_app_unsupported_hfr_timelapse">Time lapse is not supported when HFR is ON</string>
+     <string name="error_app_unsupported_hfr_timelapse">Time lapse is not supported when HFR is ON.
+        Close the one of them</string>
 
      <!-- The message is shown in dialog when the app encounters an unsupported video resolution-->
-     <string name="error_app_unsupported">Unsupported video resolution for this encoder type</string>
+     <string name="error_app_unsupported">Unsupported video resolution for this encoder type.
+        Please change encode type to H264</string>
 
     <!--The message is shown in dialog when the raw snapshot is selected in zsl mode-->
-    <string name="error_app_unsupported_raw">Raw picture format is not supported
-        in zsl mode
-    </string>
+    <string name="error_app_unsupported_raw">Raw picture format is not supported in zsl mode.
+        Auto change to JPEG format</string>
 
-    <string name="error_app_unsupported_hdr_zsl">HDR is not supported in zsl
-        mode</string>
+    <string name="error_app_unsupported_hdr_zsl">HDR is not supported in zsl mode.
+        Auto close the previous setting</string>
 
      <!-- Settings screen, AE bracketing and HDR location dialog choices -->
      <string name="pref_camera_ae_bracket_hdr_entry_ae_bracket">AE-Bracket</string>
