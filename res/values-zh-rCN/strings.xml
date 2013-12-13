@@ -433,6 +433,13 @@
     <string name="tab_albums" msgid="8079449907770685691">"相册"</string>
     <string name="camera_menu_more_label" msgid="6868642182125198710">"更多选项"</string>
     <string name="camera_menu_settings_label" msgid="875454962069404723">"设置"</string>
+    <!-- error message -->
+    <string name="error_app_unsupported_hfr">"当前分辨率下不支持高帧率视频，如需高帧率请更改视频画质"</string>
+    <string name="error_app_unsupported_hfr_codec">"高帧率下仅支持H264视频编码格式，如需高帧率请更改视频编码"</string>
+    <string name="error_app_unsupported_hfr_timelapse">"高帧率视频模式下不支持延时拍摄，如需延时请关闭高帧率"</string>
+    <string name="error_app_unsupported">"此编码格式不支持当前的分辨率设置，请切换至H264"</string>
+    <string name="error_app_unsupported_hdr_zsl">"零秒快拍模式下不支持HDR，已为您关闭冲突设置"</string>
+    <string name="error_app_unsupported_raw">"RAW图片格式下不支持零秒快拍，已为您切换至JPEG格式"</string>
   <plurals name="number_of_photos">
     <item quantity="one" msgid="6949174783125614798">"%1$d张照片"</item>
     <item quantity="other" msgid="3813306834113858135">"%1$d张照片"</item>
