@@ -86,7 +86,7 @@ public class PanoramaModule implements CameraModule,
 
     public static final int DEFAULT_SWEEP_ANGLE = 160;
     public static final int DEFAULT_BLEND_MODE = Mosaic.BLENDTYPE_HORIZONTAL;
-    public static final int DEFAULT_CAPTURE_PIXELS = 960 * 720;
+    public static final int DEFAULT_CAPTURE_PIXELS = 480 * 360;
 
     private static final int MSG_LOW_RES_FINAL_MOSAIC_READY = 1;
     private static final int MSG_GENERATE_FINAL_MOSAIC_ERROR = 2;
