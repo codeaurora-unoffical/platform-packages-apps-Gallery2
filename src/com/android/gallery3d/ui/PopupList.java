@@ -134,6 +134,12 @@ public class PopupList {
         mPopupWindow.showAsDropDown(mAnchorView, mPopupOffsetX, mPopupOffsetY);
     }
 
+    public void dismiss() {
+        if (mPopupWindow != null) {
+            mPopupWindow.dismiss();
+        }
+    }
+
     private void updatePopupLayoutParams() {
         ListView content = mContentList;
         PopupWindow popup = mPopupWindow;
