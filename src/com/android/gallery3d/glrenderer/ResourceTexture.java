@@ -21,6 +21,7 @@ package com.android.gallery3d.glrenderer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import junit.framework.Assert;
 
@@ -28,6 +29,7 @@ import junit.framework.Assert;
 // By default ResourceTexture is not opaque.
 public class ResourceTexture extends UploadedTexture {
 
+    private static final String TAG = "ResourceTexture";
     protected final Context mContext;
     protected final int mResId;
 
@@ -42,8 +44,15 @@ public class ResourceTexture extends UploadedTexture {
     protected Bitmap onGetBitmap() {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        return BitmapFactory.decodeResource(
-                mContext.getResources(), mResId, options, false);// DRM CHANGE
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeResource(mContext.getResources(), mResId, options, false);
+        } catch (OutOfMemoryError ex) {
+            Log.e(TAG, "BitmapFactory decode resource out of memory");
+            ex.printStackTrace();
+            return null;
+        }
+        return bitmap;
     }
 
     @Override
