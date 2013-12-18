@@ -16,7 +16,10 @@
 
 package com.android.gallery3d.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -45,7 +48,21 @@ public class SelectionMenu implements OnClickListener {
     @Override
     public void onClick(View v) {
         mPopupList.show();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        mContext.registerReceiver(mScreenOffReceiver, filter);
     }
+
+        private final BroadcastReceiver mScreenOffReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                if (mPopupList != null) {
+                    mPopupList.dismiss();
+                    mContext.unregisterReceiver(mScreenOffReceiver);
+                }
+            }
+        }
+     };
 
     public void updateSelectAllMode(boolean inSelectAllMode) {
         PopupList.Item item = mPopupList.findItem(R.id.action_select_all);
