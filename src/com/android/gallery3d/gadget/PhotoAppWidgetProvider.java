@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -49,6 +50,24 @@ public class PhotoAppWidgetProvider extends AppWidgetProvider {
         throw new RuntimeException("invalid type - " + entry.type);
     }
 
+     @Override
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        // receive media-related broadcast and update widget.
+        if (action.equals(Intent.ACTION_MEDIA_UNMOUNTED) || action.equals(Intent.ACTION_MEDIA_MOUNTED) ||
+                action.equals(Intent.ACTION_MEDIA_REMOVED) || action.equals(Intent.ACTION_MEDIA_EJECT)) {
+            Log.d(TAG, "action:" + action);
+            pushUpdate(context);
+        }
+        super.onReceive(context, intent);
+    }
+
+    private void pushUpdate(Context context) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        ComponentName componentName = new ComponentName(context, this.getClass());
+        onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(componentName));
+    }
+
     @Override
     public void onUpdate(Context context,
             AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -65,6 +84,15 @@ public class PhotoAppWidgetProvider extends AppWidgetProvider {
                 if (entry != null) {
                     RemoteViews views = buildWidget(context, id, entry);
                     appWidgetManager.updateAppWidget(id, views);
+                    // notify the widget that the data may have changed to make sure the newest widget.
+                    if (entry.type == WidgetDatabaseHelper.TYPE_ALBUM ||
+                            entry.type == WidgetDatabaseHelper.TYPE_SHUFFLE) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.appwidget_stack_view);
+                    } else if (entry.type == WidgetDatabaseHelper.TYPE_SINGLE_PHOTO) {
+                        appWidgetManager.notifyAppWidgetViewDataChanged(id, R.id.photo);
+                    } else {
+                        throw new RuntimeException("invalid type - " + entry.type);
+                    }
                 } else {
                     Log.e(TAG, "cannot load widget: " + id);
                 }

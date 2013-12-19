@@ -562,7 +562,6 @@ public class FocusOverlayManager {
     }
 
     private boolean needAutoFocusCall() {
-        if(mZslEnabled) return false;
         String focusMode = getFocusMode();
         return !(focusMode.equals(Parameters.FOCUS_MODE_INFINITY)
                 || focusMode.equals(Parameters.FOCUS_MODE_FIXED)
