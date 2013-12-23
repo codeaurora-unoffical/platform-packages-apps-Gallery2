@@ -74,7 +74,8 @@ public class FilterImageBorderRepresentation extends FilterRepresentation {
 
     @Override
     public int getTextId() {
-        return R.string.none;
+        int superTextId = super.getTextId();
+        return superTextId != 0 ? superTextId : R.string.none;
     }
 
     public boolean allowsSingleInstanceOnly() {
