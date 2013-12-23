@@ -307,10 +307,17 @@ public class MoviePlayer implements
         } else {
             mTState = TState.PLAYING;
             mFirstBePlayed = true;
-            final BookmarkerInfo bookmark = mBookmarker.getBookmark(mMovieItem.getUri());
-            if (bookmark != null) {
-                showResumeDialog(movieActivity, bookmark);
+            String mUri = mMovieItem.getUri().toString();
+            boolean isLive = mUri.startsWith("rtsp://") && (mUri.contains(".sdp") || mUri.contains(".smil"));
+            if (!isLive) {
+                final BookmarkerInfo bookmark = mBookmarker.getBookmark(mMovieItem.getUri());
+                if (bookmark != null) {
+                    showResumeDialog(movieActivity, bookmark);
+                } else {
+                    doStartVideo(false, 0, 0);
+                }
             } else {
+                //rtsp live TV should start from the beginning every time, no choice of continue can be select
                 doStartVideo(false, 0, 0);
             }
         }
@@ -483,6 +490,7 @@ public class MoviePlayer implements
 
             if (mServerTimeoutExt.handleOnResume() || mIsShowResumingDialog) {
                 mHasPaused = false;
+                mHandler.post(mProgressChecker);
                 return;
             }
             switch (mTState) {
