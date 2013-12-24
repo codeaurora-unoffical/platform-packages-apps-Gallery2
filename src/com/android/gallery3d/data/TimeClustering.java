@@ -106,6 +106,7 @@ public class TimeClustering extends Clustering {
             @Override
             public void consume(int index, MediaItem item) {
                 if (index < 0 || index >= total) return;
+                if (item == null) return;
                 SmallItem s = new SmallItem();
                 s.path = item.getPath();
                 s.dateInMs = item.getDateInMs();

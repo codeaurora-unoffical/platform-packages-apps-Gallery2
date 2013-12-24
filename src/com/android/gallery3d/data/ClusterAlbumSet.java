@@ -165,6 +165,7 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
             }
         }
     }
+
     private void updateEmptyClusters() {
         final HashSet<Path> existing = new HashSet<Path>();
         mBaseSet.enumerateTotalMediaItems(new MediaSet.ItemConsumer() {
