@@ -64,7 +64,7 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
                 updateClustersContents();
             } else {
                 updateClusters();
-                mFirstReloadDone = true;
+                //mFirstReloadDone = true;
             }
             mDataVersion = nextVersionNumber();
         }
