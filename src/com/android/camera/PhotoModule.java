@@ -1077,11 +1077,12 @@ public class PhotoModule
             } else if ((mReceivedSnapNum == mBurstSnapNum)
                         && (mCameraState != LONGSHOT)){
                 mFocusManager.resetTouchFocus();
+                setCameraState(IDLE);
                 if (Util.FOCUS_MODE_CONTINUOUS_PICTURE.equals(
                         mFocusManager.getFocusMode())) {
                     mCameraDevice.cancelAutoFocus();
+                    startFaceDetection();
                 }
-                setCameraState(IDLE);
             }
 
             if (!mIsImageCaptureIntent) {
