@@ -187,6 +187,20 @@ public class ListPreference extends CameraPreference {
         mEntryValues = entryValues.toArray(new CharSequence[size]);
     }
 
+	public void filterVideoEncoder(
+		List<String> supportedEntries,
+		List<String> supportedValues) {
+		ArrayList<CharSequence> entries = new ArrayList<CharSequence>();
+		ArrayList<CharSequence> entryValues = new ArrayList<CharSequence>();
+		for (int i = 0, len = supportedValues.size(); i < len; i++) {
+			entries.add(supportedEntries.get(i));
+			entryValues.add(supportedValues.get(i));
+		}
+		int size = entries.size();
+		mEntries = entries.toArray(new CharSequence[size]);
+		mEntryValues = entryValues.toArray(new CharSequence[size]);
+	}
+
     public void filterDuplicated() {
         ArrayList<CharSequence> entries = new ArrayList<CharSequence>();
         ArrayList<CharSequence> entryValues = new ArrayList<CharSequence>();

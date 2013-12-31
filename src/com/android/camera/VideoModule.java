@@ -66,9 +66,12 @@ import com.android.gallery3d.exif.ExifInterface;
 import com.android.gallery3d.util.AccessibilityUtils;
 import com.android.gallery3d.util.UsageStatistics;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -83,6 +86,10 @@ public class VideoModule implements CameraModule,
     EffectsRecorder.EffectsListener {
 
     private static final String TAG = "CAM_VideoModule";
+
+    private static final String CHIPID = "/sys/devices/soc0/soc_id";
+    private String[] videoEncoderEntry;
+    private String[] videoEncoderEntryValues;
 
     // We number the request code from 1000 to avoid collision with Gallery.
     private static final int REQUEST_EFFECT_BACKDROPPER = 1000;
@@ -508,6 +515,12 @@ public class VideoModule implements CameraModule,
             // ignore
         }
 
+        videoEncoderEntry =
+                mActivity.getResources().getStringArray(R.array.pref_camera_videoencoder_entries);
+
+        videoEncoderEntryValues =
+                mActivity.getResources().getStringArray(R.array.pref_camera_videoencoder_entryvalues);
+
         readVideoPreferences();
 
         updateCameraScreenNailSize(mDesiredPreviewWidth, mDesiredPreviewHeight);
@@ -812,6 +825,8 @@ public class VideoModule implements CameraModule,
             }
         }
 
+        setVideoEncoderList(quality);
+
         // Set video duration limit. The limit is read from the preference,
         // unless it is specified in the intent.
         if (intent.hasExtra(MediaStore.EXTRA_DURATION_LIMIT)) {
@@ -847,6 +862,52 @@ public class VideoModule implements CameraModule,
         mProfile = CamcorderProfile.get(mCameraId, quality);
         getDesiredPreviewSize();
         qcomReadVideoPreferences();
+    }
+
+    private void setVideoEncoderList(int quality) {
+        CameraSettings mCameraSettings = new CameraSettings(mActivity, mParameters,
+            mCameraId, CameraHolder.instance().getCameraInfo());
+
+        try {
+                if(mPreferenceGroup == null)
+                    return;
+                ListPreference videoEncoder = mPreferenceGroup.findPreference(CameraSettings.KEY_VIDEO_ENCODER);
+                CharSequence[] values = videoEncoder.getEntryValues();
+                ArrayList<String> supportedEncoderEntries = new ArrayList<String>();
+                ArrayList<String> supportedEncoderEntryValues = new ArrayList<String>();
+
+                if(quality == CamcorderProfile.QUALITY_720P) {
+                    BufferedReader br = new BufferedReader(new FileReader(CHIPID));
+                    int soc = Integer.valueOf(br.readLine());
+                    br.close();
+                    //For 8x10/8x12 chip
+                    if(soc == 147 || soc == 161 || soc == 162 || soc == 163 ||
+                    soc == 164 || soc == 165 || soc == 166) {
+                            supportedEncoderEntries.add("H264");
+                            supportedEncoderEntryValues.add("h264");
+                    } else {
+                        if(videoEncoderEntry.length != videoEncoderEntryValues.length)
+                            return;
+                        for (int i = 0; i < videoEncoderEntry.length; i++) {
+                            supportedEncoderEntries.add(videoEncoderEntry[i]);
+                            supportedEncoderEntryValues.add(videoEncoderEntryValues[i]);
+                        }
+                    }
+                } else {
+                    if(videoEncoderEntry.length != videoEncoderEntryValues.length)
+                        return;
+                    for (int i = 0; i < videoEncoderEntry.length; i++) {
+                        supportedEncoderEntries.add(videoEncoderEntry[i]);
+                        supportedEncoderEntryValues.add(videoEncoderEntryValues[i]);
+                    }
+                }
+
+                if (videoEncoder != null) {
+                    mCameraSettings.removeUnsupportedVideoEncoder(mPreferenceGroup,
+                        videoEncoder, supportedEncoderEntries, supportedEncoderEntryValues);
+                }
+        } catch (Exception e) {
+        }
     }
 
     private void writeDefaultEffectToPrefs()  {
