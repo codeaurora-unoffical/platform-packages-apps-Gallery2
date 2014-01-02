@@ -1228,7 +1228,7 @@ public class PhotoModule
             Log.v(TAG, "mAutoFocusTime = " + mAutoFocusTime + "ms");
             //don't reset the camera state while capture is in progress
             //otherwise, it might result in another takepicture
-            if(SNAPSHOT_IN_PROGRESS != mCameraState)
+            if(SNAPSHOT_IN_PROGRESS != mCameraState && LONGSHOT != mCameraState)
                 setCameraState(IDLE);
             mFocusManager.onAutoFocus(focused, mUI.isShutterPressed());
         }
@@ -1706,7 +1706,7 @@ public class PhotoModule
 
     @Override
     public void onShutterButtonLongClick() {
-        if ((null != mCameraDevice) && (mCameraState == IDLE)) {
+        if ((null != mCameraDevice) && (mCameraState == IDLE || mCameraState == FOCUSING)) {
             int prop = SystemProperties.getInt(PERSIST_LONG_ENABLE, 0);
             boolean enable = ( prop == 1 );
             if ( enable ) {
