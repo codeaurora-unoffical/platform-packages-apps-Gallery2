@@ -2582,6 +2582,15 @@ public class PhotoModule
             Size old_size = mParameters.getPictureSize();
             Log.v(TAG, "old picture_size = " + old_size.width + " x " + old_size.height);
             List<Size> supported = mParameters.getSupportedPictureSizes();
+            String hdr = mPreferences.getString(CameraSettings.KEY_CAMERA_HDR,
+                mActivity.getString(R.string.pref_camera_hdr_default));
+            if (mActivity.getString(R.string.setting_on_value).equals(hdr)) {
+                int index = pictureSize.indexOf('x');
+                int width = Integer.parseInt(pictureSize.substring(0, index));
+                if (width > 2048) {
+                    pictureSize = "2048x1536";
+                }
+            }
             CameraSettings.setCameraPictureSize(
                     pictureSize, supported, mParameters);
             Size size = mParameters.getPictureSize();
