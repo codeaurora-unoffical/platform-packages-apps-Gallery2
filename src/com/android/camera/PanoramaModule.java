@@ -454,7 +454,10 @@ public class PanoramaModule implements CameraModule,
                 mMosaicPreviewRenderer.release();
             }
             mMosaicPreviewRenderer = null;
-            screenNail.releaseSurfaceTexture();
+            try {
+                screenNail.releaseSurfaceTexture();
+            } catch (InterruptedException e) {
+            }
             screenNail.acquireSurfaceTexture();
         }
         mActivity.notifyScreenNailChanged();
@@ -463,7 +466,11 @@ public class PanoramaModule implements CameraModule,
             @Override
             public void run() {
                 CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-                SurfaceTexture surfaceTexture = screenNail.getSurfaceTexture();
+                SurfaceTexture surfaceTexture = null;
+                try {
+                    surfaceTexture = screenNail.getSurfaceTexture();
+                } catch (InterruptedException e) {
+                }
                 if (surfaceTexture == null) {
                     synchronized (mRendererLock) {
                         mIsCreatingRenderer = false;
@@ -471,8 +478,12 @@ public class PanoramaModule implements CameraModule,
                         return;
                     }
                 }
+                try {
+                    surfaceTexture = screenNail.getSurfaceTexture();
+                } catch (InterruptedException e) {
+                }
                 MosaicPreviewRenderer renderer = new MosaicPreviewRenderer(
-                        screenNail.getSurfaceTexture(), w, h, isLandscape);
+                        surfaceTexture, w, h, isLandscape);
                 synchronized (mRendererLock) {
                     mMosaicPreviewRenderer = renderer;
                     mCameraTexture = mMosaicPreviewRenderer.getInputSurfaceTexture();
@@ -1006,7 +1017,11 @@ public class PanoramaModule implements CameraModule,
             mSoundPlayer = null;
         }
         CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        screenNail.releaseSurfaceTexture();
+        try {
+            screenNail.releaseSurfaceTexture();
+        } catch (InterruptedException e) {
+        }
+
         System.gc();
     }
 
