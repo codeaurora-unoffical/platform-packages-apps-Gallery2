@@ -247,7 +247,7 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
     }
 
     @Override
-    public void releaseSurfaceTexture() {
+    public void releaseSurfaceTexture() throws InterruptedException{
         synchronized (mLock) {
             if (mAcquireTexture) {
                 mAcquireTexture = false;
@@ -347,7 +347,12 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
         synchronized (mLock) {
             allocateTextureIfRequested(canvas);
             if (!mVisible) mVisible = true;
-            SurfaceTexture surfaceTexture = getSurfaceTexture();
+            SurfaceTexture surfaceTexture = null;
+            try {
+                surfaceTexture = getSurfaceTexture();
+            } catch(InterruptedException e) {
+                //
+            }
             if (mDraw.requiresSurfaceTexture() && (surfaceTexture == null || !mFirstFrameArrived)) {
                 return;
             }
@@ -430,7 +435,12 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
             // as the origin (0, 0).
             canvas.translate(0, height);
             canvas.scale(1, -1, 1);
-            SurfaceTexture surfaceT = getSurfaceTexture();
+            SurfaceTexture surfaceT = null;
+            try {
+                surfaceT = getSurfaceTexture();
+            } catch(InterruptedException e) {
+                //
+            }
             if (surfaceT != null) {
                 surfaceT.getTransformMatrix(mTextureTransformMatrix);
             }
@@ -457,7 +467,13 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         synchronized (mLock) {
-            if (getSurfaceTexture() != surfaceTexture) {
+            SurfaceTexture surfaceT = null;
+            try {
+                surfaceT = getSurfaceTexture();
+            } catch(InterruptedException e) {
+                //
+            }
+            if (surfaceT != surfaceTexture) {
                 return;
             }
             mFirstFrameArrived = true;
@@ -491,7 +507,7 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
     }
 
     @Override
-    public SurfaceTexture getSurfaceTexture() {
+    public SurfaceTexture getSurfaceTexture() throws InterruptedException{
         SurfaceTexture surfaceTexture = null;
         synchronized (mLock) {
             surfaceTexture = super.getSurfaceTexture();
@@ -503,6 +519,7 @@ public class CameraScreenNail extends SurfaceTextureScreenNail {
                     surfaceTexture = super.getSurfaceTexture();
                 } catch (InterruptedException e) {
                     Log.w(TAG, "unexpected interruption");
+                    throw e;
                 }
             }
         }

@@ -1853,7 +1853,10 @@ public class PhotoModule
         }
         stopPreview();
         // Release surface texture.
-        ((CameraScreenNail) mActivity.mCameraScreenNail).releaseSurfaceTexture();
+        try {
+            ((CameraScreenNail) mActivity.mCameraScreenNail).releaseSurfaceTexture();
+        } catch (InterruptedException e) {
+        }
 
         mNamedImages = null;
 
@@ -2161,7 +2164,14 @@ public class PhotoModule
                 if (t != null && t.isCanceled()) {
                     return; // Exiting, so no need to get the surface texture.
                 }
-                mUI.setSurfaceTexture(screenNail.getSurfaceTexture());
+                SurfaceTexture sfTexture = null;
+                try {
+                    sfTexture = screenNail.getSurfaceTexture();
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "startPreview interrupted.");
+                    return;
+                }
+                mUI.setSurfaceTexture(sfTexture);
             } else {
                 updatePreviewSize(screenNail);
             }

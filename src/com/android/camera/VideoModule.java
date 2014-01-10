@@ -956,7 +956,12 @@ public class VideoModule implements CameraModule,
 
             CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
             screenNail.cancelAcquire();
-            if (screenNail.getSurfaceTexture() == null) {
+            SurfaceTexture sfTexture = null;
+            try {
+                sfTexture = screenNail.getSurfaceTexture();
+            } catch (InterruptedException e) {
+            }
+            if (sfTexture == null) {
                 screenNail.acquireSurfaceTexture();
             }
             mStartPreviewThread = new StartPreviewThread();
@@ -1148,7 +1153,10 @@ public class VideoModule implements CameraModule,
     private void releasePreviewResources() {
         if (ApiHelper.HAS_SURFACE_TEXTURE) {
             CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-            screenNail.releaseSurfaceTexture();
+            try {
+                screenNail.releaseSurfaceTexture();
+            } catch (InterruptedException e) {
+            }
             if (!ApiHelper.HAS_SURFACE_TEXTURE_RECORDING) {
                 mHandler.removeMessages(HIDE_SURFACE_VIEW);
                 mUI.hideSurfaceView();
@@ -1499,7 +1507,12 @@ public class VideoModule implements CameraModule,
         mEffectsRecorder.setOrientationHint(orientation);
 
         CameraScreenNail screenNail = (CameraScreenNail) mActivity.mCameraScreenNail;
-        mEffectsRecorder.setPreviewSurfaceTexture(screenNail.getSurfaceTexture(),
+        SurfaceTexture sfTexture = null;
+        try {
+            sfTexture = screenNail.getSurfaceTexture();
+        } catch (InterruptedException e) {
+        }
+        mEffectsRecorder.setPreviewSurfaceTexture(sfTexture,
                 screenNail.getWidth(), screenNail.getHeight());
 
         if (mEffectType == EffectsRecorder.EFFECT_BACKDROPPER &&
@@ -2319,8 +2332,12 @@ public class VideoModule implements CameraModule,
             screenNail.enableAspectRatioClamping();
             mActivity.notifyScreenNailChanged();
         }
-
-        if (mStartPreviewThread == null && screenNail.getSurfaceTexture() == null) {
+        SurfaceTexture sfTexture = null;
+        try {
+            sfTexture = screenNail.getSurfaceTexture();
+        } catch (InterruptedException e) {
+        }
+        if (mStartPreviewThread == null && sfTexture== null) {
             screenNail.acquireSurfaceTexture();
         }
     }
