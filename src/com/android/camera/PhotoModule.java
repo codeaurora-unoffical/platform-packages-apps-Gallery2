@@ -554,6 +554,7 @@ public class PhotoModule
         }
         brightnessProgressBar.setMax(MAXIMUM_BRIGHTNESS);
         brightnessProgressBar.setProgress(mbrightness);
+        brightnessProgressBar.setVisibility(View.INVISIBLE);
         skinToneSeekBar = (SeekBar) mRootView.findViewById(R.id.skintoneseek);
         skinToneSeekBar.setOnSeekBarChangeListener(mskinToneSeekListener);
         skinToneSeekBar.setVisibility(View.INVISIBLE);
