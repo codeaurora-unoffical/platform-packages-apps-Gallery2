@@ -87,6 +87,7 @@ public class VideoMenu extends PieController
 
        //settings popup
        mOtherKeys2 = new String[] {
+                CameraSettings.KEY_ANTIBANDING,
                 CameraSettings.KEY_COLOR_EFFECT,
                 CameraSettings.KEY_VIDEO_HDR,
                 CameraSettings.KEY_POWER_MODE,
