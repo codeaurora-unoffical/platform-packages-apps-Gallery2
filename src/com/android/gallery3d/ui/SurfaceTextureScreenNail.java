@@ -68,11 +68,11 @@ public abstract class SurfaceTextureScreenNail implements ScreenNail,
         }
     }
 
-    public SurfaceTexture getSurfaceTexture() {
+    public SurfaceTexture getSurfaceTexture() throws InterruptedException{
         return mSurfaceTexture;
     }
 
-    public void releaseSurfaceTexture() {
+    public void releaseSurfaceTexture() throws InterruptedException{
         synchronized (this) {
             mHasTexture = false;
         }
