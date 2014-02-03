@@ -846,7 +846,12 @@ public class PhotoModule
             mFaceDetectionStarted = false;
             mCameraDevice.setFaceDetectionListener(null);
             mCameraDevice.stopFaceDetection();
-            mUI.clearFaces();
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run(){
+                    mUI.clearFaces();
+                }
+            }, 100);
         }
     }
 
