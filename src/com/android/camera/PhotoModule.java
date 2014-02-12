@@ -1083,6 +1083,8 @@ public class PhotoModule
                     mCameraDevice.cancelAutoFocus();
                     startFaceDetection();
                 }
+                mUI.resumeFaceDetection();
+                setCameraState(IDLE);
             }
 
             if (!mIsImageCaptureIntent) {
@@ -1629,6 +1631,7 @@ public class PhotoModule
                            mFocusManager.getFocusMode())) {
                        mCameraDevice.cancelAutoFocus();
                    }
+                   mUI.resumeFaceDetection();
                }
            }
         }
