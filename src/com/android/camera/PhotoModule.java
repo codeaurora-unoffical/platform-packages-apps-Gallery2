@@ -1396,7 +1396,9 @@ public class PhotoModule
 
         mNamedImages.nameNewImage(mContentResolver, mCaptureStartTime);
 
-        mFaceDetectionStarted = false;
+        if (mSnapshotMode != CameraInfo.CAMERA_SUPPORT_MODE_ZSL) {
+            mFaceDetectionStarted = false;
+        }
         UsageStatistics.onEvent(UsageStatistics.COMPONENT_CAMERA,
                 UsageStatistics.ACTION_CAPTURE_DONE, "Photo");
         return true;
