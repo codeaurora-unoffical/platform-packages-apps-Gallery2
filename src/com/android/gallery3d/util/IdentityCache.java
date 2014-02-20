@@ -49,14 +49,12 @@ public class IdentityCache<K, V> {
     }
 
     public synchronized V put(K key, V value) {
-        cleanUpWeakMap();
         Entry<K, V> entry = mWeakMap.put(
                 key, new Entry<K, V>(key, value, mQueue));
         return entry == null ? null : entry.get();
     }
 
     public synchronized V get(K key) {
-        cleanUpWeakMap();
         Entry<K, V> entry = mWeakMap.get(key);
         return entry == null ? null : entry.get();
     }
