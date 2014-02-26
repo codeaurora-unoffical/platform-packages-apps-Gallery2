@@ -513,6 +513,7 @@ public class MoviePlayer implements
                     pauseVideo();
                     break;
                 default:
+                    showLoading();
                     mVideoView.seekTo(mVideoPosition);
                     mVideoView.resume();
                     pauseVideoMoreThanThreeMinutes();
@@ -565,8 +566,7 @@ public class MoviePlayer implements
         return position;
     }
 
-    private void doStartVideo(final boolean enableFasten, final int position, final int duration,
-            boolean start) {
+    private void showLoading() {
         // For streams that we expect to be slow to start up, show a
         // progress spinner until playback starts.
         String scheme = mMovieItem.getUri().getScheme();
@@ -580,6 +580,11 @@ public class MoviePlayer implements
             mController.showPlaying();
             mController.hide();
         }
+    }
+
+    private void doStartVideo(final boolean enableFasten, final int position, final int duration,
+            boolean start) {
+        showLoading();
 
         if (onIsRTSP()) {
             Map<String, String> header = new HashMap<String, String>(1);
