@@ -324,7 +324,7 @@ public abstract class ActivityBase extends AbstractGalleryActivity
 
     protected void updateStorageSpaceAndHint() {
         updateStorageSpace();
-        updateStorageHint(mStorageSpace);
+        mHandler.sendEmptyMessageDelayed(UPDATE_STORAGE_HINT, 200);
     }
 
     protected void updateStorageHint() {
