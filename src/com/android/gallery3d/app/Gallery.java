@@ -59,6 +59,7 @@ public final class Gallery extends AbstractGalleryActivity implements OnCancelLi
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_ACTION_BAR);
         requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         if (getIntent().getBooleanExtra(KEY_DISMISS_KEYGUARD, false)) {
             getWindow().addFlags(
