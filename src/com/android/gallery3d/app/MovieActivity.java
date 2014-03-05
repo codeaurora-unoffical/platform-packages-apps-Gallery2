@@ -203,6 +203,7 @@ public class MovieActivity extends Activity {
             public void onCompletion() {
                 if (mFinishOnCompletion) {
                     finish();
+                    mControlResumed = false;
                 }
             }
         };
