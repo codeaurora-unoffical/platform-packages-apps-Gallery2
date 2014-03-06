@@ -2270,6 +2270,15 @@ public class VideoModule implements CameraModule,
             mParameters.setZoom(mZoomValue);
         }
 
+        // Set anti banding parameter.
+        String antiBanding = mPreferences.getString(
+                 CameraSettings.KEY_ANTIBANDING,
+                 mActivity.getString(R.string.pref_camera_antibanding_default));
+        Log.v(TAG, "antiBanding value =" + antiBanding);
+        if (Util.isSupported(antiBanding, mParameters.getSupportedAntibanding())) {
+            mParameters.setAntibanding(antiBanding);
+        }
+
         // Set continuous autofocus.
         List<String> supportedFocus = mParameters.getSupportedFocusModes();
         if (isSupported(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO, supportedFocus)) {

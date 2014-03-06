@@ -29,7 +29,7 @@ import com.android.gallery3d.R;
  */
 public abstract class CameraPreference {
 
-    private final String mTitle;
+    private String mTitle;
     private SharedPreferences mSharedPreferences;
     private final Context mContext;
 
@@ -51,6 +51,10 @@ public abstract class CameraPreference {
 
     public String getTitle() {
         return mTitle;
+    }
+
+    public void setTitle(String title) {
+        mTitle = title;
     }
 
     public SharedPreferences getSharedPreferences() {

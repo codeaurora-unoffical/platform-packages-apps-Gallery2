@@ -63,6 +63,7 @@ import org.codeaurora.gallery3d.video.IControllerRewindAndForward.IRewindAndForw
 import org.codeaurora.gallery3d.video.ScreenModeManager;
 import org.codeaurora.gallery3d.video.ScreenModeManager.ScreenModeListener;
 import org.codeaurora.gallery3d.video.CodeauroraVideoView;
+import org.codeaurora.gallery3d.video.VideoSettingsActivity;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -513,6 +514,7 @@ public class MoviePlayer implements
                     pauseVideo();
                     break;
                 default:
+                    showLoading();
                     mVideoView.seekTo(mVideoPosition);
                     mVideoView.resume();
                     pauseVideoMoreThanThreeMinutes();
@@ -565,8 +567,7 @@ public class MoviePlayer implements
         return position;
     }
 
-    private void doStartVideo(final boolean enableFasten, final int position, final int duration,
-            boolean start) {
+    private void showLoading() {
         // For streams that we expect to be slow to start up, show a
         // progress spinner until playback starts.
         String scheme = mMovieItem.getUri().getScheme();
@@ -580,6 +581,11 @@ public class MoviePlayer implements
             mController.showPlaying();
             mController.hide();
         }
+    }
+
+    private void doStartVideo(final boolean enableFasten, final int position, final int duration,
+            boolean start) {
+        showLoading();
 
         if (onIsRTSP()) {
             Map<String, String> header = new HashMap<String, String>(1);
@@ -1524,7 +1530,7 @@ public class MoviePlayer implements
                 mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
                         .canStop(),
                         false, false);
-                int stepValue = getStepOptionValue();
+                int stepValue = VideoSettingsActivity.getStepOptionValue(mContext);
                 int targetDuration = mVideoView.getCurrentPosition()
                         - stepValue < 0 ? 0 : mVideoView.getCurrentPosition()
                         - stepValue;
@@ -1544,7 +1550,7 @@ public class MoviePlayer implements
                 mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
                         .canStop(),
                         false, false);
-                int stepValue = getStepOptionValue();
+                int stepValue = VideoSettingsActivity.getStepOptionValue(mContext);
                 int targetDuration = mVideoView.getCurrentPosition()
                         + stepValue > mVideoView.getDuration() ? mVideoView
                         .getDuration() : mVideoView.getCurrentPosition()
@@ -1557,16 +1563,6 @@ public class MoviePlayer implements
                         false, false);
             }
         }
-    }
-
-    public int getStepOptionValue() {
-        final String slectedStepOption = "selected_step_option";
-        final String videoPlayerData = "video_player_data";
-        final int stepBase = 3000;
-        final int stepOptionThreeSeconds = 0;
-        SharedPreferences mPrefs = mContext.getSharedPreferences(
-                videoPlayerData, 0);
-        return (mPrefs.getInt(slectedStepOption, stepOptionThreeSeconds) + 1) * stepBase;
     }
 }
 
