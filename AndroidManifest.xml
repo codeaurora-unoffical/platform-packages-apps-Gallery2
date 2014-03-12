@@ -76,6 +76,8 @@
                 <data android:mimeType="application/sdp" />
                 <data android:mimeType="video/x-msvideo"/>
                 <data android:mimeType="video/divx" />
+                <data android:mimeType="video/mkv" />
+                <data android:mimeType="video/mpeg" />
              </intent-filter>
              <intent-filter>
                 <!-- HTTP live support -->
@@ -88,6 +90,7 @@
                 <data android:mimeType="audio/mpegurl" />
                 <data android:mimeType="application/vnd.apple.mpegurl" />
                 <data android:mimeType="application/x-mpegurl" />
+                <data android:mimeType="application/dash+xml" />
              </intent-filter>
         </activity>
 
