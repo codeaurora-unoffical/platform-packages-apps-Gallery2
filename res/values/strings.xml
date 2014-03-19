@@ -1139,4 +1139,8 @@ CHAR LIMIT = NONE] -->
     <string name="can_not_trim">Only mp4 file can be trimmed</string>
     <string name="internal_video_error">Internal application error.</string>
     <string name="in_call_video_error">Camcorder is not allowed during call.</string>
+
+    <!-- longshot value -->
+    <string name="pref_camera_longshot_default" translatable="false">off</string>
+    <string name="pref_camera_longshot_title">Continuous Shot</string>
 </resources>
