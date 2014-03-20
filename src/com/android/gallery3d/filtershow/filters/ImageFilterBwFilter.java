@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
@@ -30,7 +32,7 @@ public class ImageFilterBwFilter extends SimpleImageFilter {
 
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation = (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("BW Filter");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.bwfilter));
         representation.setFilterClass(ImageFilterBwFilter.class);
         representation.setMaximum(180);
         representation.setMinimum(-180);

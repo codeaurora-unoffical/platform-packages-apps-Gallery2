@@ -16,9 +16,11 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.ImageOnlyEditor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterWBalance extends ImageFilter {
@@ -30,6 +32,7 @@ public class ImageFilterWBalance extends ImageFilter {
 
     public FilterRepresentation getDefaultRepresentation() {
         FilterRepresentation representation = new FilterDirectRepresentation("WBalance");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.wbalance));
         representation.setFilterClass(ImageFilterWBalance.class);
         representation.setPriority(FilterRepresentation.TYPE_WBALANCE);
         representation.setTextId(R.string.wbalance);

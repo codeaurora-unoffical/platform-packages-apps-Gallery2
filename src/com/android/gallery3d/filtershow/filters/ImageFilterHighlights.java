@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
 public class ImageFilterHighlights extends SimpleImageFilter {
@@ -33,7 +35,7 @@ public class ImageFilterHighlights extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Shadows");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.highlight_recovery));
         representation.setFilterClass(ImageFilterHighlights.class);
         representation.setTextId(R.string.highlight_recovery);
         representation.setButtonId(R.id.highlightRecoveryButton);

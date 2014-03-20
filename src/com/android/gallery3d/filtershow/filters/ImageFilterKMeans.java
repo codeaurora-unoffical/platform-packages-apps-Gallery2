@@ -16,9 +16,11 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.format.Time;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
 public class ImageFilterKMeans extends SimpleImageFilter {
@@ -35,7 +37,7 @@ public class ImageFilterKMeans extends SimpleImageFilter {
 
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation = (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("KMeans");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.kmeans));
         representation.setFilterClass(ImageFilterKMeans.class);
         representation.setMaximum(20);
         representation.setMinimum(2);
