@@ -1090,6 +1090,9 @@ public abstract class PhotoPage extends ActivityState implements
                 return true;
             }
             case R.id.action_slideshow: {
+                if (mInCameraAlbum && currentIndex > 0) {
+                    currentIndex--;
+                }
                 Bundle data = new Bundle();
                 data.putString(SlideshowPage.KEY_SET_PATH, mMediaSet.getPath().toString());
                 data.putString(SlideshowPage.KEY_ITEM_PATH, path.toString());
