@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
 public class ImageFilterEdge extends SimpleImageFilter {
@@ -28,7 +30,7 @@ public class ImageFilterEdge extends SimpleImageFilter {
 
     public FilterRepresentation getDefaultRepresentation() {
         FilterRepresentation representation = super.getDefaultRepresentation();
-        representation.setName("Edge");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.edge));
         representation.setFilterClass(ImageFilterEdge.class);
         representation.setTextId(R.string.edge);
         representation.setButtonId(R.id.edgeButton);

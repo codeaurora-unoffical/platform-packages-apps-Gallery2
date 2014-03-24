@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterSaturated extends SimpleImageFilter {
@@ -30,7 +32,7 @@ public class ImageFilterSaturated extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Saturated");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.saturation));
         representation.setFilterClass(ImageFilterSaturated.class);
         representation.setTextId(R.string.saturation);
         representation.setButtonId(R.id.saturationButton);

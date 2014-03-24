@@ -1,7 +1,9 @@
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.ImageOnlyEditor;
 
@@ -13,6 +15,7 @@ public class ImageFilterNegative extends ImageFilter {
 
     public FilterRepresentation getDefaultRepresentation() {
         FilterRepresentation representation = new FilterDirectRepresentation("Negative");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.negative));
         representation.setFilterClass(ImageFilterNegative.class);
         representation.setTextId(R.string.negative);
         representation.setButtonId(R.id.negativeButton);

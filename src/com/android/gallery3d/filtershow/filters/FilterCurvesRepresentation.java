@@ -1,7 +1,9 @@
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.util.Log;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.ui.Spline;
 
@@ -14,7 +16,7 @@ public class FilterCurvesRepresentation extends FilterRepresentation {
     private Spline[] mSplines = new Spline[4];
 
     public FilterCurvesRepresentation() {
-        super("Curves");
+        super(GalleryAppImpl.getContext().getString(R.string.curvesRGB));
         setFilterClass(ImageFilterCurves.class);
         setTextId(R.string.curvesRGB);
         setButtonId(R.id.curvesButtonRGB);

@@ -17,6 +17,9 @@
 package com.android.gallery3d.filtershow.state;
 
 import com.android.gallery3d.filtershow.filters.FilterRepresentation;
+import com.android.gallery3d.filtershow.filters.FilterFxRepresentation;
+import com.android.gallery3d.filtershow.filters.FilterImageBorderRepresentation;
+import com.android.gallery3d.filtershow.filters.FilterColorBorderRepresentation;
 
 public class State {
     private String mText;
@@ -40,6 +43,15 @@ public class State {
         if (mFilterRepresentation.getFilterClass()
                 != state.mFilterRepresentation.getFilterClass()) {
             return false;
+        }
+        if (mFilterRepresentation instanceof FilterFxRepresentation) {
+            return mFilterRepresentation.equals(state.getFilterRepresentation());
+        }
+        if (mFilterRepresentation instanceof FilterImageBorderRepresentation) {
+            return mFilterRepresentation.equals(state.getFilterRepresentation());
+        }
+        if (mFilterRepresentation instanceof FilterColorBorderRepresentation) {
+            return mFilterRepresentation.equals(state.getFilterRepresentation());
         }
         return true;
     }

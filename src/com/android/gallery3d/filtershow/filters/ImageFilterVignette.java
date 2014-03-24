@@ -16,12 +16,15 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
+
 import com.android.gallery3d.R;
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.filtershow.presets.ImagePreset;
 
 public class ImageFilterVignette extends SimpleImageFilter {
@@ -35,6 +38,7 @@ public class ImageFilterVignette extends SimpleImageFilter {
     @Override
     public FilterRepresentation getDefaultRepresentation() {
         FilterVignetteRepresentation representation = new FilterVignetteRepresentation();
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.vignette));
         return representation;
     }
 
