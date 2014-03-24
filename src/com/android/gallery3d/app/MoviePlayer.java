@@ -308,6 +308,9 @@ public class MoviePlayer implements
             mResumeableTime = savedInstance.getLong(KEY_RESUMEABLE_TIME, Long.MAX_VALUE);
             onRestoreInstanceState(savedInstance);
             mHasPaused = true;
+            doStartVideo(true, mVideoPosition, mVideoLastDuration,false);
+            mVideoView.start();
+            mActivityContext.initEffects(mVideoView.getAudioSessionId());
         } else {
             mTState = TState.PLAYING;
             mFirstBePlayed = true;
@@ -487,6 +490,7 @@ public class MoviePlayer implements
 
             if (mServerTimeoutExt.handleOnResume() || mIsShowResumingDialog) {
                 mHasPaused = false;
+                mHandler.post(mProgressChecker);
                 return;
             }
             switch (mTState) {
