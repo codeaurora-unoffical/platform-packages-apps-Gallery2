@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterShadows extends SimpleImageFilter {
@@ -30,7 +32,7 @@ public class ImageFilterShadows extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Shadows");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.shadow_recovery));
         representation.setFilterClass(ImageFilterShadows.class);
         representation.setTextId(R.string.shadow_recovery);
         representation.setButtonId(R.id.shadowRecoveryButton);

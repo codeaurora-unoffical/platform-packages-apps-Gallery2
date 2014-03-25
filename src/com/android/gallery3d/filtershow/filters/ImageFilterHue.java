@@ -16,9 +16,11 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.BasicEditor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterHue extends SimpleImageFilter {
@@ -32,7 +34,7 @@ public class ImageFilterHue extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Hue");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.hue));
         representation.setFilterClass(ImageFilterHue.class);
         representation.setMinimum(-180);
         representation.setMaximum(180);

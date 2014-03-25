@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterExposure extends SimpleImageFilter {
@@ -29,7 +31,7 @@ public class ImageFilterExposure extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Exposure");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.exposure));
         representation.setFilterClass(ImageFilterExposure.class);
         representation.setTextId(R.string.exposure);
         representation.setButtonId(R.id.exposureButton);

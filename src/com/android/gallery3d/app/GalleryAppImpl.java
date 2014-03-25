@@ -37,6 +37,7 @@ public class GalleryAppImpl extends Application implements GalleryApp {
 
     private static final String DOWNLOAD_FOLDER = "download";
     private static final long DOWNLOAD_CAPACITY = 64 * 1024 * 1024; // 64M
+    private static GalleryAppImpl sGalleryAppImpl;
 
     private ImageCacheService mImageCacheService;
     private Object mLock = new Object();
@@ -55,6 +56,7 @@ public class GalleryAppImpl extends Application implements GalleryApp {
         PicasaSource.initialize(this);
         UsageStatistics.initialize(this);
         MediaCache.initialize(this);
+        sGalleryAppImpl = this;
 
         mStitchingProgressManager = LightCycleHelper.createStitchingManagerInstance(this);
         if (mStitchingProgressManager != null) {
@@ -123,5 +125,9 @@ public class GalleryAppImpl extends Application implements GalleryApp {
             Class.forName(AsyncTask.class.getName());
         } catch (ClassNotFoundException e) {
         }
+    }
+
+    public static Context getContext() {
+        return sGalleryAppImpl;
     }
 }

@@ -16,8 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 public class ImageFilterContrast extends SimpleImageFilter {
@@ -29,7 +31,7 @@ public class ImageFilterContrast extends SimpleImageFilter {
     public FilterRepresentation getDefaultRepresentation() {
         FilterBasicRepresentation representation =
                 (FilterBasicRepresentation) super.getDefaultRepresentation();
-        representation.setName("Contrast");
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.contrast));
         representation.setFilterClass(ImageFilterContrast.class);
         representation.setTextId(R.string.contrast);
         representation.setButtonId(R.id.contrastButton);
