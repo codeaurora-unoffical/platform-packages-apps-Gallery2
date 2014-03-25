@@ -16,7 +16,10 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import com.android.gallery3d.app.GalleryAppImpl;
 import com.android.gallery3d.R;
+
+import android.content.Context;
 
 public class ImageFilterSharpen extends ImageFilterRS {
 
@@ -32,6 +35,7 @@ public class ImageFilterSharpen extends ImageFilterRS {
     public FilterRepresentation getDefaultRepresentation() {
         FilterRepresentation representation = new FilterBasicRepresentation("Sharpen", 0, 0, 100);
         representation.setShowParameterValue(true);
+        representation.setName(GalleryAppImpl.getContext().getString(R.string.sharpness));
         representation.setFilterClass(ImageFilterSharpen.class);
         representation.setTextId(R.string.sharpness);
         representation.setButtonId(R.id.sharpenButton);
