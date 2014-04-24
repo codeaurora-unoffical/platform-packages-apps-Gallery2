@@ -541,7 +541,12 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         FramedTextButton.setTriangleSize((int) getPixelsFromDip(10));
 
         Drawable curveHandle = res.getDrawable(R.drawable.camera_crop);
-        int curveHandleSize = (int) res.getDimension(R.dimen.crop_indicator_size);
+        int curveHandleSize;
+        try {
+            curveHandleSize = (int) res.getDimension(R.dimen.crop_indicator_size);
+        } catch (Exception e) {
+            curveHandleSize = 0;
+        }
         Spline.setCurveHandle(curveHandle, curveHandleSize);
         Spline.setCurveWidth((int) getPixelsFromDip(3));
 
