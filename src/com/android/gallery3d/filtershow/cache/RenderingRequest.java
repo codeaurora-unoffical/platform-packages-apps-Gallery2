@@ -65,9 +65,21 @@ public class RenderingRequest {
                 || type == STYLE_ICON_RENDERING) {
             CachingPipeline pipeline = new CachingPipeline(
                     FiltersManager.getManager(), "Icon");
-            bitmap = pipeline.renderGeometryIcon(source, preset);
+            try {
+                bitmap = pipeline.renderGeometryIcon(source, preset);
+            } catch(java.lang.OutOfMemoryError err) {
+                bitmap = null;
+                Log.e(LOGTAG, "failed to create bitmap:" + err );
+                return;
+            }
         } else if (type != PARTIAL_RENDERING && type != HIGHRES_RENDERING) {
-            bitmap = Bitmap.createBitmap(source.getWidth(), source.getHeight(), mConfig);
+            try {
+                bitmap = Bitmap.createBitmap(source.getWidth(), source.getHeight(), mConfig);
+            } catch(java.lang.OutOfMemoryError err) {
+                bitmap = null;
+                Log.e(LOGTAG, "failed to create bitmap:" + err );
+                return;
+            }
         }
 
         request.setBitmap(bitmap);
