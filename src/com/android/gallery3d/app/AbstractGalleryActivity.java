@@ -174,6 +174,7 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
                 builder.setIcon(android.R.drawable.ic_dialog_alert);
             }
             mAlertDialog = builder.show();
+            mMountFilter.addDataScheme("file");
             registerReceiver(mMountReceiver, mMountFilter);
         }
         mPanoramaViewHelper.onStart();

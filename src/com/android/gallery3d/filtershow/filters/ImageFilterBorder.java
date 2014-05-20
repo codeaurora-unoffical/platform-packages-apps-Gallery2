@@ -31,6 +31,8 @@ public class ImageFilterBorder extends ImageFilter {
     private static final float BITMAP_ICON_SCALING = 1 / 3.0f;
     private FilterImageBorderRepresentation mParameters = null;
     private Resources mResources = null;
+    private static Bitmap mLastBitmap = null;
+    private static int mLastRscId = -1;
 
     private HashMap<Integer, Drawable> mDrawables = new HashMap<Integer, Drawable>();
 
@@ -82,8 +84,12 @@ public class ImageFilterBorder extends ImageFilter {
 
     public Drawable getDrawable(int rsc) {
         Drawable drawable = mDrawables.get(rsc);
+        if (mLastRscId != rsc) {
+            mLastRscId = rsc;
+            mLastBitmap = BitmapFactory.decodeResource(mResources, rsc);
+        }
         if (drawable == null && mResources != null && rsc != 0) {
-            drawable = new BitmapDrawable(mResources, BitmapFactory.decodeResource(mResources, rsc));
+            drawable = new BitmapDrawable(mResources, mLastBitmap);
             mDrawables.put(rsc, drawable);
         }
         return drawable;

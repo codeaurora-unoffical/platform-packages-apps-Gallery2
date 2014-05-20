@@ -1068,6 +1068,10 @@ public class PhotoModule
             if (needRestartPreview) {
                 if (ApiHelper.CAN_START_PREVIEW_IN_JPEG_CALLBACK) {
                     setupPreview();
+                    if (Util.FOCUS_MODE_CONTINUOUS_PICTURE.equals(
+                        mFocusManager.getFocusMode())) {
+                        mCameraDevice.cancelAutoFocus();
+                    }
                 } else {
                     // Camera HAL of some devices have a bug. Starting preview
                     // immediately after taking a picture will fail. Wait some
