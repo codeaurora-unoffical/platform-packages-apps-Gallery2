@@ -18,10 +18,13 @@ package com.android.gallery3d.ui;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Handler;
+import android.os.Message;
 import android.view.ActionMode;
 import android.view.ActionMode.Callback;
 import android.view.LayoutInflater;
@@ -56,6 +59,9 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
     private static final int MAX_SELECTED_ITEMS_FOR_SHARE_INTENT = 300;
     private static final int MAX_SELECTED_ITEMS_FOR_PANORAMA_SHARE_INTENT = 10;
 
+    private static final int EVENT_SELECT_START = 1;
+    private static final int EVENT_SELECT_END = 2;
+
     private static final int SUPPORT_MULTIPLE_MASK = MediaObject.SUPPORT_DELETE
             | MediaObject.SUPPORT_ROTATE | MediaObject.SUPPORT_SHARE
             | MediaObject.SUPPORT_CACHE;
@@ -78,6 +84,16 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
     private Future<?> mMenuTask;
     private final Handler mMainHandler;
     private ActionMode mActionMode;
+    private ProgressDialog mPrepareProgress;
+    private Handler mHandler;
+
+    private ProgressDialog createProgressDialog(Context context) {
+        ProgressDialog dialog = new ProgressDialog(context);
+        dialog.setMax(1);
+        dialog.setCancelable(false);
+        dialog.setIndeterminate(false);
+        return dialog;
+    }
 
     private static class GetAllPanoramaSupports implements PanoramaSupportCallback {
         private int mNumInfoRequired;
@@ -129,6 +145,24 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
         mMenuExecutor = new MenuExecutor(activity, selectionManager);
         mMainHandler = new Handler(activity.getMainLooper());
         mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity.getAndroidContext());
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage (Message msg) {
+                switch(msg.what) {
+                    case EVENT_SELECT_START:
+                        if (mPrepareProgress != null) mPrepareProgress.dismiss();
+                        mPrepareProgress = createProgressDialog(mActivity.getAndroidContext());
+                        mPrepareProgress.show();
+                        break;
+                    case EVENT_SELECT_END:
+                        if (mPrepareProgress != null)
+                            mPrepareProgress.dismiss();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
     }
 
     public void startActionMode() {
@@ -412,21 +446,27 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
             @Override
             public Void run(final JobContext jc) {
                 // Pass1: Deal with unexpanded media object list for menu operation.
+                mHandler.sendEmptyMessage(EVENT_SELECT_START);
                 ArrayList<MediaObject> selected = getSelectedMediaObjects(jc);
                 if (selected == null) {
                     mMainHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             mMenuTask = null;
-                            if (jc.isCancelled()) return;
+                            if (jc.isCancelled()) {
+                                mHandler.sendEmptyMessage(EVENT_SELECT_END);
+                                return;
+                            }
                             // Disable all the operations when no item is selected
                             MenuExecutor.updateMenuOperation(mMenu, 0);
                         }
                     });
+                    mHandler.sendEmptyMessage(EVENT_SELECT_END);
                     return null;
                 }
                 final int operation = computeMenuOptions(selected);
                 if (jc.isCancelled()) {
+                    mHandler.sendEmptyMessage(EVENT_SELECT_END);
                     return null;
                 }
                 int numSelected = selected.size();
@@ -438,6 +478,7 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                 final GetAllPanoramaSupports supportCallback = canSharePanoramas ?
                         new GetAllPanoramaSupports(selected, jc)
                         : null;
+                mHandler.sendEmptyMessage(EVENT_SELECT_END);
 
                 // Pass2: Deal with expanded media object list for sharing operation.
                 final Intent share_panorama_intent = canSharePanoramas ?
