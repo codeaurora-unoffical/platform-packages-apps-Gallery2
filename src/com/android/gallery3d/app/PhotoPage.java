@@ -1159,11 +1159,11 @@ public abstract class PhotoPage extends ActivityState implements
         }
 
         MediaItem item = mModel.getMediaItem(0);
-        if (item == null || item == mScreenNailItem) {
+        if (item == null || item == mScreenNailItem || item.getMimeType() == null) {
             // item is not ready or it is camera preview, ignore
             return;
         }
-        if (item.getMimeType().equals(MediaItem.MIME_TYPE_GIF)) {
+        if (MediaItem.MIME_TYPE_GIF.equals(item.getMimeType())) {
             viewAnimateGif((Activity) mActivity, item.getContentUri());
             return;
         }
