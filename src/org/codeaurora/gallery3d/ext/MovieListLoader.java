@@ -112,8 +112,24 @@ public class MovieListLoader implements IMovieListLoader {
                 if (MovieUtils.isLocalFile(uri, mime)) {
                     String uristr = String.valueOf(uri);
                     if (uristr.toLowerCase().startsWith("content://media")) {
-                        //from gallery, gallery3D, videoplayer
+                        // from gallery, gallery3D, videoplayer
                         long curId = Long.parseLong(uri.getPathSegments().get(3));
+                        movieList = fillUriList(null, null, curId, params[0]);
+                    } else if (uristr.toLowerCase().startsWith("file://")) {
+                        String data = Uri.decode(uri.toString());
+                        data = data.replaceAll("'", "''");
+                        String where = "_data LIKE '%" + data.replaceFirst("file:///", "") + "'";
+                        Cursor cursor = mCr.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                                new String[] {
+                                    "_id"
+                                }, where, null, null);
+                        long curId = -1;
+                        if (cursor != null) {
+                            if (cursor.moveToFirst()) {
+                                curId = cursor.getLong(0);
+                            }
+                            cursor.close();
+                        }
                         movieList = fillUriList(null, null, curId, params[0]);
                     }
                 }
