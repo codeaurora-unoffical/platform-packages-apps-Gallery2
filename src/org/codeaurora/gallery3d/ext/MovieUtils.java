@@ -1,7 +1,11 @@
 package org.codeaurora.gallery3d.ext;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.util.Log;
+
+import com.android.gallery3d.R;
 
 import java.util.Locale;
 
@@ -94,5 +98,24 @@ public class MovieUtils {
             Log.v(TAG, "isLocalFile(" + uri + ", " + mimeType + ") return " + local);
         }
         return local;
+    }
+
+    public static boolean isCertificatedUrl(Uri uri, Context context) {
+        if (uri == null)
+            return false;
+        String hostname = uri.getHost();
+        if (hostname == null){
+            return false;
+        }
+        Resources res = context.getResources();
+        String[] certificated_urls = res.getStringArray(R.array.certificated_urls);
+        for (int i = 0; i < certificated_urls.length; i++){
+            String url = certificated_urls[i];
+            if (hostname.startsWith(url)){
+                Log.v(TAG,"it's the certificated url ="+url);
+                return true;
+            }
+        }
+        return false;
     }
 }
