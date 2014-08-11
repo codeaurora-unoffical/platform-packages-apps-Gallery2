@@ -56,6 +56,7 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
     private TransitionStore mTransitionStore = new TransitionStore();
     private boolean mDisableToggleStatusBar;
     private PanoramaViewHelper mPanoramaViewHelper;
+    private int ScreenOrientation;
 
     private AlertDialog mAlertDialog = null;
     private BroadcastReceiver mMountReceiver = new BroadcastReceiver() {
@@ -92,7 +93,13 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
     public void onConfigurationChanged(Configuration config) {
         super.onConfigurationChanged(config);
         mStateManager.onConfigurationChange(config);
-        getGalleryActionBar().onConfigurationChanged();
+        if (ScreenOrientation != config.orientation) {
+            ScreenOrientation = config.orientation;
+            getGalleryActionBar().onConfigurationChanged(true);
+        } else {
+            getGalleryActionBar().onConfigurationChanged(false);
+        }
+
         invalidateOptionsMenu();
         toggleStatusBarByOrientation();
     }
@@ -208,6 +215,7 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
         }
         mGLRootView.onResume();
         mOrientationManager.resume();
+        ScreenOrientation = getResources().getConfiguration().orientation;
     }
 
     @Override
