@@ -24,6 +24,7 @@ import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.EditorStraighten;
 
 import java.io.IOException;
+import com.android.gallery3d.app.GalleryAppImpl;
 
 public class FilterStraightenRepresentation extends FilterRepresentation {
     public static final String SERIALIZATION_NAME = "STRAIGHTEN";
@@ -48,7 +49,7 @@ public class FilterStraightenRepresentation extends FilterRepresentation {
 
     public FilterStraightenRepresentation(FilterStraightenRepresentation s) {
         this(s.getStraighten());
-        setName(s.getName());
+        setName(GalleryAppImpl.getContext().getString(R.string.straighten));
     }
 
     public FilterStraightenRepresentation() {
