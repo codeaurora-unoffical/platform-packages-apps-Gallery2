@@ -111,6 +111,9 @@ public class ExportDialog extends DialogFragment implements View.OnClickListener
             mOriginalBounds = preset.finalGeometryRect(mOriginalBounds.width(),
                     mOriginalBounds.height());
         }
+        if (mOriginalBounds == null) {
+            return null;
+        }
         mRatio = mOriginalBounds.width() / (float) mOriginalBounds.height();
         mWidthText.setText("" + mOriginalBounds.width());
         mHeightText.setText("" + mOriginalBounds.height());
