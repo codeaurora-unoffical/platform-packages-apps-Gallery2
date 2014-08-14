@@ -24,6 +24,7 @@ import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.EditorCrop;
 
 import java.io.IOException;
+import com.android.gallery3d.app.GalleryAppImpl;
 
 public class FilterCropRepresentation extends FilterRepresentation {
     public static final String SERIALIZATION_NAME = "CROP";
@@ -48,7 +49,7 @@ public class FilterCropRepresentation extends FilterRepresentation {
 
     public FilterCropRepresentation(FilterCropRepresentation m) {
         this(m.mCrop);
-        setName(m.getName());
+        setName(GalleryAppImpl.getContext().getString(R.string.crop));
     }
 
     public FilterCropRepresentation() {

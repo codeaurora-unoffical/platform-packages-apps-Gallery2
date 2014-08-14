@@ -20,4 +20,6 @@
     <bool name="stereo">false</bool>
     <bool name="streaming">false</bool>
     <bool name="speaker">false</bool>
+    <string-array name="certificated_urls">
+    </string-array>
 </resources>
