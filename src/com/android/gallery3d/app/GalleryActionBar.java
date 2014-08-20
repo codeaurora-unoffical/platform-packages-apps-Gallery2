@@ -255,10 +255,10 @@ public class GalleryActionBar implements OnNavigationListener {
         }
     }
 
-    public void onConfigurationChanged() {
+    public void onConfigurationChanged(boolean ScreenRotate) {
         if (mActionBar != null && mAlbumModeListener != null) {
             OnAlbumModeSelectedListener listener = mAlbumModeListener;
-            enableAlbumModeMenu(mLastAlbumModeSelected, listener);
+            if (!ScreenRotate) enableAlbumModeMenu(mLastAlbumModeSelected, listener);
         }
     }
 
