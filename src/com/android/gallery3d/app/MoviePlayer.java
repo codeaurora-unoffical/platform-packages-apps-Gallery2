@@ -560,9 +560,10 @@ public class MoviePlayer implements
             boolean start) {
         showLoading();
 
-        if (onIsRTSP()) {
+        if (onIsRTSP() && MovieUtils.isCertificatedUrl(mMovieItem.getUri(), mActivityContext)) {
+            Log.v(TAG,"use TCP transport for certificated url");
             Map<String, String> header = new HashMap<String, String>(1);
-            header.put("CODEAURORA-ASYNC-RTSP-PAUSE-PLAY", "true");
+            header.put("rtp.transport.TCP", "true");
             mVideoView.setVideoURI(mMovieItem.getUri(), header, !mWaitMetaData);
         } else {
             mVideoView.setVideoURI(mMovieItem.getUri(), null, !mWaitMetaData);
