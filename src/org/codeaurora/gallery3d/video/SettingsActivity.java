@@ -48,6 +48,7 @@ import android.preference.PreferenceCategory;
 import android.preference.RingtonePreference;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.provider.Settings.System;
 import android.provider.Telephony;
 import android.telephony.MSimTelephonyManager;
@@ -324,11 +325,22 @@ public class SettingsActivity extends PreferenceActivity {
     
     private void setApnListener() {
         final String CLASS_NAME    = "com.android.settings.ApnSettings";
+        final String SUBSCRIPTION_KEY = "subscription";
+
         mApn.setSummary(getDefaultApnName());
         mApn.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 Intent intent = new Intent();
                 intent.setClassName(PACKAGE_NAME, CLASS_NAME);
+
+                int subscription = 0;
+                try {
+                    subscription = Settings.Global.getInt(SettingsActivity.this.getContentResolver(),
+                            Settings.Global.MULTI_SIM_DATA_CALL_SUBSCRIPTION);
+                    intent.putExtra(SUBSCRIPTION_KEY, subscription);
+                } catch (Exception e) {
+                    Log.d("SettingActivity", "Can't get subscription for Exception" + e);
+                }
                 startActivityForResult(intent, SELECT_APN);
                 return true;
             }
