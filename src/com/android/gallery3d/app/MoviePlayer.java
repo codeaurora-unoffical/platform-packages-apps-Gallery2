@@ -52,6 +52,7 @@ import com.android.gallery3d.common.ApiHelper;
 import com.android.gallery3d.common.BlobCache;
 import com.android.gallery3d.util.CacheManager;
 import com.android.gallery3d.util.GalleryUtils;
+import com.android.internal.util.MemInfoReader;
 import org.codeaurora.gallery3d.ext.IContrllerOverlayExt;
 import org.codeaurora.gallery3d.ext.IMoviePlayer;
 import org.codeaurora.gallery3d.ext.IMovieItem;
@@ -560,11 +561,22 @@ public class MoviePlayer implements
             boolean start) {
         showLoading();
 
-        if (onIsRTSP() && MovieUtils.isCertificatedUrl(mMovieItem.getUri(), mActivityContext)) {
-            Log.v(TAG,"use TCP transport for certificated url");
-            Map<String, String> header = new HashMap<String, String>(1);
-            header.put("rtp.transport.TCP", "true");
-            mVideoView.setVideoURI(mMovieItem.getUri(), header, !mWaitMetaData);
+        if (onIsRTSP()) {
+            Map<String, String> header = new HashMap<String, String>();
+            if (MovieUtils.isCertificatedUrl(mMovieItem.getUri(), mActivityContext)){
+                Log.v(TAG,"use TCP transport for certificated url");
+                header.put("rtp.transport.TCP", "true");
+            }
+            MemInfoReader meminfo = new MemInfoReader();
+            meminfo.readMemInfo();
+            if (meminfo.getTotalSizeKb() < (512*1024)) {
+                Log.v(TAG,"use video hardware codec in low memory situation");
+                header.put("codecspecific", "true");
+            }
+            if (header.size() > 0)
+                mVideoView.setVideoURI(mMovieItem.getUri(), header, !mWaitMetaData);
+            else
+                mVideoView.setVideoURI(mMovieItem.getUri(), null, !mWaitMetaData);
         } else {
             mVideoView.setVideoURI(mMovieItem.getUri(), null, !mWaitMetaData);
         }
