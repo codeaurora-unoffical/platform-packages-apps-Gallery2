@@ -83,34 +83,43 @@ public class MuteVideo {
         new Thread(new Runnable() {
                 @Override
             public void run() {
+                boolean success = true;
                 try {
                     VideoUtils.startMute(mFilePath, mDstFileInfo);
                     SaveVideoFileUtils.insertContent(
                             mDstFileInfo, mActivity.getContentResolver(), mUri);
                 } catch (IOException e) {
-                    Toast.makeText(mActivity, mActivity.getString(R.string.video_mute_err),
-                            Toast.LENGTH_SHORT).show();
+                    success = false;
                 }
+                final boolean muteSuccess = success;
                 // After muting is done, trigger the UI changed.
                 mHandler.post(new Runnable() {
                         @Override
                     public void run() {
-                        Toast.makeText(mActivity.getApplicationContext(),
-                                mActivity.getString(R.string.save_into,
-                                        mDstFileInfo.mFolderName),
-                                Toast.LENGTH_SHORT)
-                                .show();
+                        if (muteSuccess) {
+                            Toast.makeText(mActivity.getApplicationContext(),
+                                    mActivity.getString(R.string.save_into,
+                                            mDstFileInfo.mFolderName),
+                                    Toast.LENGTH_SHORT)
+                                    .show();
+                        } else {
+                            Toast.makeText(mActivity.getApplicationContext(),
+                                    mActivity.getString(R.string.video_mute_err),
+                                    Toast.LENGTH_SHORT).show();
+                        }
 
                         if (mMuteProgress != null) {
                             mMuteProgress.dismiss();
                             mMuteProgress = null;
 
-                            // Show the result only when the activity not
-                            // stopped.
-                            Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
-                            intent.setDataAndType(Uri.fromFile(mDstFileInfo.mFile), "video/*");
-                            intent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
-                            mActivity.startActivity(intent);
+                            if (muteSuccess) {
+                                // Show the result only when the activity not
+                                // stopped and mute was successful.
+                                Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
+                                intent.setDataAndType(Uri.fromFile(mDstFileInfo.mFile), "video/*");
+                                intent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
+                                mActivity.startActivity(intent);
+                            }
                         }
                     }
                 });
