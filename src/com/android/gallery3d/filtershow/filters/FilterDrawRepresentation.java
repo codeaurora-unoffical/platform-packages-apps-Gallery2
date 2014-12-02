@@ -168,6 +168,11 @@ public class FilterDrawRepresentation extends FilterRepresentation {
         setEditorId(EditorDraw.ID);
         setOverlayId(R.drawable.filtershow_drawing);
         setOverlayOnly(true);
+        setDefaultColor();
+    }
+
+    private void setDefaultColor() {
+        mParamColor.setValue(DEFAULT_MENU_COLOR1);
     }
 
     @Override
@@ -313,6 +318,7 @@ public class FilterDrawRepresentation extends FilterRepresentation {
     public void clear() {
         mCurrent = null;
         mDrawing.clear();
+        setDefaultColor();
     }
 
     @Override
