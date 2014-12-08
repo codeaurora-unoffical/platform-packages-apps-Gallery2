@@ -505,6 +505,12 @@ public class MoviePlayer implements
             }
             mHasPaused = false;
         }
+
+        if (System.currentTimeMillis() > mResumeableTime) {
+            mHandler.removeCallbacks(mPlayingChecker);
+            mHandler.postDelayed(mPlayingChecker, 250);
+        }
+
         mHandler.post(mProgressChecker);
     }
 
@@ -1262,6 +1268,7 @@ public class MoviePlayer implements
         private long mLastDisconnectTime;
         private boolean mIsShowDialog = false;
         private AlertDialog mServerTimeoutDialog;
+        private int RESUME_DIALOG_TIMEOUT = 3 * 60 * 1000; // 3 mins
 
         // check whether disconnect from server timeout or not.
         // if timeout, return false. otherwise, return true.
@@ -1384,8 +1391,12 @@ public class MoviePlayer implements
         }
 
         public void setVideoInfo(Metadata data) {
+            mServerTimeout = RESUME_DIALOG_TIMEOUT;
             if (data.has(SERVER_TIMEOUT)) {
                 mServerTimeout = data.getInt(SERVER_TIMEOUT);
+                if (mServerTimeout == 0) {
+                    mServerTimeout = RESUME_DIALOG_TIMEOUT;
+                }
                 if (LOG) {
                     Log.v(TAG, "get server timeout from metadata. mServerTimeout="
                             + mServerTimeout);
