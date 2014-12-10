@@ -30,6 +30,7 @@ import android.media.MediaPlayer;
 import android.media.audiofx.AudioEffect;
 import android.media.audiofx.Virtualizer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -116,6 +117,13 @@ public class MoviePlayer implements
         }
     };
 
+    private class BookMarkRetriever extends AsyncTask<Void, Void, Integer> {
+        @Override
+        protected Integer doInBackground(Void... bla) {
+            return mBookmarker.getBookmark(mUri);
+        }
+    }
+
     public MoviePlayer(View rootView, final MovieActivity movieActivity,
             Uri videoUri, Bundle savedInstance, boolean canReplay) {
         mContext = movieActivity.getApplicationContext();
@@ -123,6 +131,8 @@ public class MoviePlayer implements
         mVideoView = (VideoView) rootView.findViewById(R.id.surface_view);
         mBookmarker = new Bookmarker(movieActivity);
         mUri = videoUri;
+        BookMarkRetriever bTask = new BookMarkRetriever();
+        bTask.execute();
 
         mController = new MovieControllerOverlay(mContext);
         ((ViewGroup)rootView).addView(mController.getView());
@@ -163,17 +173,7 @@ public class MoviePlayer implements
             }
         });
 
-        // The SurfaceView is transparent before drawing the first frame.
-        // This makes the UI flashing when open a video. (black -> old screen
-        // -> video) However, we have no way to know the timing of the first
-        // frame. So, we hide the VideoView for a while to make sure the
-        // video has been drawn on it.
-        mVideoView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mVideoView.setVisibility(View.VISIBLE);
-            }
-        }, BLACK_TIMEOUT);
+        mVideoView.setVisibility(View.VISIBLE);
 
         setOnSystemUiVisibilityChangeListener();
         // Hide system UI by default
@@ -193,7 +193,12 @@ public class MoviePlayer implements
             mVideoView.suspend();
             mHasPaused = true;
         } else {
-            final Integer bookmark = mBookmarker.getBookmark(mUri);
+            Integer bookmark;
+            try {
+                bookmark = bTask.get();
+            } catch (Exception ex) {
+                bookmark = null;
+            }
             if (bookmark != null) {
                 showResumeDialog(movieActivity, bookmark);
             } else {
