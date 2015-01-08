@@ -818,7 +818,7 @@ public abstract class PhotoPage extends ActivityState implements
 
         int supportedOperations = mCurrentPhoto.getSupportedOperations();
         if (mReadOnlyView) {
-            supportedOperations ^= MediaObject.SUPPORT_EDIT;
+            supportedOperations &= ~MediaObject.SUPPORT_EDIT;
         }
         if (mSecureAlbum != null) {
             supportedOperations &= MediaObject.SUPPORT_DELETE;
