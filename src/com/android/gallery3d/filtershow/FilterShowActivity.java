@@ -1281,7 +1281,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         mMasterImage.setStateAdapter(imageStateAdapter);
         mMasterImage.setActivity(this);
 
-        if (Runtime.getRuntime().maxMemory() > LIMIT_SUPPORTS_HIGHRES) {
+        if (Runtime.getRuntime().maxMemory() >= LIMIT_SUPPORTS_HIGHRES) {
             mMasterImage.setSupportsHighRes(true);
         } else {
             mMasterImage.setSupportsHighRes(false);
