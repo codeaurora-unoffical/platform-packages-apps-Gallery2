@@ -1283,7 +1283,7 @@ public class MoviePlayer implements
         private long mLastDisconnectTime;
         private boolean mIsShowDialog = false;
         private AlertDialog mServerTimeoutDialog;
-        private static final int DEFAULT_SERVER_TIMEOUT = 600000;
+        private static final int DEFAULT_SERVER_TIMEOUT = 3 * 60 * 1000; // 3 mins
 
         // check whether disconnect from server timeout or not.
         // if timeout, return false. otherwise, return true.
