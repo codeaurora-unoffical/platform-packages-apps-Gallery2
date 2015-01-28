@@ -1288,7 +1288,7 @@ public class MoviePlayer implements
         // check whether disconnect from server timeout or not.
         // if timeout, return false. otherwise, return true.
         private boolean passDisconnectCheck() {
-            if (!isFullBuffer()) {
+            if (!isFullBuffer() || mStreamingType == STREAMING_HTTP) {
                 // record the time disconnect from server
                 long now = System.currentTimeMillis();
                 if (LOG) {
@@ -1306,7 +1306,7 @@ public class MoviePlayer implements
         }
 
         private void recordDisconnectTime() {
-            if (!isFullBuffer()) {
+            if (!isFullBuffer() || mStreamingType == STREAMING_HTTP) {
                 // record the time disconnect from server
                 mLastDisconnectTime = System.currentTimeMillis();
             }
