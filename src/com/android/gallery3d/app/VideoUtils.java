@@ -142,22 +142,26 @@ public class VideoUtils {
         HashMap<Integer, Integer> indexMap = new HashMap<Integer,
                 Integer>(trackCount);
         int bufferSize = -1;
+        boolean isTrackAdded = false;
         for (int i = 0; i < trackCount; i++) {
             MediaFormat format = extractor.getTrackFormat(i);
             String mime = format.getString(MediaFormat.KEY_MIME);
-
             boolean selectCurrentTrack = false;
 
             if (mime.startsWith("audio/") && useAudio) {
                 selectCurrentTrack = true;
             } else if (mime.startsWith("video/") && useVideo) {
-                selectCurrentTrack = true;
+                if ("video/mp4v-es".equals(mime) || "video/avc".equals(mime) ||
+                    "video/3gpp".equals(mime) || "video/hevc".equals(mime)) {
+                    selectCurrentTrack = true;
+                }
             }
 
             if (selectCurrentTrack) {
                 extractor.selectTrack(i);
                 try {
                     int dstIndex = muxer.addTrack(format);
+                    isTrackAdded = true;
                     indexMap.put(i, dstIndex);
                     if (format.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) {
                         int newSize = format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE);
@@ -166,8 +170,17 @@ public class VideoUtils {
                 } catch (IllegalArgumentException e) {
                     Log.e(LOGTAG, "Unsupported format '" + mime + "'");
                     throw new IOException("Muxer does not support " + mime);
+                } catch (IllegalStateException e) {
+                    Log.e(LOGTAG, "Unsupported format '" + mime + "'");
+                    throw new IOException("Muxer does not support " + mime);
                 }
             }
+        }
+
+        if (!isTrackAdded) {
+            muxer.release();
+            Log.e(LOGTAG, "No track added for muxing .. bailing out");
+            throw new IOException("No track added for muxing");
         }
 
         if (bufferSize < 0) {
