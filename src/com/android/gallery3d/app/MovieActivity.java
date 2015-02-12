@@ -191,7 +191,7 @@ public class MovieActivity extends Activity {
             @Override
             public void onCompletion() {
                 if (mFinishOnCompletion) {
-                    finish();
+                    finishActivity();
                     mControlResumed = false;
                     Bookmarker mBookmarker = new Bookmarker(MovieActivity.this);
                     mBookmarker.setBookmark(mMovieItem.getUri(), 0, 1);
@@ -764,5 +764,14 @@ public class MovieActivity extends Activity {
         if (title != null) {
             actionBar.setTitle(title);
         }
+    }
+    @Override
+    public void onBackPressed() {
+        finishActivity();
+    }
+    private void finishActivity(){
+        MovieActivity.this.finish();
+        overridePendingTransition(0,0);
+        return;
     }
 }
