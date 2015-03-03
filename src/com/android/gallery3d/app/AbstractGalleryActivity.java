@@ -31,6 +31,7 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.print.PrintHelper;
 import android.view.Menu;
@@ -165,7 +166,7 @@ public class AbstractGalleryActivity extends Activity implements GalleryContext 
     @Override
     protected void onStart() {
         super.onStart();
-        if (getExternalCacheDir() == null) {
+        if (Environment.getExternalStorageDirectory() == null) {
             OnCancelListener onCancel = new OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
