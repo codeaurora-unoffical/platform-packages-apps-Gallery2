@@ -1346,6 +1346,12 @@ public class MoviePlayer implements
                             }
 
                         })
+                        .setOnCancelListener(new OnCancelListener() {
+                            public void onCancel(DialogInterface dialog) {
+                                mController.showEnded();
+                                onCompletion();
+                            }
+                        })
                         .create();
                 mServerTimeoutDialog.setOnDismissListener(new OnDismissListener() {
 
@@ -1353,6 +1359,7 @@ public class MoviePlayer implements
                         if (LOG) {
                             Log.v(TAG, "mServerTimeoutDialog.onDismiss()");
                         }
+                        mVideoView.setDialogShowState(false);
                         mIsShowDialog = false;
                     }
 
@@ -1363,6 +1370,7 @@ public class MoviePlayer implements
                         if (LOG) {
                             Log.v(TAG, "mServerTimeoutDialog.onShow()");
                         }
+                        mVideoView.setDialogShowState(true);
                         mIsShowDialog = true;
                     }
 
