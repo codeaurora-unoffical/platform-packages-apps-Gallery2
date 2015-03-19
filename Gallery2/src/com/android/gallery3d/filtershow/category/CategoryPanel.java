@@ -89,6 +89,13 @@ public class CategoryPanel extends Fragment implements View.OnClickListener {
                 }
                 break;
             }
+           case MainPanel.MAKEUP: {
+                mAdapter = activity.getCategoryMakeupAdapter();
+                if (mAdapter != null) {
+                    mAdapter.initializeSelection(MainPanel.MAKEUP);
+                }
+                break;
+            }
         }
         updateAddButtonVisibility();
     }
@@ -148,7 +155,7 @@ public class CategoryPanel extends Fragment implements View.OnClickListener {
             return;
         }
         FilterShowActivity activity = (FilterShowActivity) getActivity();
-        if (activity.isShowingImageStatePanel() && mAdapter.showAddButton()) {
+        if (activity.isShowingImageStatePanel() && mAdapter != null && mAdapter.showAddButton()) {
             mAddButton.setVisibility(View.VISIBLE);
             if (mAdapter != null) {
                 mAddButton.setText(mAdapter.getAddButtonText());
