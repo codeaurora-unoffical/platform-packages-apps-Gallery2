@@ -306,12 +306,22 @@ public class MoviePlayer implements
             mResumeableTime = savedInstance.getLong(KEY_RESUMEABLE_TIME, Long.MAX_VALUE);
             onRestoreInstanceState(savedInstance);
             mHasPaused = true;
+            doStartVideo(true, mVideoPosition, mVideoLastDuration,false);
+            mVideoView.start();
+            mActivityContext.initEffects(mVideoView.getAudioSessionId());
         } else {
             mTState = TState.PLAYING;
             mFirstBePlayed = true;
-            final BookmarkerInfo bookmark = mBookmarker.getBookmark(mMovieItem.getUri());
-            if (bookmark != null) {
-                showResumeDialog(movieActivity, bookmark);
+            String mUri = mMovieItem.getUri().toString();
+            boolean isLive = mUri.startsWith("rtsp://") && (mUri.contains(".sdp")
+                    || mUri.contains(".smil"));
+            if (!isLive) {
+                final BookmarkerInfo bookmark = mBookmarker.getBookmark(mMovieItem.getUri());
+                if (bookmark != null) {
+                    showResumeDialog(movieActivity, bookmark);
+                } else {
+                    doStartVideo(false, 0, 0);
+                }
             } else {
                 doStartVideo(false, 0, 0);
             }
