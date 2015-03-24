@@ -47,7 +47,11 @@ else
 endif
 
 ifeq ($(TARGET_TS_MAKEUP), true)
-  LOCAL_REQUIRED_MODULES := libts_detected_face_jni libts_face_beautify_jni
+  ifneq (,$(TARGET_BUILD_APPS))
+    LOCAL_REQUIRED_MODULES := libts_detected_face_jni libts_face_beautify_jni
+  else
+    LOCAL_REQUIRED_MODULES += libts_detected_face_jni libts_face_beautify_jni
+  endif
 endif
 
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
