@@ -222,7 +222,7 @@ public abstract class UploadedTexture extends BasicTexture {
                 Assert.assertTrue(bWidth <= texWidth && bHeight <= texHeight);
 
                 // Null pointer check here is to avoid monkey test failure.
-                if (canvas.getGLId() != null) {
+                if (canvas != null && canvas.getGLId() != null) {
                     // Upload the bitmap to a new texture.
                     mId = canvas.getGLId().generateTexture();
                 }
