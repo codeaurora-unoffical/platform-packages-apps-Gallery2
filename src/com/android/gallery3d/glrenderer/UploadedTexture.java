@@ -184,6 +184,7 @@ public abstract class UploadedTexture extends BasicTexture {
      * @param canvas
      */
     public void updateContent(GLCanvas canvas) {
+        if (canvas == null) return;
         if (!isLoaded()) {
             if (mThrottled && ++sUploadedCount > UPLOAD_LIMIT) {
                 return;
@@ -222,7 +223,7 @@ public abstract class UploadedTexture extends BasicTexture {
                 Assert.assertTrue(bWidth <= texWidth && bHeight <= texHeight);
 
                 // Null pointer check here is to avoid monkey test failure.
-                if (canvas != null && canvas.getGLId() != null) {
+                if (canvas.getGLId() != null) {
                     // Upload the bitmap to a new texture.
                     mId = canvas.getGLId().generateTexture();
                 }
