@@ -19,16 +19,19 @@ package com.android.gallery3d.app;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.drm.DrmHelper;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.android.gallery3d.R;
@@ -59,6 +62,7 @@ import com.android.gallery3d.util.Future;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.MediaSetUtils;
 
+import java.util.Locale;
 
 public class AlbumPage extends ActivityState implements GalleryActionBar.ClusterRunner,
         SelectionManager.SelectionListener, MediaSet.SyncListener, GalleryActionBar.OnAlbumModeSelectedListener {
@@ -278,10 +282,31 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
         }
 
         MediaItem item = mAlbumDataAdapter.get(slotIndex);
-        if (item == null) return; // Item not ready yet, ignore the click
+
+        // Checking it is RTL or not
+        boolean isLayoutRtl = (View.LAYOUT_DIRECTION_RTL == TextUtils
+                .getLayoutDirectionFromLocale(Locale.getDefault())) ? true : false;
+
+        // When not RTL, return directly to ignore the click
+        if (!isLayoutRtl && item == null) {
+            return;
+        }
+
         if (mGetContent) {
+            if (isLayoutRtl && item == null) {
+                return; // Item not ready yet, ignore the click
+            }
+            if (DrmHelper.isDrmFile(DrmHelper.getFilePath(
+                    mActivity.getAndroidContext(), item.getContentUri()))) {
+                Toast.makeText(mActivity, R.string.no_permission_for_drm,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
             onGetContent(item);
         } else if (mLaunchedFromPhotoPage) {
+            if (isLayoutRtl && item == null) {
+                return; // Item not ready yet, ignore the click
+            }
             TransitionStore transitions = mActivity.getTransitionStore();
             transitions.put(
                     PhotoPage.KEY_ALBUMPAGE_TRANSITION,

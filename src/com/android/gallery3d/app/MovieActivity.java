@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.drm.DrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -114,6 +115,15 @@ public class MovieActivity extends Activity {
         // We set the background in the theme to have the launching animation.
         // But for the performance (and battery), we remove the background here.
         win.setBackgroundDrawable(null);
+        // DRM validation
+        Uri original = intent.getData();
+        String mimeType = intent.getType();
+        String filepath = DrmHelper.getFilePath(this, original);
+        if (DrmHelper.isDrmFile(filepath)) {
+            if (!DrmHelper.validateLicense(this, filepath, mimeType)) {
+                finish();
+            }
+        }
     }
 
     private void setActionBarLogoFromIntent(Intent intent) {
@@ -181,6 +191,20 @@ public class MovieActivity extends Activity {
         } else {
             shareItem.setVisible(false);
         }
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        Uri movieItemUri = getIntent().getData();
+        if (movieItemUri != null
+                && !DrmHelper.isShareableDrmFile(DrmHelper.getFilePath(this,
+                        movieItemUri))) {
+            menu.removeItem(R.id.action_share);
+        }
+
         return true;
     }
 

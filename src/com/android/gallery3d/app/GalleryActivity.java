@@ -21,6 +21,7 @@ import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.drm.DrmHelper;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.InputDevice;
@@ -207,6 +208,10 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
 
                 data.putString(PhotoPage.KEY_MEDIA_ITEM_PATH, itemPath.toString());
                 data.putBoolean(PhotoPage.KEY_READONLY, true);
+
+                if (DrmHelper.isDrmFile(DrmHelper.getFilePath(this, uri))) {
+                    data.putBoolean(PhotoPage.KEY_READONLY, false);
+                }
 
                 // TODO: Make the parameter "SingleItemOnly" public so other
                 //       activities can reference it.

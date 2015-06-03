@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.drm.DrmHelper;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
@@ -33,6 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,6 +74,7 @@ import com.android.gallery3d.ui.SelectionManager;
 import com.android.gallery3d.ui.SynchronizedHandler;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.UsageStatistics;
+
 
 public abstract class PhotoPage extends ActivityState implements
         PhotoView.Listener, AppBridge.Server, ShareActionProvider.OnShareTargetSelectedListener,
@@ -756,6 +759,18 @@ public abstract class PhotoPage extends ActivityState implements
             requestDeferredUpdate();
         } else {
             updateUIForCurrentPhoto();
+
+            // Manage DRM rights while image selection changed. this
+            // flow will comes for both image and video, but here
+            // we will consume rights for image files only.
+            // Do not consume rights of a GIF image and video here.
+            // MediaPlayer will handle the video rights consumption stub.
+            String mime = mCurrentPhoto.getMimeType();
+            if (!TextUtils.isEmpty(mime) && !mime.startsWith("video/")) {
+                DrmHelper.manageDrmLicense(mActivity.getAndroidContext(),
+                        mHandler, mCurrentPhoto.getFilePath(),
+                        mCurrentPhoto.getMimeType());
+            }
         }
     }
 
@@ -1098,6 +1113,12 @@ public abstract class PhotoPage extends ActivityState implements
                 mSelectionManager.toggle(path);
                 mMenuExecutor.onMenuClicked(item, confirmMsg, mConfirmDialogListener);
                 return true;
+            case R.id.action_drm_info:
+                String filepath = current.getFilePath();
+                if (DrmHelper.isDrmFile(filepath)) {
+                    DrmHelper.showDrmInfo(mActivity.getAndroidContext(), filepath);
+                }
+                return true;
             default :
                 return false;
         }
@@ -1347,6 +1368,21 @@ public abstract class PhotoPage extends ActivityState implements
                 UsageStatistics.onContentViewChanged(
                         UsageStatistics.COMPONENT_CAMERA, "Unknown"); // TODO
             }
+
+            // Manage DRM rights while image selection changed. this
+            // flow will comes for both image and video, but here
+            // we will consume rights for image files only.
+            // Do not consume rights of a GIF image and video here.
+            // MediaPlayer will handle the video rights consumption stub.
+            if ((mMediaSet != null && mMediaSet.getMediaItemCount() > 1)
+                    || !(this instanceof SinglePhotoPage)) {
+                String mime = mCurrentPhoto.getMimeType();
+                if (!TextUtils.isEmpty(mime) && !mime.startsWith("video/")) {
+                    DrmHelper.manageDrmLicense(mActivity.getAndroidContext(),
+                            mHandler, mCurrentPhoto.getFilePath(),
+                            mCurrentPhoto.getMimeType());
+                }
+            }
         }
     }
 
@@ -1529,5 +1565,4 @@ public abstract class PhotoPage extends ActivityState implements
             return "Unknown:" + item.getMediaType();
         }
     }
-
 }
