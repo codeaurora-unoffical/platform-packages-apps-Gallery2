@@ -18,6 +18,7 @@ package com.android.gallery3d.data;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
 import android.net.Uri;
@@ -182,6 +183,15 @@ public class LocalVideo extends LocalMediaItem {
 
     @Override
     public int getSupportedOperations() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            int operation = SUPPORT_DELETE | SUPPORT_PLAY | SUPPORT_INFO
+                    | SUPPORT_DRM_INFO;
+            if (OmaDrmHelper.isShareableDrmFile(getFilePath())) {
+                operation |= SUPPORT_SHARE;
+            }
+            return operation;
+        }
+
         return SUPPORT_DELETE | SUPPORT_SHARE | SUPPORT_PLAY | SUPPORT_INFO | SUPPORT_TRIM | SUPPORT_MUTE;
     }
 
@@ -211,6 +221,10 @@ public class LocalVideo extends LocalMediaItem {
 
     @Override
     public int getMediaType() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            return MEDIA_TYPE_DRM_VIDEO;
+        }
+
         return MEDIA_TYPE_VIDEO;
     }
 

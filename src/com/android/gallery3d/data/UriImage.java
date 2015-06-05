@@ -17,6 +17,7 @@
 package com.android.gallery3d.data;
 
 import android.content.ContentResolver;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory.Options;
@@ -58,12 +59,14 @@ public class UriImage extends MediaItem {
     private PanoramaMetadataSupport mPanoramaMetadata = new PanoramaMetadataSupport(this);
 
     private GalleryApp mApplication;
+    private String mFilePath;
 
     public UriImage(GalleryApp application, Path path, Uri uri, String contentType) {
         super(path, nextVersionNumber());
         mUri = uri;
         mApplication = Utils.checkNotNull(application);
         mContentType = contentType;
+        mFilePath = OmaDrmHelper.getFilePath(mApplication.getAndroidContext(), uri);
     }
 
     @Override
@@ -171,6 +174,14 @@ public class UriImage extends MediaItem {
     private class RegionDecoderJob implements Job<BitmapRegionDecoder> {
         @Override
         public BitmapRegionDecoder run(JobContext jc) {
+            if (OmaDrmHelper.isDrmFile(getFilePath())) {
+                BitmapRegionDecoder decoder = OmaDrmHelper
+                        .createBitmapRegionDecoder(getFilePath(), false);
+                mWidth = decoder.getWidth();
+                mHeight = decoder.getHeight();
+                return decoder;
+            }
+
             if (!prepareInputFile(jc)) return null;
             BitmapRegionDecoder decoder = DecodeUtils.createBitmapRegionDecoder(
                     jc, mFileDescriptor.getFileDescriptor(), false);
@@ -189,6 +200,10 @@ public class UriImage extends MediaItem {
 
         @Override
         public Bitmap run(JobContext jc) {
+            if (OmaDrmHelper.isDrmFile(getFilePath())) {
+                return DecodeUtils.ensureGLCompatibleBitmap(OmaDrmHelper.getBitmap(getFilePath()));
+            }
+
             if (!prepareInputFile(jc)) return null;
             int targetSize = MediaItem.getTargetSize(mType);
             Options options = new Options();
@@ -211,6 +226,17 @@ public class UriImage extends MediaItem {
 
     @Override
     public int getSupportedOperations() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            int supported = SUPPORT_DRM_INFO ;
+            if (BitmapUtils.isSupportedByRegionDecoder(mContentType)) {
+                supported |= SUPPORT_FULL_IMAGE;
+            }
+            if (OmaDrmHelper.isShareableDrmFile(getFilePath())) {
+                supported |= SUPPORT_SHARE;
+            }
+            return supported;
+        }
+
         int supported = SUPPORT_PRINT | SUPPORT_SETAS;
         if (isSharable()) supported |= SUPPORT_SHARE;
         if (BitmapUtils.isSupportedByRegionDecoder(mContentType)) {
@@ -239,6 +265,10 @@ public class UriImage extends MediaItem {
 
     @Override
     public int getMediaType() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            return MEDIA_TYPE_DRM_IMAGE;
+        }
+
         return MEDIA_TYPE_IMAGE;
     }
 
@@ -294,5 +324,10 @@ public class UriImage extends MediaItem {
     @Override
     public int getRotation() {
         return mRotation;
+    }
+
+    @Override
+    public String getFilePath() {
+        return mFilePath;
     }
 }

@@ -19,6 +19,8 @@ package com.android.gallery3d.app;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.drm.OmaDrmHelper;
+import android.drm.OmaDrmHelper.OmaDrmStrings;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -309,6 +311,17 @@ public class AlbumPage extends ActivityState implements GalleryActionBar.Cluster
             if (isLayoutRtl && item == null) {
                 return; // Item not ready yet, ignore the click
             }
+
+            if (OmaDrmHelper.isDrmFile(OmaDrmHelper.getFilePath(
+                    mActivity.getAndroidContext(), item.getContentUri()))) {
+                Toast.makeText(
+                        mActivity,
+                        OmaDrmStrings.getString(mActivity,
+                        OmaDrmStrings.SHARE_NOT_ALLOWED),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             onGetContent(item);
         } else if (mLaunchedFromPhotoPage) {
             if (isLayoutRtl && item == null) {

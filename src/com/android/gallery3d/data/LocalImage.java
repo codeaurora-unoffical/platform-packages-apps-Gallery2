@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
@@ -172,8 +173,9 @@ public class LocalImage extends LocalMediaItem {
 
     @Override
     public Job<Bitmap> requestImage(int type) {
+        // To identify DRM file we need to send mimetype as well
         return new LocalImageRequest(mApplication, mPath, dateModifiedInSec,
-                type, filePath);
+                type, filePath, mimeType);
     }
 
     public static class LocalImageRequest extends ImageCacheRequest {
@@ -186,10 +188,24 @@ public class LocalImage extends LocalMediaItem {
             mLocalFilePath = localFilePath;
         }
 
+        // This constructor is used for DRM image file
+        LocalImageRequest(GalleryApp application, Path path, long timeModified,
+                int type, String localFilePath, String mimeType) {
+            super(application, path, timeModified, type,
+                    MediaItem.getTargetSize(type),localFilePath, mimeType);
+            mLocalFilePath = localFilePath;
+        }
+
         @Override
         public Bitmap onDecodeOriginal(JobContext jc, final int type) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+            if (OmaDrmHelper.isDrmFile(mLocalFilePath)) {
+                return DecodeUtils.ensureGLCompatibleBitmap(OmaDrmHelper
+                        .getBitmap(mLocalFilePath, options));
+            }
+
             int targetSize = MediaItem.getTargetSize(type);
 
             // try to decode from JPEG EXIF
@@ -230,12 +246,32 @@ public class LocalImage extends LocalMediaItem {
 
         @Override
         public BitmapRegionDecoder run(JobContext jc) {
+            if (OmaDrmHelper.isDrmFile(mLocalFilePath)) {
+                return OmaDrmHelper.createBitmapRegionDecoder(mLocalFilePath,
+                        false);
+            }
+
             return DecodeUtils.createBitmapRegionDecoder(jc, mLocalFilePath, false);
         }
     }
 
     @Override
     public int getSupportedOperations() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            int operation = SUPPORT_DELETE | SUPPORT_INFO | SUPPORT_DRM_INFO;
+            if (OmaDrmHelper.isDrmFLBlocking(mApplication.getAndroidContext(),
+                    getFilePath())) {
+                operation |= SUPPORT_SETAS;
+            }
+            if (BitmapUtils.isSupportedByRegionDecoder(mimeType)) {
+                operation |= SUPPORT_FULL_IMAGE;
+            }
+            if (OmaDrmHelper.isShareableDrmFile(getFilePath())) {
+                operation |= SUPPORT_SHARE;
+            }
+            return operation;
+        }
+
         int operation = SUPPORT_DELETE | SUPPORT_SHARE | SUPPORT_CROP
                 | SUPPORT_SETAS | SUPPORT_PRINT | SUPPORT_INFO;
         if (BitmapUtils.isSupportedByRegionDecoder(mimeType)) {
@@ -313,6 +349,10 @@ public class LocalImage extends LocalMediaItem {
 
     @Override
     public int getMediaType() {
+        if (OmaDrmHelper.isDrmFile(getFilePath())) {
+            return MEDIA_TYPE_DRM_IMAGE;
+        }
+
         return MEDIA_TYPE_IMAGE;
     }
 
