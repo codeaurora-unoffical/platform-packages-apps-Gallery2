@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.drm.OmaDrmHelper;
 import android.graphics.Rect;
 import android.media.MediaFile;
 import android.net.Uri;
@@ -802,6 +803,20 @@ public abstract class PhotoPage extends ActivityState implements
             requestDeferredUpdate();
         } else {
             updateUIForCurrentPhoto();
+
+            // Manage DRM rights while image selection changed. this
+            // flow will comes for both image and video, but here
+            // we will consume rights for image files only.
+            // Do not consume rights of a GIF image and video here.
+            // ViewGifImage will take care of GIF rights consumption stub.
+            // MediaPlayer will handle the video rights consumption stub.
+            String mime = mCurrentPhoto.getMimeType();
+            if (!TextUtils.isEmpty(mime) && !mime.equals("image/gif")
+                    && !mime.startsWith("video/")) {
+                OmaDrmHelper.manageDrmLicense(mActivity.getAndroidContext(),
+                        mHandler, mCurrentPhoto.getFilePath(),
+                        mCurrentPhoto.getMimeType());
+            }
         }
     }
 
@@ -1157,6 +1172,12 @@ public abstract class PhotoPage extends ActivityState implements
                 mSelectionManager.toggle(path);
                 mMenuExecutor.onMenuClicked(item, confirmMsg, mConfirmDialogListener);
                 return true;
+            case R.id.action_drm_info:
+                String filepath = current.getFilePath();
+                if (OmaDrmHelper.isDrmFile(filepath)) {
+                    OmaDrmHelper.showDrmInfo(mActivity.getAndroidContext(), filepath);
+                }
+                return true;
             default :
                 return false;
         }
@@ -1423,6 +1444,23 @@ public abstract class PhotoPage extends ActivityState implements
                 UsageStatistics.onContentViewChanged(
                         UsageStatistics.COMPONENT_CAMERA, "Unknown"); // TODO
             }
+
+            // Manage DRM rights while image selection changed. this
+            // flow will comes for both image and video, but here
+            // we will consume rights for image files only.
+            // Do not consume rights of a GIF image and video here.
+            // ViewGifImage will take care of GIF rights consumption stub.
+            // MediaPlayer will handle the video rights consumption stub.
+            if ((mMediaSet != null && mMediaSet.getMediaItemCount() > 1)
+                    || !(this instanceof SinglePhotoPage)) {
+                String mime = mCurrentPhoto.getMimeType();
+                if (!TextUtils.isEmpty(mime) && !mime.equals("image/gif")
+                        && !mime.startsWith("video/")) {
+                    OmaDrmHelper.manageDrmLicense(mActivity.getAndroidContext(),
+                            mHandler, mCurrentPhoto.getFilePath(),
+                            mCurrentPhoto.getMimeType());
+                }
+            }
         }
     }
 
@@ -1617,6 +1655,11 @@ public abstract class PhotoPage extends ActivityState implements
 
     private static void viewAnimateGif(Activity activity, Uri uri) {
         Intent intent = new Intent(ViewGifImage.VIEW_GIF_ACTION, uri);
+
+        if (OmaDrmHelper.isDrmFile(uri.toString())) {
+            intent.setDataAndType(uri, "image/gif");
+        }
+
         activity.startActivity(intent);
     }
 }

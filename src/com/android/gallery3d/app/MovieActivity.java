@@ -35,6 +35,8 @@ import android.content.res.Configuration;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.drm.DrmManagerClient;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -125,6 +127,17 @@ public class MovieActivity extends Activity {
     private boolean mResumed        = false;
     private boolean mControlResumed = false;
 
+    /**
+     * Used to finish activity when DRM error found.
+     */
+    private final DialogInterface.OnClickListener mDrmErrorDialogButtonListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            finish();
+        }
+    };
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
@@ -198,6 +211,24 @@ public class MovieActivity extends Activity {
                     mBookmarker.setBookmark(mMovieItem.getUri(), 0, 1);
                 }
             }
+
+            @Override
+            public boolean onError(MediaPlayer player, int what, int extra) {
+                // check DRM error
+                String filepath = OmaDrmHelper.getFilePath(MovieActivity.this,
+                        getIntent().getData());
+                if (OmaDrmHelper.isDrmFile(filepath)) {
+                    if (!OmaDrmHelper.validateLicense(MovieActivity.this,
+                            filepath, null, mDrmErrorDialogButtonListener,
+                            mDrmErrorDialogButtonListener)) {
+                        super.onError(player, what, extra);
+                        return true;
+                    }
+                }
+
+                return super.onError(player, what, extra);
+            }
+
         };
         if (intent.hasExtra(MediaStore.EXTRA_SCREEN_ORIENTATION)) {
             int orientation = intent.getIntExtra(
@@ -332,6 +363,14 @@ public class MovieActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         mMovieHooker.onPrepareOptionsMenu(menu);
+
+        Uri movieItemUri = getIntent().getData();
+        if (movieItemUri != null
+                && !OmaDrmHelper.isShareableDrmFile(OmaDrmHelper.getFilePath(this,
+                        movieItemUri))) {
+            menu.removeItem(R.id.action_share);
+        }
+
         return true;
     }
 
