@@ -18,6 +18,7 @@ package com.android.gallery3d.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -338,6 +339,16 @@ public class SlideshowPage extends ActivityState {
                 mData = mMediaSet.getMediaItem(index, DATA_SIZE);
                 mDataStart = index;
                 dataEnd = index + mData.size();
+
+                // Consume license once in each element of the slide-show
+                // This is a non-blocking loop operation
+                for (int i = 0; i < mData.size(); i++) {
+                    String path = mData.get(i).getFilePath();
+                    if (OmaDrmHelper.isDrmFile(path)) {
+                        OmaDrmHelper.consumeDrmRights(path, "image/*");
+                    }
+                }
+
             }
 
             return (index < mDataStart || index >= dataEnd) ? null : mData.get(index - mDataStart);
