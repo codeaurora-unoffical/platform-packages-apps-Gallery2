@@ -1085,7 +1085,7 @@ public abstract class PhotoPage extends ActivityState implements
         int currentIndex = mModel.getCurrentIndex();
 
         // If RTL, the current index need be revised.
-        if (View.LAYOUT_DIRECTION_RTL == TextUtils
+        if (mMediaSet != null && View.LAYOUT_DIRECTION_RTL == TextUtils
                 .getLayoutDirectionFromLocale(Locale.getDefault())) {
             currentIndex = mMediaSet.getMediaItemCount() - currentIndex - 1;
         }
