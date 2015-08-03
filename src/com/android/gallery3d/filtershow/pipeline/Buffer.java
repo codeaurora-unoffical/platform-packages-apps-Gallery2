@@ -18,9 +18,10 @@ package com.android.gallery3d.filtershow.pipeline;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.PorterDuff;
 import android.support.v8.renderscript.Allocation;
 import android.support.v8.renderscript.RenderScript;
-import android.util.Log;
+
 import com.android.gallery3d.filtershow.cache.BitmapCache;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
 
@@ -58,6 +59,7 @@ public class Buffer {
 
     public synchronized void useBitmap(Bitmap bitmap) {
         Canvas canvas = new Canvas(mBitmap);
+        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
         canvas.drawBitmap(bitmap, 0, 0, null);
     }
 

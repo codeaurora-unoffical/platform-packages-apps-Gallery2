@@ -29,6 +29,7 @@ import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.FilterShowActivity;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
 import com.android.gallery3d.filtershow.state.StatePanel;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
 
 public class MainPanel extends Fragment {
 
@@ -39,13 +40,15 @@ public class MainPanel extends Fragment {
     private ImageButton bordersButton;
     private ImageButton geometryButton;
     private ImageButton filtersButton;
+    private ImageButton dualCamButton;
 
     public static final String FRAGMENT_TAG = "MainPanel";
     public static final int LOOKS = 0;
     public static final int BORDERS = 1;
     public static final int GEOMETRY = 2;
     public static final int FILTERS = 3;
-    public static final int VERSIONS = 4;
+    public static final int DUALCAM = 4;
+    public static final int VERSIONS = 5;
 
     private int mCurrentSelected = -1;
     private int mPreviousToggleVersions = -1;
@@ -70,6 +73,10 @@ public class MainPanel extends Fragment {
             }
             case FILTERS: {
                 filtersButton.setSelected(value);
+                break;
+            }
+            case DUALCAM: {
+                dualCamButton.setSelected(value);
                 break;
             }
         }
@@ -97,6 +104,7 @@ public class MainPanel extends Fragment {
         bordersButton = (ImageButton) mMainView.findViewById(R.id.borderButton);
         geometryButton = (ImageButton) mMainView.findViewById(R.id.geometryButton);
         filtersButton = (ImageButton) mMainView.findViewById(R.id.colorsButton);
+        dualCamButton = (ImageButton) mMainView.findViewById(R.id.dualCamButton);
 
         looksButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,6 +130,13 @@ public class MainPanel extends Fragment {
                 showPanel(FILTERS);
             }
         });
+        dualCamButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPanel(DUALCAM);
+            }
+        });
+        enableDualCameraButton(DualCameraNativeEngine.getInstance().isLibLoaded());
 
         FilterShowActivity activity = (FilterShowActivity) getActivity();
         showImageStatePanel(activity.isShowingImageStatePanel());
@@ -217,6 +232,19 @@ public class MainPanel extends Fragment {
         selection(mCurrentSelected, true);
     }
 
+    public void loadCategoryDualCamPanel() {
+        if (mCurrentSelected == DUALCAM) {
+            return;
+        }
+        boolean fromRight = isRightAnimation(DUALCAM);
+        selection(mCurrentSelected, false);
+        CategoryPanel categoryPanel = new CategoryPanel();
+        categoryPanel.setAdapter(DUALCAM);
+        setCategoryFragment(categoryPanel, fromRight);
+        mCurrentSelected = DUALCAM;
+        selection(mCurrentSelected, true);
+    }
+
     public void showPanel(int currentPanel) {
         switch (currentPanel) {
             case LOOKS: {
@@ -233,6 +261,10 @@ public class MainPanel extends Fragment {
             }
             case FILTERS: {
                 loadCategoryFiltersPanel();
+                break;
+            }
+            case DUALCAM: {
+                loadCategoryDualCamPanel();
                 break;
             }
             case VERSIONS: {
@@ -294,5 +326,11 @@ public class MainPanel extends Fragment {
         mCurrentSelected = -1;
         showPanel(currentPanel);
         transaction.commit();
+    }
+
+    public void enableDualCameraButton(boolean enable) {
+        if(dualCamButton != null) {
+            dualCamButton.setVisibility(enable?View.VISIBLE:View.GONE);
+        }
     }
 }
