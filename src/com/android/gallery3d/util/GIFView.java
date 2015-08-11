@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.ContentResolver;
 import android.content.res.AssetManager;
 import android.database.Cursor;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -44,6 +45,19 @@ public class GIFView extends ImageView implements GifAction {
             return false;
         }
         mUri = uri;
+
+        // Let decode the GIF image from byte stream instead of file stream
+        String filepath = OmaDrmHelper.getFilePath(mContext, mUri);
+        if (OmaDrmHelper.isDrmFile(filepath)) {
+            byte[] bytes = OmaDrmHelper.getDrmImageBytes(filepath);
+            OmaDrmHelper.manageDrmLicense(mContext, this.getHandler(), filepath,
+                    "image/gif");
+            if (bytes == null) {
+                return false;
+            }
+            startDecode(bytes);
+            return true;
+        }
 
         InputStream is = getInputStream(uri);
         if (is == null || (getFileSize (is) == 0)) {
@@ -89,6 +103,12 @@ public class GIFView extends ImageView implements GifAction {
     private void startDecode(InputStream is) {
         freeGifDecoder();
         mGifDecoder = new GifDecoder(is, this);
+        mGifDecoder.start();
+    }
+
+    private void startDecode(byte[] bytes) {
+        freeGifDecoder();
+        mGifDecoder = new GifDecoder(bytes, this);
         mGifDecoder.start();
     }
 

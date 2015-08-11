@@ -27,9 +27,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.AsyncQueryHandler;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -38,8 +35,8 @@ import android.content.res.Configuration;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
-import android.drm.DrmManagerClientWrapper;
-import android.drm.DrmStore.DrmDeliveryType;
+import android.drm.DrmManagerClient;
+import android.drm.OmaDrmHelper;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -53,7 +50,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.MediaStore.Video.VideoColumns;
 import android.provider.OpenableColumns;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -131,6 +127,17 @@ public class MovieActivity extends Activity {
     private boolean mResumed        = false;
     private boolean mControlResumed = false;
 
+    /**
+     * Used to finish activity when DRM error found.
+     */
+    private final DialogInterface.OnClickListener mDrmErrorDialogButtonListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            finish();
+        }
+    };
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
@@ -204,6 +211,24 @@ public class MovieActivity extends Activity {
                     mBookmarker.setBookmark(mMovieItem.getUri(), 0, 1);
                 }
             }
+
+            @Override
+            public boolean onError(MediaPlayer player, int what, int extra) {
+                // check DRM error
+                String filepath = OmaDrmHelper.getFilePath(MovieActivity.this,
+                        getIntent().getData());
+                if (OmaDrmHelper.isDrmFile(filepath)) {
+                    if (!OmaDrmHelper.validateLicense(MovieActivity.this,
+                            filepath, null, mDrmErrorDialogButtonListener,
+                            mDrmErrorDialogButtonListener)) {
+                        super.onError(player, what, extra);
+                        return true;
+                    }
+                }
+
+                return super.onError(player, what, extra);
+            }
+
         };
         if (intent.hasExtra(MediaStore.EXTRA_SCREEN_ORIENTATION)) {
             int orientation = intent.getIntExtra(
@@ -312,36 +337,6 @@ public class MovieActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        String path = null;
-        String scheme = mUri.getScheme();
-        if ("file".equals(scheme)) {
-            path = mUri.getPath();
-        } else {
-            Cursor cursor = null;
-            try {
-                cursor = getContentResolver().query(mUri,
-                        new String[] {VideoColumns.DATA}, null, null, null);
-                if (cursor != null && cursor.moveToNext()) {
-                    path = cursor.getString(0);
-                }
-            } catch (Throwable t) {
-                Log.d(TAG, "cannot get path from: " + mUri);
-            } finally {
-                if (cursor != null) cursor.close();
-            }
-        }
-        Log.d(TAG, "onCreateOptionsMenu= " + path);
-        if ((path != null) && ((path.endsWith(".dcf") || path.endsWith(".dm")))) {
-            DrmManagerClientWrapper drmClient = new DrmManagerClientWrapper(this);
-            ContentValues values = drmClient.getMetadata(path);
-            int drmType = values.getAsInteger("DRM-TYPE");
-            Log.d(TAG, "onCreateOptionsMenu:DRM-TYPE = " + Integer.toString(drmType));
-            if (drmType != DrmDeliveryType.SEPARATE_DELIVERY) {
-                return true;
-            }
-            if (drmClient != null) drmClient.release();
-        }
-
         getMenuInflater().inflate(R.menu.movie, menu);
         MenuItem shareMenu = menu.findItem(R.id.action_share);
         ShareActionProvider provider = (ShareActionProvider) shareMenu.getActionProvider();
@@ -368,6 +363,14 @@ public class MovieActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         mMovieHooker.onPrepareOptionsMenu(menu);
+
+        Uri movieItemUri = getIntent().getData();
+        if (movieItemUri != null
+                && !OmaDrmHelper.isShareableDrmFile(OmaDrmHelper.getFilePath(this,
+                        movieItemUri))) {
+            menu.removeItem(R.id.action_share);
+        }
+
         return true;
     }
 

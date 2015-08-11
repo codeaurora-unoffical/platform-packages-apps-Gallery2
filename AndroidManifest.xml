@@ -92,6 +92,7 @@
                 <data android:mimeType="video/webm" />
                 <data android:mimeType="video/avi" />
                 <data android:mimeType="application/sdp" />
+                <data android:mimeType="video/MP2T" />
                 <data android:mimeType="video/mp2ts" />
                 <data android:mimeType="video/x-ms-asf" />
                 <data android:mimeType="video/x-ms-wmv" />
@@ -172,7 +173,6 @@
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/webp" />
                 <data android:mimeType="image/x-ms-bmp" />
-                <data android:mimeType="image/x-MS-bmp" />
                 <data android:mimeType="image/vnd.wap.wbmp" />
                 <data android:mimeType="application/vnd.google.panorama360+jpg" />
             </intent-filter>

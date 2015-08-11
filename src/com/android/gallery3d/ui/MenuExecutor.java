@@ -24,11 +24,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.database.Cursor;
+import android.drm.OmaDrmHelper;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore.Video.VideoColumns;
 import android.support.v4.print.PrintHelper;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +36,7 @@ import com.android.gallery3d.R;
 import com.android.gallery3d.app.AbstractGalleryActivity;
 import com.android.gallery3d.common.Utils;
 import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.Log;
 import com.android.gallery3d.data.MediaItem;
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.Path;
@@ -182,7 +182,7 @@ public class MenuExecutor {
         boolean supportInfo = (supported & MediaObject.SUPPORT_INFO) != 0;
         boolean supportPrint = (supported & MediaObject.SUPPORT_PRINT) != 0;
         supportPrint &= PrintHelper.systemSupportsPrint();
-        boolean supportDrmInfo = (supported & MediaObject.SUPPORT_DRM_INFO) != 0;
+
         setMenuItemVisible(menu, R.id.action_delete, supportDelete);
         setMenuItemVisible(menu, R.id.action_rotate_ccw, supportRotate);
         setMenuItemVisible(menu, R.id.action_rotate_cw, supportRotate);
@@ -198,6 +198,8 @@ public class MenuExecutor {
         // setMenuItemVisible(menu, R.id.action_simple_edit, supportEdit);
         setMenuItemVisible(menu, R.id.action_details, supportInfo);
         setMenuItemVisible(menu, R.id.print, supportPrint);
+
+        boolean supportDrmInfo = (supported & MediaObject.SUPPORT_DRM_INFO) != 0;
         setMenuItemVisible(menu, R.id.action_drm_info, supportDrmInfo);
     }
 
@@ -258,6 +260,14 @@ public class MenuExecutor {
                 Intent intent = getIntentBySingleSelectedPath(Intent.ACTION_ATTACH_DATA)
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.putExtra("mimeType", intent.getType());
+
+                // DRM files can be set as wallpaper only. Don't show other options
+                // to set as.
+                Uri uri = intent.getData();
+                if (OmaDrmHelper.isDrmFile(OmaDrmHelper.getFilePath(mActivity, uri))) {
+                    intent.setPackage("com.android.gallery3d");
+                }
+
                 Activity activity = mActivity;
                 activity.startActivity(Intent.createChooser(
                         intent, activity.getString(R.string.set_as)));
@@ -279,30 +289,14 @@ public class MenuExecutor {
                 DataManager manager = mActivity.getDataManager();
                 Path path = getSingleSelectedPath();
                 Uri uri = manager.getContentUri(path);
-                Log.d(TAG, "onMenuClicked:" + uri);
                 String filepath = null;
                 String scheme = uri.getScheme();
                 if ("file".equals(scheme)) {
                     filepath = uri.getPath();
                 } else {
-                    Cursor cursor = null;
-                    try {
-                        cursor = mActivity.getAndroidContext().getContentResolver().query(uri,
-                                new String[] {VideoColumns.DATA}, null, null, null);
-                        if (cursor != null && cursor.moveToNext()) {
-                            filepath = cursor.getString(0);
-                        }
-                    } catch (Throwable t) {
-                        Log.w(TAG, "cannot get path from: " + uri);
-                    } finally {
-                        if (cursor != null) cursor.close();
-                    }
+                    filepath = OmaDrmHelper.getFilePath(mActivity, uri);
                 }
-                Intent drmintent = new Intent("android.drmservice.intent.action.SHOW_PROPERTIES");
-                filepath = filepath.replace("/storage/emulated/0", "/storage/emulated/legacy");
-                drmintent.putExtra("DRM_FILE_PATH", filepath);
-                drmintent.putExtra("DRM_TYPE", "OMAV1");
-                mActivity.getAndroidContext().sendBroadcast(drmintent);
+                OmaDrmHelper.showDrmInfo(mActivity, filepath);
                 title = R.string.drm_license_info;
                 break;
             default:
