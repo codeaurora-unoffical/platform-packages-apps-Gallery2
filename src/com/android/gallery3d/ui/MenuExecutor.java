@@ -296,7 +296,7 @@ public class MenuExecutor {
                 } else {
                     filepath = OmaDrmHelper.getFilePath(mActivity, uri);
                 }
-                OmaDrmHelper.showDrmInfo(mActivity, filepath);
+                OmaDrmHelper.showDrmInfo(mActivity, filepath, uri);
                 title = R.string.drm_license_info;
                 break;
             default:
@@ -387,8 +387,10 @@ public class MenuExecutor {
     public static String getMimeType(int type) {
         switch (type) {
             case MediaObject.MEDIA_TYPE_IMAGE :
+            case MediaObject.MEDIA_TYPE_DRM_IMAGE:
                 return GalleryUtils.MIME_TYPE_IMAGE;
             case MediaObject.MEDIA_TYPE_VIDEO :
+            case MediaObject.MEDIA_TYPE_DRM_VIDEO :
                 return GalleryUtils.MIME_TYPE_VIDEO;
             default: return GalleryUtils.MIME_TYPE_ALL;
         }

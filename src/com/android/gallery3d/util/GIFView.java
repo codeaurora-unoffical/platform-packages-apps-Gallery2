@@ -49,9 +49,8 @@ public class GIFView extends ImageView implements GifAction {
         // Let decode the GIF image from byte stream instead of file stream
         String filepath = OmaDrmHelper.getFilePath(mContext, mUri);
         if (OmaDrmHelper.isDrmFile(filepath)) {
-            byte[] bytes = OmaDrmHelper.getDrmImageBytes(filepath);
-            OmaDrmHelper.manageDrmLicense(mContext, this.getHandler(), filepath,
-                    "image/gif");
+            byte[] bytes = OmaDrmHelper.getDrmImageBytes(mContext, filepath,
+                    mUri, true);
             if (bytes == null) {
                 return false;
             }

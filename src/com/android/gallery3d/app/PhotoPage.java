@@ -819,6 +819,7 @@ public abstract class PhotoPage extends ActivityState implements
                     && !mime.startsWith("video/")) {
                 OmaDrmHelper.manageDrmLicense(mActivity.getAndroidContext(),
                         mHandler, mCurrentPhoto.getFilePath(),
+                        mCurrentPhoto.getContentUri(),
                         mCurrentPhoto.getMimeType());
             }
         }
@@ -1179,7 +1180,8 @@ public abstract class PhotoPage extends ActivityState implements
             case R.id.action_drm_info:
                 String filepath = current.getFilePath();
                 if (OmaDrmHelper.isDrmFile(filepath)) {
-                    OmaDrmHelper.showDrmInfo(mActivity.getAndroidContext(), filepath);
+                    OmaDrmHelper.showDrmInfo(mActivity.getAndroidContext(), filepath,
+                        current.getContentUri());
                 }
                 return true;
             default :

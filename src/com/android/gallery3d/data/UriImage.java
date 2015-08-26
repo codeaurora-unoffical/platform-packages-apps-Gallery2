@@ -176,7 +176,8 @@ public class UriImage extends MediaItem {
         public BitmapRegionDecoder run(JobContext jc) {
             if (OmaDrmHelper.isDrmFile(getFilePath())) {
                 BitmapRegionDecoder decoder = OmaDrmHelper
-                        .createBitmapRegionDecoder(getFilePath(), false);
+                        .createBitmapRegionDecoder(mApplication
+                            .getAndroidContext(), getFilePath(), mUri, false);
                 mWidth = decoder.getWidth();
                 mHeight = decoder.getHeight();
                 return decoder;
@@ -201,7 +202,10 @@ public class UriImage extends MediaItem {
         @Override
         public Bitmap run(JobContext jc) {
             if (OmaDrmHelper.isDrmFile(getFilePath())) {
-                return DecodeUtils.ensureGLCompatibleBitmap(OmaDrmHelper.getBitmap(getFilePath()));
+                return DecodeUtils.ensureGLCompatibleBitmap(
+                    OmaDrmHelper.getBitmap(mApplication
+                            .getAndroidContext(),
+                            getFilePath(), mUri, null));
             }
 
             if (!prepareInputFile(jc)) return null;
