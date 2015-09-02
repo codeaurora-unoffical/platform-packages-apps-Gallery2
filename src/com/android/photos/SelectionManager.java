@@ -45,6 +45,9 @@ public class SelectionManager {
         mActivity = activity;
         if (ApiHelper.AT_LEAST_16) {
             mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity);
+            if (mNfcAdapter == null) {
+                return;
+            }
             mNfcAdapter.setBeamPushUrisCallback(new CreateBeamUrisCallback() {
                 @Override
                 public Uri[] createBeamUris(NfcEvent arg0) {
