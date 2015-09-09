@@ -942,8 +942,6 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         }
         mUserPresetsManager.close();
         doUnbindService();
-        if(DualCameraNativeEngine.getInstance().isLibLoaded())
-            DualCameraNativeEngine.getInstance().releaseDepthMap();
         super.onDestroy();
     }
 
@@ -983,7 +981,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         }
     }
 
-    public void completeSaveImage(Uri saveUri) {
+    public void completeSaveImage(Uri saveUri, boolean releaseDualCam) {
         if (mSharingImage && mSharedOutputFile != null) {
             // Image saved, we unblock the content provider
             Uri uri = Uri.withAppendedPath(SharedImageProvider.CONTENT_URI,
@@ -993,6 +991,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             getContentResolver().insert(uri, values);
         }
         setResult(RESULT_OK, new Intent().setData(saveUri));
+        if (releaseDualCam && DualCameraNativeEngine.getInstance().isLibLoaded())
+            DualCameraNativeEngine.getInstance().releaseDepthMap();
         hideSavingProgress();
         finish();
     }
