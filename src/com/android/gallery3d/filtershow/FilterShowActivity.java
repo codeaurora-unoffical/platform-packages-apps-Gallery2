@@ -186,6 +186,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
     private DialogInterface mCurrentDialog = null;
     private PopupMenu mCurrentMenu = null;
     private boolean mLoadingVisible = true;
+    private boolean mReleaseDualCamOnDestory = true;
 
     public ProcessingService getProcessingService() {
         return mBoundService;
@@ -922,6 +923,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         }
         mUserPresetsManager.close();
         doUnbindService();
+        if (mReleaseDualCamOnDestory && DualCameraNativeEngine.getInstance().isLibLoaded())
+            DualCameraNativeEngine.getInstance().releaseDepthMap();
         super.onDestroy();
     }
 
@@ -1426,6 +1429,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             File saveDir = SaveImage.getFinalSaveDirectory(this, mSelectedImageUri);
             int bucketId = GalleryUtils.getBucketId(saveDir.getPath());
             String albumName = LocalAlbum.getLocalizedName(getResources(), bucketId, null);
+            mReleaseDualCamOnDestory = false;
             showSavingProgress(albumName);
             mImageShow.saveImage(this, null);
         } else {
@@ -1439,6 +1443,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         if (mLoadBitmapTask != null) {
             mLoadBitmapTask.cancel(false);
         }
+        mReleaseDualCamOnDestory = true;
         finish();
     }
 
