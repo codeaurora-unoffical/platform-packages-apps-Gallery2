@@ -401,8 +401,12 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
 
         // Disable share actions until share intent is in good shape
         if (mSharePanoramaMenuItem != null) mSharePanoramaMenuItem.setEnabled(false);
-        if (mShareMenuItem != null && mSelectionManager.inSelectAllMode()) {
-            mShareMenuItem.setVisible(false);
+        if (mShareMenuItem != null) {
+            if (mSelectionManager.inSelectAllMode()) {
+                mShareMenuItem.setVisible(false);
+            } else {
+                mShareMenuItem.setEnabled(false);
+            }
         }
 
         // Generate sharing intent and update supported operations in the background
@@ -489,7 +493,11 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
                                 mShareMaxDialog = false;
                             }
 
-                            mShareMenuItem.setVisible(canShare);
+                            if (mSelectionManager.inSelectAllMode()) {
+                                mShareMenuItem.setVisible(false);
+                            } else {
+                                mShareMenuItem.setEnabled(false);
+                            }
                             mShareActionProvider.setShareIntent(share_intent);
                         }
                     }
