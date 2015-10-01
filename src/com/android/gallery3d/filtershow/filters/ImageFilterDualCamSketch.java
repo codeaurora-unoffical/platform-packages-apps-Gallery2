@@ -40,8 +40,11 @@ import android.widget.Toast;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.cache.BitmapCache;
+import com.android.gallery3d.filtershow.imageshow.GeometryMathUtils;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
+import com.android.gallery3d.filtershow.imageshow.GeometryMathUtils.GeometryHolder;
 import com.android.gallery3d.filtershow.pipeline.FilterEnvironment;
+import com.android.gallery3d.filtershow.pipeline.ImagePreset;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
 
 public class ImageFilterDualCamSketch extends ImageFilter {
@@ -72,16 +75,22 @@ public class ImageFilterDualCamSketch extends ImageFilter {
 
         Point point = getParameters().getPoint();
         if(!point.equals(-1,-1)) {
-            boolean result = false;
             Bitmap filteredBitmap = null;
+            boolean result = false;
+            int filteredW;
+            int filteredH;
 
-            Rect originalBounds = MasterImage.getImage().getOriginalBounds();
-            int origW = originalBounds.width();
-            int origH = originalBounds.height();
-            int w = bitmap.getWidth();
-            int h = bitmap.getHeight();
+            if(quality == FilterEnvironment.QUALITY_FINAL) {
+                Rect originalBounds = MasterImage.getImage().getOriginalBounds();
+                filteredW = originalBounds.width();
+                filteredH = originalBounds.height();
+            } else {
+                Bitmap originalBmp = MasterImage.getImage().getOriginalBitmapHighres();
+                filteredW = originalBmp.getWidth();
+                filteredH = originalBmp.getHeight();
+            }
 
-            filteredBitmap = MasterImage.getImage().getBitmapCache().getBitmap(w, h, BitmapCache.FILTERS);
+            filteredBitmap = MasterImage.getImage().getBitmapCache().getBitmap(filteredW, filteredH, BitmapCache.FILTERS);
 
             result = DualCameraNativeEngine.getInstance().applySketch(point.x, point.y, filteredBitmap);
 
@@ -107,12 +116,16 @@ public class ImageFilterDualCamSketch extends ImageFilter {
                 }
 
                 Canvas canvas = new Canvas(bitmap);
+                ImagePreset preset = getEnvironment().getImagePreset();
+                int bmWidth = bitmap.getWidth();
+                int bmHeight = bitmap.getHeight();
 
-                if(getEnvironment().getImagePreset().getDoApplyGeometry()) {
-                    Matrix originalToScreen = getImageToScreenMatrix(w, h, w, h);
-                    canvas.drawBitmap(filteredBitmap, originalToScreen, mPaint);
+                if(preset.getDoApplyGeometry()) {
+                    GeometryHolder holder = GeometryMathUtils.unpackGeometry(preset.getGeometryFilters());
+                    GeometryMathUtils.drawTransformedCropped(holder, canvas, filteredBitmap, bmWidth, bmHeight);
                 } else {
-                    canvas.drawBitmap(filteredBitmap, null, new Rect(0,0,w,h), mPaint);
+                    canvas.drawBitmap(filteredBitmap, null,
+                            new Rect(0, 0,bmWidth, bmHeight), mPaint);
                 }
 
                 MasterImage.getImage().getBitmapCache().cache(filteredBitmap);
