@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
+import android.net.ParseException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -172,7 +173,13 @@ public class MovieListLoader implements IMovieListLoader {
                             }
                             cursor.close();
                         }
-                        long curId = Long.parseLong(uri.getPathSegments().get(3));
+                        long curId;
+                        try {
+                            curId = Long.parseLong(uri.getLastPathSegment());
+                        } catch(ParseException pe) {
+                            Log.v(TAG, "Exception while getting last segment");
+                            return null;
+                        }
                         movieList = fillUriList(MediaStore.Video.Media.BUCKET_ID + "=? ",
                                 new String[]{String.valueOf(bucketId)}, curId, params[0]);
                     } else if (uristr.toLowerCase().startsWith("file://")) {

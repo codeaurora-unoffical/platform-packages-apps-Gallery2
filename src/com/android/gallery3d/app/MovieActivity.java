@@ -219,7 +219,8 @@ public class MovieActivity extends Activity {
                         getIntent().getData());
                 if (OmaDrmHelper.isDrmFile(filepath)) {
                     if (!OmaDrmHelper.validateLicense(MovieActivity.this,
-                            filepath, null, mDrmErrorDialogButtonListener,
+                            filepath, getIntent().getData(), null,
+                            mDrmErrorDialogButtonListener,
                             mDrmErrorDialogButtonListener)) {
                         super.onError(player, what, extra);
                         return true;
