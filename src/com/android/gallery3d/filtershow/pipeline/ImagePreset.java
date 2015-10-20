@@ -413,7 +413,7 @@ public class ImagePreset {
                 }
             }
             if (!replaced && !isNoneFxFilter(representation)) {
-                mFilters.add(0, representation);
+                mFilters.add(representation);
             }
         } else {
             mFilters.add(representation);
@@ -462,7 +462,7 @@ public class ImagePreset {
 
     private boolean isNoneDualCamFilter(FilterRepresentation representation) {
         return representation instanceof FilterDualCamSketchRepresentation &&
-                ((FilterDualCamSketchRepresentation) representation).getSketchResId() == 0;
+                ((FilterDualCamSketchRepresentation) representation).getTextId() == R.string.none;
     }
 
     public FilterRepresentation getRepresentation(FilterRepresentation filterRepresentation) {

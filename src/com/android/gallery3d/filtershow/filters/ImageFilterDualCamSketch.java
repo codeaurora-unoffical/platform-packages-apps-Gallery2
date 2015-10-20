@@ -29,9 +29,7 @@
 
 package com.android.gallery3d.filtershow.filters;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -42,8 +40,11 @@ import android.widget.Toast;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.cache.BitmapCache;
+import com.android.gallery3d.filtershow.imageshow.GeometryMathUtils;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
+import com.android.gallery3d.filtershow.imageshow.GeometryMathUtils.GeometryHolder;
 import com.android.gallery3d.filtershow.pipeline.FilterEnvironment;
+import com.android.gallery3d.filtershow.pipeline.ImagePreset;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
 
 public class ImageFilterDualCamSketch extends ImageFilter {
@@ -52,9 +53,6 @@ public class ImageFilterDualCamSketch extends ImageFilter {
 
     private FilterDualCamSketchRepresentation mParameters;
     private Paint mPaint = new Paint();
-    private Bitmap mSketchBm = null;
-    private int mSketchResId = 0;
-    private Resources mResources = null;
 
     public FilterRepresentation getDefaultRepresentation() {
         return null;
@@ -69,19 +67,6 @@ public class ImageFilterDualCamSketch extends ImageFilter {
         return mParameters;
     }
 
-    public void setResources(Resources resources) {
-        mResources = resources;
-    }
-
-    @Override
-    public void freeResources() {
-        if (mSketchBm != null)
-            mSketchBm.recycle();
-
-        mSketchBm = null;
-        mSketchResId = 0;
-    }
-
     @Override
     public Bitmap apply(Bitmap bitmap, float scaleFactor, int quality) {
         if (getParameters() == null) {
@@ -90,32 +75,24 @@ public class ImageFilterDualCamSketch extends ImageFilter {
 
         Point point = getParameters().getPoint();
         if(!point.equals(-1,-1)) {
-
-            int sketchResId = getParameters().getSketchResId();
-            if (sketchResId == 0) {
-                return bitmap;
-            }
-
-            if (mSketchBm == null || mSketchResId != sketchResId) {
-                loadSketchImage(sketchResId);
-            }
-
-            if (mSketchBm == null) {
-                return bitmap;
-            }
-
-            boolean result = false;
             Bitmap filteredBitmap = null;
+            boolean result = false;
+            int filteredW;
+            int filteredH;
 
-            Rect originalBounds = MasterImage.getImage().getOriginalBounds();
-            int origW = originalBounds.width();
-            int origH = originalBounds.height();
-            int w = bitmap.getWidth();
-            int h = bitmap.getHeight();
+            if(quality == FilterEnvironment.QUALITY_FINAL) {
+                Rect originalBounds = MasterImage.getImage().getOriginalBounds();
+                filteredW = originalBounds.width();
+                filteredH = originalBounds.height();
+            } else {
+                Bitmap originalBmp = MasterImage.getImage().getOriginalBitmapHighres();
+                filteredW = originalBmp.getWidth();
+                filteredH = originalBmp.getHeight();
+            }
 
-            filteredBitmap = MasterImage.getImage().getBitmapCache().getBitmap(w, h, BitmapCache.FILTERS);
+            filteredBitmap = MasterImage.getImage().getBitmapCache().getBitmap(filteredW, filteredH, BitmapCache.FILTERS);
 
-            result = DualCameraNativeEngine.getInstance().applySketch(mSketchBm, point.x, point.y, filteredBitmap);
+            result = DualCameraNativeEngine.getInstance().applySketch(point.x, point.y, filteredBitmap);
 
             if(result == false) {
                 Log.e(TAG, "Imagelib API failed");
@@ -139,12 +116,16 @@ public class ImageFilterDualCamSketch extends ImageFilter {
                 }
 
                 Canvas canvas = new Canvas(bitmap);
+                ImagePreset preset = getEnvironment().getImagePreset();
+                int bmWidth = bitmap.getWidth();
+                int bmHeight = bitmap.getHeight();
 
-                if(getEnvironment().getImagePreset().getDoApplyGeometry()) {
-                    Matrix originalToScreen = getImageToScreenMatrix(w, h, w, h);
-                    canvas.drawBitmap(filteredBitmap, originalToScreen, mPaint);
+                if(preset.getDoApplyGeometry()) {
+                    GeometryHolder holder = GeometryMathUtils.unpackGeometry(preset.getGeometryFilters());
+                    GeometryMathUtils.drawTransformedCropped(holder, canvas, filteredBitmap, bmWidth, bmHeight);
                 } else {
-                    canvas.drawBitmap(filteredBitmap, null, new Rect(0,0,w,h), mPaint);
+                    canvas.drawBitmap(filteredBitmap, null,
+                            new Rect(0, 0,bmWidth, bmHeight), mPaint);
                 }
 
                 MasterImage.getImage().getBitmapCache().cache(filteredBitmap);
@@ -152,24 +133,5 @@ public class ImageFilterDualCamSketch extends ImageFilter {
         }
 
         return bitmap;
-    }
-
-    private void loadSketchImage(int sketchResId) {
-        if(mResources == null) {
-            Log.w(TAG, "resources not set");
-            return;
-        }
-
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inScaled = false;
-        mSketchResId = sketchResId;
-        if (mSketchResId != 0) {
-            mSketchBm = BitmapFactory.decodeResource(mResources, mSketchResId, o);
-            if(mSketchBm == null) {
-                Log.w(TAG, "could not decode sketch image");
-            }
-        } else {
-            Log.w(TAG, "bad sketch resource for filter: " + mName);
-        }
     }
 }
