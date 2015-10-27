@@ -81,7 +81,7 @@ public class SelectionManager {
     }
 
     public boolean inSelectAllMode() {
-        return mInverseSelection;
+        return getSelectedCount() == getTotalCount();
     }
 
     public boolean inSelectionMode() {
