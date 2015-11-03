@@ -30,6 +30,7 @@ import com.android.gallery3d.filtershow.FilterShowActivity;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
 import com.android.gallery3d.filtershow.state.StatePanel;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine.DdmStatus;
 
 public class MainPanel extends Fragment {
 
@@ -136,7 +137,8 @@ public class MainPanel extends Fragment {
                 showPanel(DUALCAM);
             }
         });
-        enableDualCameraButton(DualCameraNativeEngine.getInstance().isLibLoaded());
+
+        updateDualCameraButton();
 
         FilterShowActivity activity = (FilterShowActivity) getActivity();
         showImageStatePanel(activity.isShowingImageStatePanel());
@@ -328,9 +330,10 @@ public class MainPanel extends Fragment {
         transaction.commit();
     }
 
-    public void enableDualCameraButton(boolean enable) {
+    public void updateDualCameraButton() {
         if(dualCamButton != null) {
-            dualCamButton.setVisibility(enable?View.VISIBLE:View.GONE);
+            DdmStatus status = MasterImage.getImage().getDepthMapLoadingStatus();
+            dualCamButton.setVisibility(status == DdmStatus.DDM_LOADED?View.VISIBLE:View.GONE);
         }
     }
 }

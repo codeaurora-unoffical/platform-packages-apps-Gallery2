@@ -26,51 +26,34 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-        <FrameLayout
+        <LinearLayout
+                android:layout_weight="1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1">
+                android:orientation="horizontal">
 
-            <ProgressBar
-                    android:id="@+id/loading"
-                    style="@android:style/Widget.Holo.ProgressBar.Large"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+            <FrameLayout
+                    android:id="@+id/central_panel_container"
                     android:layout_gravity="center"
-                    android:indeterminate="true"
-                    android:indeterminateOnly="true"
-                    android:background="@null"/>
-
-            <LinearLayout
-                    android:layout_weight="1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_weight="1"
+                    android:visibility="gone"/>
 
-                <FrameLayout
-                        android:id="@+id/central_panel_container"
-                        android:layout_gravity="center"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:visibility="gone"/>
+            <FrameLayout
+                    android:id="@+id/editorContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
 
-                <FrameLayout
-                        android:id="@+id/editorContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"/>
-
-                <com.android.gallery3d.filtershow.imageshow.ImageShow
-                        android:id="@+id/imageShow"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"/>
+            <com.android.gallery3d.filtershow.imageshow.ImageShow
+                    android:id="@+id/imageShow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
 
 
-            </LinearLayout>
-
-        </FrameLayout>
+        </LinearLayout>
 
         <com.android.gallery3d.filtershow.CenteredLinearLayout
                 xmlns:custom="http://schemas.android.com/apk/res/com.android.gallery3d"

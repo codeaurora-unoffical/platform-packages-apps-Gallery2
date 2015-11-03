@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
@@ -109,6 +110,7 @@ import com.android.gallery3d.filtershow.presets.UserPresetsAdapter;
 import com.android.gallery3d.filtershow.provider.SharedImageProvider;
 import com.android.gallery3d.filtershow.state.StateAdapter;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine.DdmStatus;
 import com.android.gallery3d.filtershow.tools.SaveImage;
 import com.android.gallery3d.filtershow.tools.XmpPresets;
 import com.android.gallery3d.filtershow.tools.XmpPresets.XMresults;
@@ -185,8 +187,9 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
     private Menu mMenu;
     private DialogInterface mCurrentDialog = null;
     private PopupMenu mCurrentMenu = null;
-    private boolean mLoadingVisible = true;
     private boolean mReleaseDualCamOnDestory = true;
+
+    private ProgressDialog mLoadingDialog;
 
     public ProcessingService getProcessingService() {
         return mBoundService;
@@ -545,6 +548,13 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         mShowingTinyPlanet = false;
         mLoadBitmapTask = new LoadBitmapTask();
         mLoadBitmapTask.execute(uri);
+
+        if(DualCameraNativeEngine.getInstance().isLibLoaded()) {
+            LoadMpoDataTask mpoLoad = new LoadMpoDataTask();
+            mpoLoad.execute();
+        } else {
+            MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_FAILED);
+        }
     }
 
     private void fillBorders() {
@@ -766,10 +776,6 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
                 mBoundService.setHighresPreviewScaleFactor(highResPreviewScale);
             }
 
-            if(DualCameraNativeEngine.getInstance().isLibLoaded()) {
-                LoadMpoDataTask mpoLoad = new LoadMpoDataTask();
-                mpoLoad.execute();
-            }
             MasterImage.getImage().warnListeners();
         }
     }
@@ -782,31 +788,47 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
 
         @Override
         protected void onPostExecute(Boolean result) {
-            MasterImage.getImage().warnListeners();
-
+            MasterImage.getImage().setDepthMapLoadingStatus(result?DdmStatus.DDM_LOADED:DdmStatus.DDM_FAILED);
             Fragment currentPanel = getSupportFragmentManager().findFragmentByTag(MainPanel.FRAGMENT_TAG);
             if (currentPanel instanceof MainPanel) {
                 MainPanel mainPanel = (MainPanel) currentPanel;
-                mainPanel.enableDualCameraButton(result);
+                mainPanel.updateDualCameraButton();
             }
         }
     }
 
     public boolean isLoadingVisible() {
-        return mLoadingVisible;
+        if(mLoadingDialog != null) {
+            return mLoadingDialog.isShowing();
+        }
+
+        return false;
     }
 
     public void startLoadingIndicator() {
-        final View loading = findViewById(R.id.loading);
-        mLoadingVisible = true;
-        loading.setVisibility(View.VISIBLE);
+        if(mLoadingDialog == null) {
+            mLoadingDialog = new ProgressDialog(this);
+            mLoadingDialog.setMessage(getString(R.string.loading_image));
+            mLoadingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mLoadingDialog.setIndeterminate(true);
+            mLoadingDialog.setCancelable(true);
+            mLoadingDialog.setCanceledOnTouchOutside(false);
+            mLoadingDialog.setOnCancelListener(new OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    finish();
+                }
+            });
+        }
+
+        mLoadingDialog.show();
     }
 
     public void stopLoadingIndicator() {
-        final View loading = findViewById(R.id.loading);
-        loading.setVisibility(View.GONE);
-        mLoadingVisible = false;
-    }
+        if(mLoadingDialog != null && mLoadingDialog.isShowing()) {
+            mLoadingDialog.dismiss();
+        }
+     }
 
     private class LoadBitmapTask extends AsyncTask<Uri, Boolean, Boolean> {
         int mBitmapSize;

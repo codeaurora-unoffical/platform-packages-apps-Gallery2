@@ -103,6 +103,7 @@
                     android:background="@drawable/filtershow_button_background"
                     android:padding="2dip"
                     android:scaleType="centerInside"
+                    android:visibility="gone"
                     android:src="@drawable/ic_photoeditor_dualcam"/>
         </LinearLayout>
 
