@@ -153,6 +153,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
     private WeakReference<ProgressDialog> mSavingProgressDialog;
 
     private LoadBitmapTask mLoadBitmapTask;
+    private LoadHighresBitmapTask mHiResBitmapTask;
+    private LoadMpoDataTask mLoadMpoTask;
 
     private Uri mOriginalImageUri = null;
     private ImagePreset mOriginalPreset = null;
@@ -221,6 +223,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
              * see this happen.
              */
             mBoundService = null;
+            MasterImage.setMaster(null);
         }
     };
 
@@ -569,8 +572,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         mLoadBitmapTask.execute(uri);
 
         if(DualCameraNativeEngine.getInstance().isLibLoaded()) {
-            LoadMpoDataTask mpoLoad = new LoadMpoDataTask();
-            mpoLoad.execute();
+            mLoadMpoTask = new LoadMpoDataTask();
+            mLoadMpoTask.execute();
         } else {
             MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_FAILED);
         }
@@ -831,7 +834,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             mLoadingDialog.setOnCancelListener(new OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    finish();
+                    done();
                 }
             });
         }
@@ -939,8 +942,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             if (mAction == TINY_PLANET_ACTION) {
                 showRepresentation(mCategoryFiltersAdapter.getTinyPlanet());
             }
-            LoadHighresBitmapTask highresLoad = new LoadHighresBitmapTask();
-            highresLoad.execute();
+            mHiResBitmapTask = new LoadHighresBitmapTask();
+            mHiResBitmapTask.execute();
             MasterImage.getImage().warnListeners();
             super.onPostExecute(result);
         }
@@ -963,6 +966,15 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         if (mLoadBitmapTask != null) {
             mLoadBitmapTask.cancel(false);
         }
+
+        if(mHiResBitmapTask != null) {
+            mHiResBitmapTask.cancel(false);
+        }
+
+        if(mLoadMpoTask != null) {
+            mLoadMpoTask.cancel(false);
+        }
+
         mUserPresetsManager.close();
         doUnbindService();
         if (mReleaseDualCamOnDestory && DualCameraNativeEngine.getInstance().isLibLoaded())
@@ -1098,7 +1110,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             mShareActionProvider.setOnShareTargetSelectedListener(this);
         }
         if(SimpleMakeupImageFilter.HAS_TS_MAKEUP) {
-            MakeupEngine.getMakeupObj().setContext(getBaseContext());
+            MakeupEngine.getMakeupObj();
         }
 
         DualCameraNativeEngine.createInstance();
@@ -1348,7 +1360,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
 
         HistoryManager historyManager = new HistoryManager();
         StateAdapter imageStateAdapter = new StateAdapter(this, 0);
-        MasterImage.reset();
+        MasterImage.setMaster(null);
         mMasterImage = MasterImage.getImage();
         mMasterImage.setHistoryManager(historyManager);
         mMasterImage.setStateAdapter(imageStateAdapter);
