@@ -79,6 +79,7 @@ public class ImageFilterDualCamSketch extends ImageFilter {
             boolean result = false;
             int filteredW;
             int filteredH;
+            int[] roiRect = new int[4];
 
             if(quality == FilterEnvironment.QUALITY_FINAL) {
                 Rect originalBounds = MasterImage.getImage().getOriginalBounds();
@@ -93,7 +94,7 @@ public class ImageFilterDualCamSketch extends ImageFilter {
             filteredBitmap = MasterImage.getImage().getBitmapCache().getBitmap(filteredW, filteredH, BitmapCache.FILTERS);
 
             result = DualCameraNativeEngine.getInstance().applySketch(point.x, point.y,
-                    quality != FilterEnvironment.QUALITY_FINAL, filteredBitmap);
+                    roiRect, quality != FilterEnvironment.QUALITY_FINAL, filteredBitmap);
 
             if(result == false) {
                 Log.e(TAG, "Imagelib API failed");
