@@ -16,8 +16,6 @@
 
 package com.android.gallery3d.filtershow.imageshow;
 
-import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Vector;
 
@@ -54,6 +52,7 @@ import com.android.gallery3d.filtershow.pipeline.SharedBuffer;
 import com.android.gallery3d.filtershow.pipeline.SharedPreset;
 import com.android.gallery3d.filtershow.state.StateAdapter;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine.DdmStatus;
 import com.android.gallery3d.mpo.MpoParser;
 
 public class MasterImage implements RenderingRequestCaller {
@@ -98,6 +97,7 @@ public class MasterImage implements RenderingRequestCaller {
     private Bitmap mFusionUnderlay = null;
     private Rect mImageBounds = null;
     private Rect mFusionBounds = null;
+    private DualCameraNativeEngine.DdmStatus mDepthMapLoadingStatus = DdmStatus.DDM_IDLE;
 
     private ValueAnimator mAnimator = null;
     private float mMaskScale = 1;
@@ -134,6 +134,12 @@ public class MasterImage implements RenderingRequestCaller {
 
     // TODO: remove singleton
     public static void setMaster(MasterImage master) {
+        if((master == null || master != sMasterImage)
+                && sMasterImage != null) {
+            // clearing singleton, clean up resources
+            // in old instance
+            sMasterImage.freeResources();
+        }
         sMasterImage = master;
     }
 
@@ -142,6 +148,64 @@ public class MasterImage implements RenderingRequestCaller {
             sMasterImage = new MasterImage();
         }
         return sMasterImage;
+    }
+
+    private void freeResources() {
+        if(mOriginalBitmapSmall != null) {
+            mOriginalBitmapSmall.recycle();
+        }
+        mOriginalBitmapSmall = null;
+
+        if(mOriginalBitmapLarge != null) {
+            mOriginalBitmapLarge.recycle();
+        }
+        mOriginalBitmapLarge = null;
+
+        if(mOriginalBitmapHighres != null) {
+            mOriginalBitmapHighres.recycle();
+        }
+        mOriginalBitmapHighres = null;
+
+        if(mTemporaryThumbnail != null) {
+            mTemporaryThumbnail.recycle();
+        }
+        mTemporaryThumbnail = null;
+
+        if(mGeometryOnlyBitmap != null) {
+            mGeometryOnlyBitmap.recycle();
+        }
+        mGeometryOnlyBitmap = null;
+
+        if(mFiltersOnlyBitmap != null) {
+            mFiltersOnlyBitmap.recycle();
+        }
+        mFiltersOnlyBitmap = null;
+
+        if(mPartialBitmap != null) {
+            mPartialBitmap.recycle();
+        }
+        mPartialBitmap = null;
+
+        if(mHighresBitmap != null) {
+            mHighresBitmap.recycle();
+        }
+        mHighresBitmap = null;
+
+        if(mPreviousImage != null) {
+            mPreviousImage.recycle();
+        }
+        mPreviousImage = null;
+
+        if(mFusionUnderlay != null) {
+            mFusionUnderlay.recycle();
+        }
+        mFusionUnderlay = null;
+
+        if(mBitmapCache != null) {
+            mBitmapCache.clear();
+        }
+
+        mPreviewBuffer.reset();
     }
 
     public Bitmap getOriginalBitmapSmall() {
@@ -748,10 +812,6 @@ public class MasterImage implements RenderingRequestCaller {
         }
     }
 
-    public static void reset() {
-        sMasterImage = null;
-    }
-
     public float getScaleFactor() {
         return mScaleFactor;
     }
@@ -865,12 +925,10 @@ public class MasterImage implements RenderingRequestCaller {
     public boolean loadMpo() {
         boolean loaded = false;
         MpoParser parser = MpoParser.parse(getActivity(), getUri());
-        byte[] primaryMpoData = parser.readImgData(true);
         byte[] auxiliaryMpoData = parser.readImgData(false);
 
-        if(primaryMpoData != null && auxiliaryMpoData != null) {
-            Bitmap primaryBm = BitmapFactory.decodeByteArray(primaryMpoData, 0, primaryMpoData.length);
-            primaryMpoData = null;
+        if(auxiliaryMpoData != null) {
+            Bitmap primaryBm = ImageLoader.loadBitmap(getActivity(), getUri(), null);
 
             if(primaryBm == null) {
                 return false;
@@ -878,58 +936,49 @@ public class MasterImage implements RenderingRequestCaller {
 
             // check for pre-generated dm file
             String mpoFilepath = ImageLoader.getLocalPathFromUri(getActivity(), getUri());
-            String depthFilepath = MpoParser.getDepthmapFilepath(mpoFilepath);
-            File depthFile = new File(depthFilepath);
-            if(depthFile.exists()) {
-                // TODO: read from depth map file and init DDM
-                //                ByteBuffer depthMap = MpoParser.readDepthMapFile(depthFilepath);
-                //
-                //                DualCameraNativeEngine.getInstance().loadDepthMap(
-                //                        mPrimaryMpoImg, primaryWidth, primaryHeight, primaryStride,
-                //                        depthMap, depthMapWidth, depthMapHeight, depthMapStride);
+            // read auxiliary image and generate depth map.
+            Bitmap auxiliaryBm = BitmapFactory.decodeByteArray(auxiliaryMpoData, 0, auxiliaryMpoData.length);
+            auxiliaryMpoData = null;
 
-            } else {
-                // read auxiliary image and generate depth map.
-                Bitmap auxiliaryBm = BitmapFactory.decodeByteArray(auxiliaryMpoData, 0, auxiliaryMpoData.length);
-                auxiliaryMpoData = null;
-
-                if(auxiliaryBm == null) {
-                    primaryBm.recycle();
-                    primaryBm = null;
-                    return false;
-                }
-
-                DualCameraNativeEngine.getInstance().initDepthMap(
-                        primaryBm, auxiliaryBm, mpoFilepath,
-                        DualCameraNativeEngine.getInstance().getCalibFilepath(mActivity));
-
+            if(auxiliaryBm == null) {
                 primaryBm.recycle();
                 primaryBm = null;
-                auxiliaryBm.recycle();
-                auxiliaryBm = null;
+                return false;
+            }
 
-                Point size = new Point();
-                boolean result = DualCameraNativeEngine.getInstance().getDepthMapSize(size);
-                if(result) {
-                    Log.v(LOGTAG, "get depthmapsize returned true. size: " + size.x + "x" + size.y);
+            DualCameraNativeEngine.getInstance().initDepthMap(
+                    primaryBm, auxiliaryBm, mpoFilepath,
+                    DualCameraNativeEngine.getInstance().getCalibFilepath(mActivity));
 
+            primaryBm.recycle();
+            primaryBm = null;
+            auxiliaryBm.recycle();
+            auxiliaryBm = null;
+
+            Point size = new Point();
+            boolean result = DualCameraNativeEngine.getInstance().getDepthMapSize(size);
+            if(result) {
+                Log.v(LOGTAG, "get depthmapsize returned true. size: " + size.x + "x" + size.y);
+
+                if(size.x == 0 || size.y == 0) {
+                    Log.v(LOGTAG, "invalid ddm size: " + size.x + "x" + size.y);
+                    loaded = false;
+                } else {
                     Bitmap depthMap = Bitmap.createBitmap(size.x, size.y, Config.ALPHA_8);
                     if(DualCameraNativeEngine.getInstance().getDepthMap(depthMap)) {
                         loaded = true;
-
-                        // TODO: write and read depth map.
-                        // MpoParser.writeDepthMapFile(depthFilepath, depthMap);
                     } else {
                         Log.w(LOGTAG, "get depthmap returned false");
                     }
 
                     depthMap.recycle();
                     depthMap = null;
-                } else {
-                    Log.w(LOGTAG, "get depthmapsize returned false");
                 }
+            } else {
+                Log.w(LOGTAG, "get depthmapsize returned false");
             }
         }
+
         return loaded;
     }
 
@@ -956,5 +1005,18 @@ public class MasterImage implements RenderingRequestCaller {
 
     public Rect getImageBounds() {
         return mImageBounds;
+    }
+
+    public boolean isDepthMapLoadingDone() {
+        return (mDepthMapLoadingStatus == DdmStatus.DDM_LOADED ||
+                mDepthMapLoadingStatus == DdmStatus.DDM_FAILED);
+    }
+
+    public DdmStatus getDepthMapLoadingStatus() {
+        return mDepthMapLoadingStatus;
+    }
+
+    public void setDepthMapLoadingStatus(DdmStatus status) {
+        mDepthMapLoadingStatus = status;
     }
 }
