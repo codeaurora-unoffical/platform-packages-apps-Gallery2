@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
@@ -105,11 +106,13 @@ import com.android.gallery3d.filtershow.presets.UserPresetsAdapter;
 import com.android.gallery3d.filtershow.provider.SharedImageProvider;
 import com.android.gallery3d.filtershow.state.StateAdapter;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine.DdmStatus;
 import com.android.gallery3d.filtershow.tools.SaveImage;
 import com.android.gallery3d.filtershow.tools.XmpPresets;
 import com.android.gallery3d.filtershow.tools.XmpPresets.XMresults;
 import com.android.gallery3d.filtershow.ui.ExportDialog;
 import com.android.gallery3d.filtershow.ui.FramedTextButton;
+import com.android.gallery3d.mpo.MpoParser;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.photos.data.GalleryBitmapPool;
 import com.thundersoft.hz.selfportrait.makeup.engine.MakeupEngine;
@@ -151,6 +154,9 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
     private WeakReference<ProgressDialog> mSavingProgressDialog;
 
     private LoadBitmapTask mLoadBitmapTask;
+    private LoadHighresBitmapTask mHiResBitmapTask;
+    private ParseMpoDataTask mParseMpoTask;
+    private LoadMpoDataTask mLoadMpoTask;
 
     private Uri mOriginalImageUri = null;
     private ImagePreset mOriginalPreset = null;
@@ -183,8 +189,9 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
     private Menu mMenu;
     private DialogInterface mCurrentDialog = null;
     private PopupMenu mCurrentMenu = null;
-    private boolean mLoadingVisible = true;
     private boolean mReleaseDualCamOnDestory = true;
+
+    private ProgressDialog mLoadingDialog;
 
     public ProcessingService getProcessingService() {
         return mBoundService;
@@ -218,6 +225,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
              * see this happen.
              */
             mBoundService = null;
+            MasterImage.setMaster(null);
         }
     };
 
@@ -564,6 +572,13 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         mShowingTinyPlanet = false;
         mLoadBitmapTask = new LoadBitmapTask();
         mLoadBitmapTask.execute(uri);
+
+        if(DualCameraNativeEngine.getInstance().isLibLoaded()) {
+            mParseMpoTask = new ParseMpoDataTask();
+            mParseMpoTask.execute();
+        } else {
+            MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_FAILED);
+        }
     }
 
     private void fillBorders() {
@@ -669,6 +684,11 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             return;
         }
 
+        if (representation.getFilterType() == FilterRepresentation.TYPE_DUALCAM &&
+                MasterImage.getImage().getDepthMapLoadingStatus() == DdmStatus.DDM_FAILED) {
+            Toast.makeText(this, getString(R.string.dualcam_filter_not_supported), Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (representation instanceof FilterRotateRepresentation) {
             FilterRotateRepresentation r = (FilterRotateRepresentation) representation;
             r.rotateCW();
@@ -781,47 +801,90 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
                 mBoundService.setHighresPreviewScaleFactor(highResPreviewScale);
             }
 
-            if(DualCameraNativeEngine.getInstance().isLibLoaded()) {
-                LoadMpoDataTask mpoLoad = new LoadMpoDataTask();
-                mpoLoad.execute();
-            }
             MasterImage.getImage().warnListeners();
         }
     }
 
-    private class LoadMpoDataTask extends AsyncTask<Void, Void, Boolean> {
+    private class ParseMpoDataTask extends AsyncTask<Void, Void, byte[]> {
         @Override
-        protected Boolean doInBackground(Void... params) {
-            return MasterImage.getImage().loadMpo();
+        protected void onPreExecute() {
+            MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_PARSING);
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
-            MasterImage.getImage().warnListeners();
+        protected byte[] doInBackground(Void... params) {
+            MpoParser parser = MpoParser.parse(FilterShowActivity.this, MasterImage.getImage().getUri());
+            return parser.readImgData(false);
+        }
+
+        @Override
+        protected void onPostExecute(byte[] result) {
+            if(result == null) {
+                // parse failed
+                MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_FAILED);
+            } else {
+                mLoadMpoTask = new LoadMpoDataTask();
+                mLoadMpoTask.execute(result);
+            }
 
             Fragment currentPanel = getSupportFragmentManager().findFragmentByTag(MainPanel.FRAGMENT_TAG);
             if (currentPanel instanceof MainPanel) {
                 MainPanel mainPanel = (MainPanel) currentPanel;
-                mainPanel.enableDualCameraButton(result);
+                mainPanel.updateDualCameraButton();
             }
         }
     }
 
+    private class LoadMpoDataTask extends AsyncTask<byte[], Void, Boolean> {
+        @Override
+        protected void onPreExecute() {
+            MasterImage.getImage().setDepthMapLoadingStatus(DdmStatus.DDM_LOADING);
+        }
+
+        @Override
+        protected Boolean doInBackground(byte[]... params) {
+            return MasterImage.getImage().loadMpo(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            MasterImage.getImage().setDepthMapLoadingStatus(result?DdmStatus.DDM_LOADED:DdmStatus.DDM_FAILED);
+            stopLoadingIndicator();
+        }
+    }
+
     public boolean isLoadingVisible() {
-        return mLoadingVisible;
+        if(mLoadingDialog != null) {
+            return mLoadingDialog.isShowing();
+        }
+
+        return false;
     }
 
     public void startLoadingIndicator() {
-        final View loading = findViewById(R.id.loading);
-        mLoadingVisible = true;
-        loading.setVisibility(View.VISIBLE);
+        if(mLoadingDialog == null) {
+            mLoadingDialog = new ProgressDialog(this);
+            mLoadingDialog.setMessage(getString(R.string.loading_image));
+            mLoadingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mLoadingDialog.setIndeterminate(true);
+            mLoadingDialog.setCancelable(true);
+            mLoadingDialog.setCanceledOnTouchOutside(false);
+            mLoadingDialog.setOnCancelListener(new OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    done();
+                }
+            });
+        }
+
+        mLoadingDialog.show();
     }
 
     public void stopLoadingIndicator() {
-        final View loading = findViewById(R.id.loading);
-        loading.setVisibility(View.GONE);
-        mLoadingVisible = false;
-    }
+        if(mLoadingDialog != null && mLoadingDialog.isShowing()) {
+            mLoadingDialog.dismiss();
+        }
+     }
 
     private class LoadBitmapTask extends AsyncTask<Uri, Boolean, Boolean> {
         int mBitmapSize;
@@ -917,8 +980,8 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             if (mAction == TINY_PLANET_ACTION) {
                 showRepresentation(mCategoryFiltersAdapter.getTinyPlanet());
             }
-            LoadHighresBitmapTask highresLoad = new LoadHighresBitmapTask();
-            highresLoad.execute();
+            mHiResBitmapTask = new LoadHighresBitmapTask();
+            mHiResBitmapTask.execute();
             MasterImage.getImage().warnListeners();
             super.onPostExecute(result);
         }
@@ -941,6 +1004,19 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
         if (mLoadBitmapTask != null) {
             mLoadBitmapTask.cancel(false);
         }
+
+        if(mHiResBitmapTask != null) {
+            mHiResBitmapTask.cancel(false);
+        }
+
+        if(mParseMpoTask != null) {
+            mParseMpoTask.cancel(false);
+        }
+
+        if(mLoadMpoTask != null) {
+            mLoadMpoTask.cancel(false);
+        }
+
         mUserPresetsManager.close();
         doUnbindService();
         if (mReleaseDualCamOnDestory && DualCameraNativeEngine.getInstance().isLibLoaded())
@@ -1076,7 +1152,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
             mShareActionProvider.setOnShareTargetSelectedListener(this);
         }
         if(SimpleMakeupImageFilter.HAS_TS_MAKEUP) {
-            MakeupEngine.getMakeupObj().setContext(getBaseContext());
+            MakeupEngine.getMakeupObj();
         }
 
         DualCameraNativeEngine.createInstance();
@@ -1326,7 +1402,7 @@ public class FilterShowActivity extends FragmentActivity implements OnItemClickL
 
         HistoryManager historyManager = new HistoryManager();
         StateAdapter imageStateAdapter = new StateAdapter(this, 0);
-        MasterImage.reset();
+        MasterImage.setMaster(null);
         mMasterImage = MasterImage.getImage();
         mMasterImage.setHistoryManager(historyManager);
         mMasterImage.setStateAdapter(imageStateAdapter);
