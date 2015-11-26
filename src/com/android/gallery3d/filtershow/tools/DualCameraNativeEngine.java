@@ -30,7 +30,6 @@
 package com.android.gallery3d.filtershow.tools;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -49,6 +48,15 @@ public class DualCameraNativeEngine {
             mLibLoaded = false;
         }
     }
+
+    // Status of Depth Map loading for current image
+    public static enum DdmStatus {
+        DDM_IDLE,
+        DDM_PARSING,
+        DDM_LOADING,
+        DDM_LOADED,
+        DDM_FAILED
+    };
 
     public static final String DEPTH_MAP_EXT = "dm";
     private static final String CALIBRATION_FILENAME = "ddm_calib_file.dat";
@@ -86,11 +94,11 @@ public class DualCameraNativeEngine {
 
     native public boolean getDepthMap(Bitmap dataBuffer);
 
-    native public boolean applyFocus(int focusPointX, int focusPointY, float intensity, boolean isPreview, Bitmap outBm);
+    native public boolean applyFocus(int focusPointX, int focusPointY, float intensity, int[] roiRect, boolean isPreview, Bitmap outBm);
 
-    native public boolean applyHalo(int focusPointX, int focusPointY, float intensity, boolean isPreview, Bitmap outBm);
+    native public boolean applyHalo(int focusPointX, int focusPointY, float intensity, int[] roiRect, boolean isPreview, Bitmap outBm);
 
-    native public boolean applySketch(int focusPointX, int focusPointY, boolean isPreview, Bitmap outBm);
+    native public boolean applySketch(int focusPointX, int focusPointY, int[] roiRect, boolean isPreview, Bitmap outBm);
 
-    native public boolean getForegroundImg(int focusPointX, int focusPointY, boolean isPreview, Bitmap outBm);
+    native public boolean getForegroundImg(int focusPointX, int focusPointY, int[] roiRect, boolean isPreview, Bitmap outBm);
 }
