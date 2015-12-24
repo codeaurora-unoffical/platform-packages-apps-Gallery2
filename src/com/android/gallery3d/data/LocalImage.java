@@ -203,6 +203,7 @@ public class LocalImage extends LocalMediaItem {
                     Log.w(TAG, "failed to find file to read thumbnail: " + mLocalFilePath);
                 } catch (IOException e) {
                     Log.w(TAG, "failed to get thumbnail from: " + mLocalFilePath);
+                } catch (NullPointerException e) {
                 }
                 if (thumbData != null) {
                     Bitmap bitmap = DecodeUtils.decodeIfBigEnough(
