@@ -625,6 +625,10 @@ public class TimeLineSlotView extends GLView {
                 } if (indexEnd<0) {
                     indexEnd = (indexEnd * (- 1)) - 1;
                 }
+
+                if (indexStart > mHeightList.size() - 1) {
+                    indexStart = mHeightList.size() - 1;
+                }
                 int startSlotIndex = mHeightList.indexOf(mHeightList.get(indexStart));
                 if(indexEnd> mHeightList.size()-1) {
                     indexEnd = mHeightList.size()-1;
@@ -755,6 +759,10 @@ public class TimeLineSlotView extends GLView {
 
                     }
                     mHeightList.add(totalHieght);
+                    if (View.LAYOUT_DIRECTION_RTL == TextUtils
+                            .getLayoutDirectionFromLocale(Locale.getDefault())) {
+                        col = mUnitCount - col -1;
+                    }
                     RectSlot rectslot = new RectSlot(info.getMediaType(), i, col, totalHieght);
                     mMediaSlotMap.put(rectslot.slotIndex, rectslot);
                 }
