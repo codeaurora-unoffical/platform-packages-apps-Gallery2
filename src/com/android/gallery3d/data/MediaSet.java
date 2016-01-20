@@ -16,6 +16,7 @@
 
 package com.android.gallery3d.data;
 
+import android.net.Uri;
 import com.android.gallery3d.common.Utils;
 import com.android.gallery3d.util.Future;
 
@@ -68,6 +69,16 @@ public abstract class MediaSet extends MediaObject {
 
     public int getVideoItemCount(){
       return 0;
+    }
+
+    /**
+     * Some items is not selectable. such as Title item in TimeLine.
+     * default return {@link #getMediaItemCount()}, override by subclass if need.
+     *
+     * @return total selectable count.
+     */
+    public int getSelectableItemCount() {
+        return getMediaItemCount();
     }
 
     // Returns the media items in the range [start, start + count).
@@ -194,6 +205,11 @@ public abstract class MediaSet extends MediaObject {
         return details;
     }
 
+    @Override
+    public Uri getContentUri() {
+        return null;
+    }
+
     // Enumerate all media items in this media set (including the ones in sub
     // media sets), in an efficient order. ItemConsumer.consumer() will be
     // called for each media item with its index.
@@ -235,8 +251,10 @@ public abstract class MediaSet extends MediaObject {
         start += enumerateMediaItems(consumer, startIndex);
         int m = getSubMediaSetCount();
         for (int i = 0; i < m; i++) {
-            start += getSubMediaSet(i).enumerateTotalMediaItems(
-                    consumer, startIndex + start);
+            MediaSet set = getSubMediaSet(i);
+            if (set != null) {
+                start += set.enumerateTotalMediaItems(consumer, startIndex + start);
+            }
         }
         return start;
     }

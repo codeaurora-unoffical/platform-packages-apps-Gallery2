@@ -284,10 +284,22 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
             if (jc.isCancelled() || !mSelectionManager.inSelectionMode()) {
                 return null;
             }
-            selected.add(manager.getMediaObject(path));
+            MediaObject mediaObject = manager.getMediaObject(path);
+            if (checkMediaTypeSelectable(mediaObject.getMediaType())) {
+                selected.add(mediaObject);
+            }
         }
         return selected;
     }
+
+    /** Some Media Item is not selectable such as Title item in TimeLine. */
+    private boolean checkMediaTypeSelectable(int type) {
+        if (type == MediaObject.MEDIA_TYPE_TIMELINE_TITLE) {
+            return false;
+        }
+        return true;
+    }
+
     // Menu options are determined by selection set itself.
     // We cannot expand it because MenuExecuter executes it based on
     // the selection set instead of the expanded result.
@@ -335,7 +347,10 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
         final Intent intent = new Intent();
         for (Path path : expandedPaths) {
             if (jc.isCancelled()) return null;
-            uris.add(manager.getContentUri(path));
+            Uri uri = manager.getContentUri(path);
+            if (uri != null) {
+                uris.add(uri);
+            }
         }
 
         final int size = uris.size();
@@ -371,7 +386,10 @@ public class ActionModeHandler implements Callback, PopupList.OnPopupItemClickLi
             type |= manager.getMediaType(path);
 
             if ((support & MediaObject.SUPPORT_SHARE) != 0) {
-                uris.add(manager.getContentUri(path));
+                Uri uri = manager.getContentUri(path);
+                if (uri != null) {
+                    uris.add(uri);
+                }
             }
         }
 

@@ -83,6 +83,11 @@ public class ClusterAlbum extends MediaSet implements ContentListener {
         return mPaths.size();
     }
 
+    @Override
+    public int getSelectableItemCount() {
+        return mPaths.size();
+    }
+
     public void setImageItemCount(int count) {
         mImageCount = count;
         if (mTimelineTitleMediaItem != null && mKind == ClusterSource.CLUSTER_ALBUMSET_TIME) {
@@ -162,6 +167,15 @@ public class ClusterAlbum extends MediaSet implements ContentListener {
             return mPaths.size()+1;
         }
         return mPaths.size();
+    }
+
+    @Override
+    public int getMediaType() {
+        // return correct type of Timeline Title.
+        if (mKind == ClusterSource.CLUSTER_ALBUMSET_TIME) {
+            return MEDIA_TYPE_TIMELINE_TITLE;
+        }
+        return super.getMediaType();
     }
 
     @Override
