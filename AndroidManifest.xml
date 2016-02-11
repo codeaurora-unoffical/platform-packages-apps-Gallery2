@@ -95,6 +95,7 @@
                 <data android:mimeType="video/webm" />
                 <data android:mimeType="video/avi" />
                 <data android:mimeType="application/sdp" />
+                <data android:mimeType="video/mp2t" />
                 <data android:mimeType="video/mp2ts" />
                 <data android:mimeType="video/x-ms-asf" />
                 <data android:mimeType="video/x-ms-wmv" />
@@ -411,7 +412,6 @@
         </activity>
         <receiver android:name="org.codeaurora.gallery3d.video.DmReceiver" >
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="streaming.action.WRITE_SETTINGS" />
             </intent-filter>
         </receiver>

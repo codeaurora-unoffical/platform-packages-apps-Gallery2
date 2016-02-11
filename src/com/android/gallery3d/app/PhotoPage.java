@@ -673,8 +673,10 @@ public abstract class PhotoPage extends ActivityState implements
                  mShareIntent.setType(MenuExecutor.getMimeType(mModel
                     .getMediaItem(0).getMediaType()));
                  mShareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                 String shareTitle = mActivity.getResources().
+                         getString(R.string.share_dialogue_title);
                  mActivity.startActivity(Intent.createChooser(mShareIntent,
-                    "Share via"));
+                    shareTitle));
                  }
                  return;
 
@@ -1372,6 +1374,10 @@ public abstract class PhotoPage extends ActivityState implements
     }
 
     public void playVideo(Activity activity, Uri uri, String title) {
+        if (GalleryUtils.isTelephonyCallInProgress()) {
+            Log.w(TAG, "CS/CSVT Call is in progress, can't play video");
+            return;
+        }
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW)
                     .setDataAndType(uri, "video/*")

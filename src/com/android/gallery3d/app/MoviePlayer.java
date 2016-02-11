@@ -139,6 +139,9 @@ public class MoviePlayer implements
     // If the time bar is visible.
     private boolean mShowing;
 
+    // used to track what type of audio focus loss caused the video to pause
+    private boolean mPausedByTransientLossOfFocus = false;
+
     private Virtualizer mVirtualizer;
 
     private MovieActivity mActivityContext;//for dialog and toast context
@@ -218,6 +221,40 @@ public class MoviePlayer implements
         }
     };
 
+    private CodeauroraVideoView.AudioFocusChangeListener mAudioFocusListener =
+            new CodeauroraVideoView.AudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusRequestFailed() {
+                    Log.d(TAG, "pause video because onAudioFocusRequestFailed.");
+                    onPauseVideo();
+                }
+
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    switch (focusChange) {
+                        case AudioManager.AUDIOFOCUS_GAIN:
+                            boolean isTargetPlaying = (mVideoView != null &&
+                                    mVideoView.isTargetPlaying());
+                            Log.d(TAG, "AUDIOFOCUS_GAIN isTargetPlaying : " + isTargetPlaying);
+                            if (mPausedByTransientLossOfFocus || isTargetPlaying) {
+                                onPlayVideo();
+                                mPausedByTransientLossOfFocus = false;
+                            }
+                            break;
+                        case AudioManager.AUDIOFOCUS_LOSS:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                            boolean isPlaying = (mVideoView != null && mVideoView.isPlaying());
+                            Log.d(TAG, "AUDIOFOCUS_LOSS isPlaying : " + isPlaying);
+                            if (isPlaying) {
+                                onPauseVideo();
+                                mPausedByTransientLossOfFocus = true;
+                            }
+                            break;
+                        default:
+                    }
+                }
+            };
+
     public MoviePlayer(View rootView, final MovieActivity movieActivity,
             IMovieItem info, Bundle savedInstance, boolean canReplay) {
         mContext = movieActivity.getApplicationContext();
@@ -234,6 +271,7 @@ public class MoviePlayer implements
 
         mVideoView.setOnErrorListener(this);
         mVideoView.setOnCompletionListener(this);
+        mVideoView.setOnAudioFocusChangeListener(mAudioFocusListener);
 
         if (mVirtualizer != null) {
             mVirtualizer.release();
@@ -617,14 +655,21 @@ public class MoviePlayer implements
         doStartVideo(enableFasten, position, duration, true);
     }
 
-    private void playVideo() {
+    private boolean playVideo() {
         if (LOG) {
             Log.v(TAG, "playVideo()");
         }
+
+        if (GalleryUtils.isTelephonyCallInProgress()) {
+            Log.w(TAG, "CS/CSVT Call is in progress, can't play video");
+            return false;
+        }
+
         mTState = TState.PLAYING;
         mVideoView.start();
         mController.showPlaying();
         setProgress();
+        return true;
     }
 
     private void pauseVideo() {
@@ -684,17 +729,27 @@ public class MoviePlayer implements
     @Override
     public void onPlayPause() {
         if (mVideoView.isPlaying()) {
-            if (mVideoView.canPause()) {
-                pauseVideo();
-                //set view disabled(play/pause asynchronous processing)
-                mController.setViewEnabled(true);
-                if (mControllerRewindAndForwardExt != null) {
-                    mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
-                            .canStop(), false, false);
-                }
-            }
+            onPauseVideo();
         } else {
-            playVideo();
+            onPlayVideo();
+        }
+    }
+
+    private void onPlayVideo() {
+        boolean result = playVideo();
+        if (result) {
+            //set view disabled(play/pause asynchronous processing)
+            mController.setViewEnabled(true);
+            if (mControllerRewindAndForwardExt != null) {
+                mControllerRewindAndForwardExt.showControllerButtonsView(mPlayerExt
+                        .canStop(), false, false);
+            }
+        }
+    }
+
+    private void onPauseVideo() {
+        if (mVideoView != null && mVideoView.canPause()) {
+            pauseVideo();
             //set view disabled(play/pause asynchronous processing)
             mController.setViewEnabled(true);
             if (mControllerRewindAndForwardExt != null) {
