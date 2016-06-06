@@ -28,9 +28,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.Manifest;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -103,6 +105,10 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
      * such as Intent.ACTION_VIEW, Intent.ACTION_GET_CONTENT, Intent.PICK. */
     private boolean mDrawerLayoutSupported = true;
 
+    private static final int PERMISSION_REQUEST_STORAGE = 1;
+    private Bundle mSavedInstanceState;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,8 +122,16 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
         setContentView(R.layout.gallery_main);
         initView();
 
-        if (savedInstanceState != null) {
-            getStateManager().restoreFromState(savedInstanceState);
+        mSavedInstanceState = savedInstanceState;
+
+        if (!needRequestStoragePermission()) {
+            init();
+        }
+    }
+
+    private void init() {
+        if (mSavedInstanceState != null) {
+            getStateManager().restoreFromState(mSavedInstanceState);
         } else {
             initializeByIntent();
         }
@@ -125,6 +139,60 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
         boolean ddmBulk = SystemProperties.getBoolean("persist.gallery.dualcam.ddmbulk", false);
         if(ddmBulk)
             startBulkMpoProcess();
+
+        mSavedInstanceState = null;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[],
+            int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_STORAGE: {
+                if (checkPermissionGrantResults(grantResults)) {
+                    init();
+                } else {
+                    finish();
+                }
+            }
+        }
+    }
+
+    private boolean needRequestStoragePermission() {
+        boolean needRequest = false;
+        String[] permissions = {
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        };
+        ArrayList<String> permissionList = new ArrayList<String>();
+        for (String permission : permissions) {
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionList.add(permission);
+                needRequest = true;
+            }
+        }
+
+        if (needRequest) {
+            int count = permissionList.size();
+            if (count > 0) {
+                String[] permissionArray = new String[count];
+                for (int i = 0; i < count; i++) {
+                    permissionArray[i] = permissionList.get(i);
+                }
+
+                requestPermissions(permissionArray, PERMISSION_REQUEST_STORAGE);
+            }
+        }
+
+        return needRequest;
+    }
+
+    private boolean checkPermissionGrantResults(int[] grantResults) {
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static class ActionItem {
@@ -546,7 +614,6 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
 
     @Override
     protected void onResume() {
-        Utils.assertTrue(getStateManager().getStateCount() > 0);
         super.onResume();
         if (mVersionCheckDialog != null) {
             mVersionCheckDialog.show();
