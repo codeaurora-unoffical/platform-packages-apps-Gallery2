@@ -644,7 +644,8 @@ public class MovieControllerOverlay extends CommonControllerOverlay implements
                         + mEnableScrubbing + ", state=" + mState);
             }
             if (mEnableScrubbing
-                    && (mState == State.PAUSED || mState == State.PLAYING)) {
+                    && (mState == State.PAUSED || mState == State.PLAYING
+                            || mState == State.BUFFERING)) {
                 mTimeBar.setScrubbing(true);
             } else {
                 mTimeBar.setScrubbing(false);
