@@ -33,6 +33,7 @@ import com.android.gallery3d.filtershow.filters.SimpleMakeupImageFilter;
 import com.android.gallery3d.filtershow.filters.TrueScannerActs;
 import com.android.gallery3d.filtershow.imageshow.MasterImage;
 import com.android.gallery3d.filtershow.state.StatePanel;
+import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine;
 import com.android.gallery3d.filtershow.tools.DualCameraNativeEngine.DdmStatus;
 
 public class MainPanel extends Fragment {
@@ -134,6 +135,10 @@ public class MainPanel extends Fragment {
         geometryButton = (ImageButton) mMainView.findViewById(R.id.geometryButton);
         filtersButton = (ImageButton) mMainView.findViewById(R.id.colorsButton);
         dualCamButton = (ImageButton) mMainView.findViewById(R.id.dualCamButton);
+        if(!DualCameraNativeEngine.getInstance().isLibLoaded()) {
+            dualCamButton.setVisibility(View.GONE);
+        }
+
         if (SimpleMakeupImageFilter.HAS_TS_MAKEUP) {
             makeupButton = (ImageButton) mMainView.findViewById(R.id.makeupButton);
             makeupButton.setVisibility(View.VISIBLE);
