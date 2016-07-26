@@ -124,7 +124,11 @@ public class WidgetConfigure extends Activity {
 
     private void setPhotoWidget(Intent data) {
         // Store the cropped photo in our database
-        Bitmap bitmap = (Bitmap) data.getParcelableExtra("data");
+        Bitmap bitmap = data.getParcelableExtra("data");
+        if (bitmap == null) {
+            Log.e(TAG, "bitmap null");
+            return;
+        }
         WidgetDatabaseHelper helper = new WidgetDatabaseHelper(this);
         try {
             helper.setPhoto(mAppWidgetId, mPickedItem, bitmap);
