@@ -20,9 +20,10 @@
 package com.android.gallery3d.app;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -375,9 +376,42 @@ public class TimeLinePage extends ActivityState implements
         } else {
             MediaItem item = mAlbumDataAdapter.get(slotIndex);
             if (item == null) return;
-            mSelectionManager.setAutoLeaveSelectionMode(true);
-            mSelectionManager.toggle(item.getPath());
-            mSlotView.invalidate();
+            String path = item.getPath().toString();
+            if (isFileExist(path.substring(path.lastIndexOf("/") + 1))) {
+                mSelectionManager.setAutoLeaveSelectionMode(true);
+                mSelectionManager.toggle(item.getPath());
+                mSlotView.invalidate();
+            }
+        }
+    }
+
+    private boolean isFileExist(String id) {
+        ContentResolver resolver = mActivity.getContentResolver();
+        Uri iamgeUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        Cursor imageCursor = resolver.query(iamgeUri,
+                new String[]{MediaStore.Images.ImageColumns._ID},
+                "_id=?", new String[]{id}, null);
+        if (imageCursor == null) return false;
+        try {
+            if (imageCursor.getCount() == 0) {
+                Uri videoUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                Cursor videoCursor = resolver.query(videoUri,
+                        new String[]{MediaStore.Video.VideoColumns._ID},
+                        "_id=?", new String[]{id}, null);
+                try {
+                    if (videoCursor == null || videoCursor.getCount() == 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } finally {
+                    videoCursor.close();
+                }
+            } else {
+                return true;
+            }
+        } finally {
+            imageCursor.close();
         }
     }
 
