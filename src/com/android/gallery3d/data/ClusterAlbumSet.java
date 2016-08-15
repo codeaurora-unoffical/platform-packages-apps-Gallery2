@@ -69,13 +69,8 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
     @Override
     public long reload() {
         synchronized(this){
-            if (mBaseSet.reload() > mDataVersion) {
-                if (mFirstReloadDone) {
-                    updateClustersContents();
-                } else {
-                    updateClusters();
-                    mFirstReloadDone = true;
-                }
+            if (mBaseSet.reload() > mDataVersion && !mBaseSet.isLoading()) {
+                updateClusters();
                 mDataVersion = nextVersionNumber();
             }
             if (mKind == ClusterSource.CLUSTER_ALBUMSET_TIME) {
@@ -92,6 +87,12 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
     }
 
     private void updateClusters() {
+        //save last paths to find the empty albums
+        ArrayList<Path> oldPaths = new ArrayList<Path>();
+        for (ClusterAlbum album : mAlbums) {
+            oldPaths.add(album.getPath());
+        }
+
         mAlbums.clear();
         Clustering clustering;
         Context context = mApplication.getAndroidContext();
@@ -112,7 +113,6 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
                 clustering = new SizeClustering(context);
                 break;
         }
-
         clustering.run(mBaseSet);
         int n = clustering.getNumberOfClusters();
         DataManager dataManager = mApplication.getDataManager();
@@ -141,6 +141,21 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
             album.setImageItemCount(clustering.getClusterImageCount(i));
             album.setVideoItemCount(clustering.getClusterVideoCount(i));
             mAlbums.add(album);
+
+            int size = oldPaths.size();
+            for (int j = size - 1; j >= 0; j--) {
+                if (oldPaths.get(j) == childPath) {
+                    oldPaths.remove(j);
+                    break;
+                }
+            }
+        }
+        //set the empty path to the albums which don't exist from dataManger
+        for (Path path : oldPaths) {
+            ClusterAlbum album = (ClusterAlbum) dataManager.peekMediaObject(path);
+            if (album != null) {
+                album.setMediaItems(new ArrayList<Path>());
+            }
         }
     }
 
@@ -232,15 +247,18 @@ public class ClusterAlbumSet extends MediaSet implements ContentListener {
       int endAlbum = findTimelineAlbumIndex(start + count - 1);
       int s;
       int lCount;
-      s =  mAlbums.get(startAlbum).getTotalMediaItemCount() - (mAlbumItemCountList.get(startAlbum) - start);
-      for (int i = startAlbum; i <= endAlbum && i < mAlbums.size(); ++i) {
-          int albumCount = mAlbums.get(i).getTotalMediaItemCount();
-          lCount = Math.min(albumCount - s, count);
-          ArrayList<MediaItem> items = mAlbums.get(i).getMediaItem(s, lCount);
-          if (items != null)
-              mediaItems.addAll(items);
-          count -= lCount;
-          s = 0;
+      if (mAlbums.size() > 0 && mAlbumItemCountList.size() > 0) {
+          s = mAlbums.get(startAlbum).getTotalMediaItemCount() - 
+                  (mAlbumItemCountList.get(startAlbum) - start);
+          for (int i = startAlbum; i <= endAlbum && i < mAlbums.size(); ++i) {
+              int albumCount = mAlbums.get(i).getTotalMediaItemCount();
+              lCount = Math.min(albumCount - s, count);
+              ArrayList<MediaItem> items = mAlbums.get(i).getMediaItem(s, lCount);
+              if (items != null)
+                  mediaItems.addAll(items);
+              count -= lCount;
+              s = 0;
+          }
       }
       return mediaItems;
   }

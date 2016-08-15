@@ -39,9 +39,12 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.RelativeLayout;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.android.gallery3d.R;
 import com.android.gallery3d.common.ApiHelper;
@@ -207,7 +210,10 @@ public abstract class PhotoPage extends ActivityState implements
 
     private ShareActionProvider mShareActionProvider;
     private Intent mShareIntent;
-    private boolean mIsPhotoChanged = true;
+
+    //use for saving the original height and padding of toolbar
+    private int originalHeight = 0;
+    private int originalPadding = 0;
 
     private final PanoramaSupportCallback mUpdatePanoramaMenuItemsCallback = new PanoramaSupportCallback() {
         @Override
@@ -479,8 +485,8 @@ public abstract class PhotoPage extends ActivityState implements
             mSetPathString = "/filter/delete/{" + mSetPathString + "}";
             mMediaSet = (FilterDeleteSet) mActivity.getDataManager()
                     .getMediaSet(mSetPathString);
-            if(mMediaSet != null && mIsFromTimelineScreen) {
-                mMediaSet.setClusterKind(-1);
+            if (mMediaSet != null && mIsFromTimelineScreen) {
+                mMediaSet.setClusterKind(GalleryActivity.CLUSTER_ALBUMSET_NO_TITLE);
             }
             if (mMediaSet == null) {
                 Log.w(TAG, "failed to restore " + mSetPathString);
@@ -516,7 +522,6 @@ public abstract class PhotoPage extends ActivityState implements
                 public void onPhotoChanged(int index, Path item) {
                     int oldIndex = mCurrentIndex;
                     mCurrentIndex = index;
-                    mIsPhotoChanged = true;
 
                     if (mHasCameraScreennailOrPlaceholder) {
                         if (mCurrentIndex > 0) {
@@ -566,8 +571,7 @@ public abstract class PhotoPage extends ActivityState implements
                         // We only want to finish the PhotoPage if there is no
                         // deletion that the user can undo.
                         if (mMediaSet.getNumberOfDeletions() == 0) {
-                            mActivity.getStateManager().finishState(
-                                    PhotoPage.this);
+                            onBackPressed();
                         }
                     }
                 }
@@ -627,14 +631,6 @@ public abstract class PhotoPage extends ActivityState implements
     public boolean canDisplayBottomControl(int control) {
         if (mCurrentPhoto == null) {
             return false;
-        }
-        if (mIsPhotoChanged) {
-            if (mCurrentPhoto.getMediaType() == MediaObject.MEDIA_TYPE_VIDEO) {
-                mBottomControls.setSharePositionForVideo(mActivity);
-            } else {
-                mBottomControls.setSharePositionForImage();
-            }
-            mIsPhotoChanged = false;
         }
         switch (control) {
         case R.id.photopage_bottom_controls:
@@ -709,15 +705,21 @@ public abstract class PhotoPage extends ActivityState implements
     private void setupNfcBeamPush() {
         if (!ApiHelper.HAS_SET_BEAM_PUSH_URIS) return;
 
-        NfcAdapter adapter = NfcAdapter.getDefaultAdapter(mActivity);
-        if (adapter != null) {
-            adapter.setBeamPushUris(null, mActivity);
-            adapter.setBeamPushUrisCallback(new CreateBeamUrisCallback() {
-                @Override
-                public Uri[] createBeamUris(NfcEvent event) {
-                    return mNfcPushUris;
-                }
-            }, mActivity);
+        try {
+            NfcAdapter adapter = NfcAdapter.getDefaultAdapter(mActivity);
+            if (adapter != null) {
+                adapter.setBeamPushUris(null, mActivity);
+                adapter.setBeamPushUrisCallback(new CreateBeamUrisCallback() {
+                    @Override
+                    public Uri[] createBeamUris(NfcEvent event) {
+                        return mNfcPushUris;
+                    }
+                }, mActivity);
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -917,7 +919,7 @@ public abstract class PhotoPage extends ActivityState implements
         mShowBars = true;
         mOrientationManager.unlockOrientation();
         mActionBar.show();
-        mActivity.getGLRoot().setLightsOutMode(false);
+        mActivity.getGLRoot().setLightsOutMode(true);
         refreshHidingMessage();
         refreshBottomControlsWhenReady();
     }
@@ -985,17 +987,21 @@ public abstract class PhotoPage extends ActivityState implements
             } else if (mTreatBackAsUp) {
                 onUpPressed();
             } else {
+                if (mMediaSet != null && mIsFromTimelineScreen) {
+                    //if back to TimeLinePage, need show timeline title
+                    mMediaSet.setClusterKind(GalleryActivity.CLUSTER_ALBUMSET_TIME_TITLE);
+                }
                 super.onBackPressed();
                 mActionBar.setBackGroundDefault();
                 int count = mActivity.getStateManager().getStateCount();
-                if(mIsFromTimelineScreen) {
-                    mMediaSet.setClusterKind(0);
-                }
                 if (mIsFromVideoScreen || count == 1 || mIsFromTimelineScreen) {
                     mActivity.getToolbar().setNavigationContentDescription(
                             "drawer");
                     mActivity.getToolbar().setNavigationIcon(R.drawable.drawer);
                     ((GalleryActivity)mActivity).toggleNavDrawer(true);
+                    if (mModel instanceof PhotoDataAdapter) {
+                        ((PhotoDataAdapter) mModel).setDataListener(null);
+                    }
                 }
             }
         }
@@ -1399,7 +1405,8 @@ public abstract class PhotoPage extends ActivityState implements
             if (albumPath == null) {
                 return;
             }
-            if (!albumPath.equalsIgnoreCase(mOriginalSetPathString)) {
+            boolean isClusterType = FilterUtils.isClusterPath(mOriginalSetPathString);
+            if (!albumPath.equalsIgnoreCase(mOriginalSetPathString) && !isClusterType) {
                 // If the edited image is stored in a different album, we need
                 // to start a new activity state to show the new image
                 Bundle data = new Bundle(getData());
@@ -1458,7 +1465,14 @@ public abstract class PhotoPage extends ActivityState implements
     public void onPause() {
         super.onPause();
         mIsActive = false;
-
+        //restore the orginal heigh and padding of toolbar
+        Toolbar toolbar = mActivity.getToolbar();
+        if (toolbar != null) {
+            ViewGroup.LayoutParams layoutParams = toolbar.getLayoutParams();
+            layoutParams.height = originalHeight;
+            toolbar.setLayoutParams(layoutParams);
+            toolbar.setPadding(0, originalPadding, 0, 0);
+        }
         mActivity.getGLRoot().unfreeze();
         mHandler.removeMessages(MSG_UNFREEZE_GLROOT);
 
@@ -1583,9 +1597,23 @@ public abstract class PhotoPage extends ActivityState implements
         transitionFromAlbumPageIfNeeded();
 
         mActivity.getGLRoot().freeze();
+        Toolbar toolbar = mActivity.getToolbar();
+        //set the new height and padding to toolbar
+        if (toolbar != null) {
+            ViewGroup.LayoutParams layoutParams = toolbar.getLayoutParams();
+            originalHeight = layoutParams.height;
+            originalPadding = toolbar.getPaddingTop();
+            layoutParams.height = originalHeight - originalPadding;
+            toolbar.setPadding(0, 0, 0, 0);
+            toolbar.setLayoutParams(layoutParams);
+        }
         mIsActive = true;
         setContentPane(mRootPane);
 
+        //if from TimeLinePage, don't show the timeline title
+        if (mMediaSet != null && mIsFromTimelineScreen) {
+            mMediaSet.setClusterKind(GalleryActivity.CLUSTER_ALBUMSET_NO_TITLE);
+        }
         mModel.resume();
         mPhotoView.resume();
         mActionBar.setDisplayOptions(
@@ -1602,8 +1630,9 @@ public abstract class PhotoPage extends ActivityState implements
         // }
         if (!mShowBars) {
             mActionBar.hide();
-            mActivity.getGLRoot().setLightsOutMode(true);
         }
+        //hide the status bar
+        mActivity.getGLRoot().setLightsOutMode(true);
         boolean haveImageEditor = GalleryUtils.isEditorAvailable(mActivity, "image/*");
         if (haveImageEditor != mHaveImageEditor) {
             mHaveImageEditor = haveImageEditor;

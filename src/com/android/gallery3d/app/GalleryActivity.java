@@ -20,6 +20,8 @@
 package com.android.gallery3d.app;
 
 import java.util.Locale;
+
+import android.graphics.Color;
 import android.os.Handler;
 import android.app.Dialog;
 import android.content.ContentResolver;
@@ -93,6 +95,10 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
     public static final String KEY_DISMISS_KEYGUARD = "dismiss-keyguard";
     public static final String KEY_FROM_SNAPCAM = "from-snapcam";
     public static final String KEY_TOTAL_NUMBER = "total-number";
+
+    //add for TimelinePage and PhotoPage: -1 don't show timeline title, 0 show timeline title
+    public static final int CLUSTER_ALBUMSET_NO_TITLE = -1;
+    public static final int CLUSTER_ALBUMSET_TIME_TITLE = 0;
 
     private static final String TAG = "GalleryActivity";
     private Dialog mVersionCheckDialog;
@@ -598,15 +604,11 @@ public final class GalleryActivity extends AbstractGalleryActivity implements On
                         || intent.getBooleanExtra("SingleItemOnly", false);
                 if (!singleItemOnly) {
                     data.putString(PhotoPage.KEY_MEDIA_SET_PATH, albumPath.toString());
-                    // when FLAG_ACTIVITY_NEW_TASK is set, (e.g. when intent is fired
-                    // from notification), back button should behave the same as up button
-                    // rather than taking users back to the home screen
-                    if (intent.getBooleanExtra(PhotoPage.KEY_TREAT_BACK_AS_UP, false)
-                            || ((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0)) {
-                        data.putBoolean(PhotoPage.KEY_TREAT_BACK_AS_UP, true);
-                    }
                 }
                 data.putBoolean("SingleItemOnly", singleItemOnly);
+                // set the cover View to black
+                View cover = findViewById(R.id.gl_root_cover);
+                cover.setBackgroundColor(Color.BLACK);
                 getStateManager().startState(SinglePhotoPage.class, data);
             }
         }

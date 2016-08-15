@@ -32,7 +32,6 @@ import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.Metadata;
-import android.media.audiofx.AudioEffect;
 import android.media.audiofx.Virtualizer;
 import android.net.Uri;
 import android.os.Build;
@@ -43,7 +42,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.VideoView;
 import android.widget.Toast;
 
 import com.android.gallery3d.R;
@@ -51,17 +49,17 @@ import com.android.gallery3d.common.ApiHelper;
 import com.android.gallery3d.common.BlobCache;
 import com.android.gallery3d.util.CacheManager;
 import com.android.gallery3d.util.GalleryUtils;
+
 import org.codeaurora.gallery3d.ext.IContrllerOverlayExt;
-import org.codeaurora.gallery3d.ext.IMoviePlayer;
 import org.codeaurora.gallery3d.ext.IMovieItem;
+import org.codeaurora.gallery3d.ext.IMoviePlayer;
 import org.codeaurora.gallery3d.ext.MovieUtils;
 import org.codeaurora.gallery3d.video.BookmarkEnhance;
-import org.codeaurora.gallery3d.video.ExtensionHelper;
+import org.codeaurora.gallery3d.video.CodeauroraVideoView;
 import org.codeaurora.gallery3d.video.IControllerRewindAndForward;
 import org.codeaurora.gallery3d.video.IControllerRewindAndForward.IRewindAndForwardListener;
 import org.codeaurora.gallery3d.video.ScreenModeManager;
 import org.codeaurora.gallery3d.video.ScreenModeManager.ScreenModeListener;
-import org.codeaurora.gallery3d.video.CodeauroraVideoView;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -221,40 +219,6 @@ public class MoviePlayer implements
         }
     };
 
-    private CodeauroraVideoView.AudioFocusChangeListener mAudioFocusListener =
-            new CodeauroraVideoView.AudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusRequestFailed() {
-                    Log.d(TAG, "pause video because onAudioFocusRequestFailed.");
-                    onPauseVideo();
-                }
-
-                @Override
-                public void onAudioFocusChange(int focusChange) {
-                    switch (focusChange) {
-                        case AudioManager.AUDIOFOCUS_GAIN:
-                            boolean isTargetPlaying = (mVideoView != null &&
-                                    mVideoView.isTargetPlaying());
-                            Log.d(TAG, "AUDIOFOCUS_GAIN isTargetPlaying : " + isTargetPlaying);
-                            if (mPausedByTransientLossOfFocus || isTargetPlaying) {
-                                onPlayVideo();
-                                mPausedByTransientLossOfFocus = false;
-                            }
-                            break;
-                        case AudioManager.AUDIOFOCUS_LOSS:
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                            boolean isPlaying = (mVideoView != null && mVideoView.isPlaying());
-                            Log.d(TAG, "AUDIOFOCUS_LOSS isPlaying : " + isPlaying);
-                            if (isPlaying) {
-                                onPauseVideo();
-                                mPausedByTransientLossOfFocus = true;
-                            }
-                            break;
-                        default:
-                    }
-                }
-            };
-
     public MoviePlayer(View rootView, final MovieActivity movieActivity,
             IMovieItem info, Bundle savedInstance, boolean canReplay) {
         mContext = movieActivity.getApplicationContext();
@@ -262,7 +226,7 @@ public class MoviePlayer implements
         mVideoView = (CodeauroraVideoView) rootView.findViewById(R.id.surface_view);
         mBookmarker = new Bookmarker(movieActivity);
 
-        mController = new MovieControllerOverlay(movieActivity);
+        mController = new MovieControllerOverlayNew(movieActivity);
         ((ViewGroup)rootView).addView(mController.getView());
         mController.setListener(this);
         mController.setCanReplay(canReplay);
@@ -271,7 +235,6 @@ public class MoviePlayer implements
 
         mVideoView.setOnErrorListener(this);
         mVideoView.setOnCompletionListener(this);
-        mVideoView.setOnAudioFocusChangeListener(mAudioFocusListener);
 
         if (mVirtualizer != null) {
             mVirtualizer.release();
@@ -708,12 +671,14 @@ public class MoviePlayer implements
         }
         if (mMovieItem.getError()) {
             Log.w(TAG, "error occured, exit the video player!");
+            mHandler.removeCallbacksAndMessages(null);
             mActivityContext.finish();
             return;
         }
         if (mPlayerExt.getLoop()) {
             onReplay();
         } else { //original logic
+            mHandler.removeCallbacksAndMessages(null);
             mTState = TState.COMPELTED;
             if (mCanReplay) {
                 mController.showEnded();
@@ -810,6 +775,9 @@ public class MoviePlayer implements
         } else if (what == MediaPlayer.MEDIA_INFO_METADATA_UPDATE && mServerTimeoutExt != null) {
             Log.e(TAG, "setServerTimeout " + extra);
             mServerTimeoutExt.setTimeout(extra * 1000);
+        } else if ((what == MediaPlayer.MEDIA_INFO_BUFFERING_START
+                || what == MediaPlayer.MEDIA_INFO_BUFFERING_END) && mOverlayExt != null) {
+            mOverlayExt.showBuffering(what);
         }
         if (mRetryExt.onInfo(mp, what, extra)) {
             return true;
@@ -819,8 +787,6 @@ public class MoviePlayer implements
 
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        boolean fullBuffer = isFullBuffer();
-        mOverlayExt.showBuffering(fullBuffer, percent);
     }
 
     @Override
@@ -1626,6 +1592,45 @@ public class MoviePlayer implements
         if (mController != null) {
             mController.cancelHiding();
         }
+    }
+
+    private AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener =
+            new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    switch (focusChange) {
+                        case AudioManager.AUDIOFOCUS_GAIN:
+                            boolean isTargetPlaying = (mVideoView != null &&
+                                    mVideoView.isTargetPlaying());
+                            Log.d(TAG, "AUDIOFOCUS_GAIN isTargetPlaying : " + isTargetPlaying);
+                            if (mPausedByTransientLossOfFocus || isTargetPlaying) {
+                                onPlayVideo();
+                                mPausedByTransientLossOfFocus = false;
+                            }
+                            break;
+                        case AudioManager.AUDIOFOCUS_LOSS:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                            boolean isPlaying = (mVideoView != null && mVideoView.isPlaying());
+                            Log.d(TAG, "AUDIOFOCUS_LOSS isPlaying : " + isPlaying);
+                            if (isPlaying) {
+                                onPauseVideo();
+                                mPausedByTransientLossOfFocus = true;
+                            }
+                            break;
+                        default:
+                    }
+                }
+    };
+
+    public int requestAudioFocus() {
+        AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        return am.requestAudioFocus(mAudioFocusChangeListener, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+    }
+
+    public int abandonAudioFocus() {
+        AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        return am.abandonAudioFocus(mAudioFocusChangeListener);
     }
 }
 

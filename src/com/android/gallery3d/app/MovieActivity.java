@@ -368,13 +368,13 @@ public class MovieActivity extends Activity {
 
             mSwitch = (ToggleButton) title.findViewById(R.id.audio_effects_switch);
             mSwitch.setChecked(enabled);
-            mSwitch.setBackgroundResource(enabled ?
+            mSwitch.setButtonDrawable(enabled ?
                     R.drawable.switch_thumb_activated : R.drawable.switch_thumb_off);
 
             mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mSwitch.setBackgroundResource(isChecked ?
+                    mSwitch.setButtonDrawable(isChecked ?
                             R.drawable.switch_thumb_activated : R.drawable.switch_thumb_off);
                     if(mBassBoostEffect != null) {
                         mBassBoostEffect.setEnabled(isChecked);
@@ -424,7 +424,7 @@ public class MovieActivity extends Activity {
             });
 
             mEffectDialog = new AlertDialog.Builder(MovieActivity.this,
-                    AlertDialog.THEME_HOLO_DARK)
+                    AlertDialog.THEME_DEVICE_DEFAULT_LIGHT)
                 .setCustomTitle(title)
                 .setView(content)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -457,8 +457,6 @@ public class MovieActivity extends Activity {
                 .setCancelable(false)
                 .create();
             mEffectDialog.show();
-            mEffectDialog.findViewById(com.android.internal.R.id.titleDivider)
-                .setBackgroundResource(R.color.highlight);
         }
     }
 
@@ -522,7 +520,7 @@ public class MovieActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-         // If click back up button, we will always finish current activity and 
+         // If click back up button, we will always finish current activity and
          // back to previous one.
             finish();
             return true;
@@ -543,9 +541,7 @@ public class MovieActivity extends Activity {
 
     @Override
     public void onStart() {
-        ((AudioManager) getSystemService(AUDIO_SERVICE))
-                .requestAudioFocus(null, AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+        mPlayer.requestAudioFocus();
         super.onStart();
         mMovieHooker.onStart();
         registerScreenReceiver();
@@ -553,8 +549,7 @@ public class MovieActivity extends Activity {
 
     @Override
     protected void onStop() {
-        ((AudioManager) getSystemService(AUDIO_SERVICE))
-                .abandonAudioFocus(null);
+        mPlayer.abandonAudioFocus();
         super.onStop();
         if (mControlResumed && mPlayer != null) {
             mPlayer.onStop();

@@ -16,13 +16,16 @@
 
 package com.android.gallery3d.filtershow.filters;
 
+import android.renderscript.Element;
+import android.renderscript.ScriptIntrinsicConvolve3x3;
+
 import com.android.gallery3d.R;
 import com.android.gallery3d.filtershow.editors.BasicEditor;
 
 public class ImageFilterSharpen extends ImageFilterRS {
     private static final String SERIALIZATION_NAME = "SHARPEN";
     private static final String LOGTAG = "ImageFilterSharpen";
-    private ScriptC_convolve3x3 mScript;
+    private ScriptIntrinsicConvolve3x3 mScript;
 
     private FilterBasicRepresentation mParameters;
 
@@ -64,13 +67,13 @@ public class ImageFilterSharpen extends ImageFilterRS {
     protected void createFilter(android.content.res.Resources res, float scaleFactor,
             int quality) {
         if (mScript == null) {
-            mScript = new ScriptC_convolve3x3(getRenderScriptContext());
+            mScript = ScriptIntrinsicConvolve3x3.create(getRenderScriptContext(),
+                    Element.RGBA_8888(getRenderScriptContext()));
         }
     }
 
     private void computeKernel() {
-        float scaleFactor = getEnvironment().getScaleFactor();
-        float p1 = mParameters.getValue() * scaleFactor;
+        float p1 = mParameters.getValue();
         float value = p1 / 100.0f;
         float f[] = new float[9];
         float p = value;
@@ -83,15 +86,11 @@ public class ImageFilterSharpen extends ImageFilterRS {
         f[6] = -p;
         f[7] = -p;
         f[8] = -p;
-        mScript.set_gCoeffs(f);
+        mScript.setCoefficients(f);
     }
 
     @Override
     protected void bindScriptValues() {
-        int w = getInPixelsAllocation().getType().getX();
-        int h = getInPixelsAllocation().getType().getY();
-        mScript.set_gWidth(w);
-        mScript.set_gHeight(h);
     }
 
     @Override
@@ -100,9 +99,8 @@ public class ImageFilterSharpen extends ImageFilterRS {
             return;
         }
         computeKernel();
-        mScript.set_gIn(getInPixelsAllocation());
-        mScript.bind_gPixels(getInPixelsAllocation());
-        mScript.forEach_root(getInPixelsAllocation(), getOutPixelsAllocation());
+        mScript.setInput(getInPixelsAllocation());
+        mScript.forEach(getOutPixelsAllocation());
     }
 
 }

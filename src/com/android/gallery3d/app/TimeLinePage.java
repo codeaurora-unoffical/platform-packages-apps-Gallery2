@@ -20,9 +20,10 @@
 package com.android.gallery3d.app;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -168,7 +169,13 @@ public class TimeLinePage extends ActivityState implements
         protected void onLayout(
                 boolean changed, int left, int top, int right, int bottom) {
 
-            int slotViewTop = mActivity.getGalleryActionBar().getHeight();
+            int slotViewTop;
+            android.widget.Toolbar toolbar = mActivity.getToolbar();
+            if (toolbar != null) {
+                slotViewTop = toolbar.getLayoutParams().height;
+            } else {
+                slotViewTop = mActivity.getGalleryActionBar().getHeight();
+            }
             int padding =0 ;
             if((right - left) > (bottom - top)) {
                 padding =  (int) mActivity.getResources().getDimension(R.dimen.timeline_land_margin);
@@ -369,9 +376,42 @@ public class TimeLinePage extends ActivityState implements
         } else {
             MediaItem item = mAlbumDataAdapter.get(slotIndex);
             if (item == null) return;
-            mSelectionManager.setAutoLeaveSelectionMode(true);
-            mSelectionManager.toggle(item.getPath());
-            mSlotView.invalidate();
+            String path = item.getPath().toString();
+            if (isFileExist(path.substring(path.lastIndexOf("/") + 1))) {
+                mSelectionManager.setAutoLeaveSelectionMode(true);
+                mSelectionManager.toggle(item.getPath());
+                mSlotView.invalidate();
+            }
+        }
+    }
+
+    private boolean isFileExist(String id) {
+        ContentResolver resolver = mActivity.getContentResolver();
+        Uri iamgeUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        Cursor imageCursor = resolver.query(iamgeUri,
+                new String[]{MediaStore.Images.ImageColumns._ID},
+                "_id=?", new String[]{id}, null);
+        if (imageCursor == null) return false;
+        try {
+            if (imageCursor.getCount() == 0) {
+                Uri videoUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                Cursor videoCursor = resolver.query(videoUri,
+                        new String[]{MediaStore.Video.VideoColumns._ID},
+                        "_id=?", new String[]{id}, null);
+                try {
+                    if (videoCursor == null || videoCursor.getCount() == 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } finally {
+                    videoCursor.close();
+                }
+            } else {
+                return true;
+            }
+        } finally {
+            imageCursor.close();
         }
     }
 
@@ -442,6 +482,10 @@ public class TimeLinePage extends ActivityState implements
 
         // Set the reload bit here to prevent it exit this page in clearLoadingBit().
         setLoadingBit(BIT_LOADING_RELOAD);
+        if (null != mMediaSet) {
+            //set to show timeline title
+            mMediaSet.setClusterKind(GalleryActivity.CLUSTER_ALBUMSET_TIME_TITLE);
+        }
         mLoadingFailed = false;
         mAlbumDataAdapter.resume();
 
@@ -459,9 +503,6 @@ public class TimeLinePage extends ActivityState implements
         super.onPause();
         mIsActive = false;
 
-        if (mSelectionManager.inSelectionMode()) {
-            mSelectionManager.leaveSelectionMode();
-        }
         mAlbumView.setSlotFilter(null);
         mActionModeHandler.pause();
         mAlbumDataAdapter.pause();
