@@ -291,7 +291,7 @@ public class ProcessingService extends Service {
         if (mNeedsAlive) {
             // If the app has been restarted while we were saving...
             mFiltershowActivity.updateUIAfterServiceStarted();
-        } else if (exit || mFiltershowActivity.isSimpleEditAction()) {
+        } else if (mFiltershowActivity != null && (exit || mFiltershowActivity.isSimpleEditAction())) {
             // terminate now
             mFiltershowActivity.completeSaveImage(result, releaseDualCam);
         }
